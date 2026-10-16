@@ -1,0 +1,185 @@
+# The SMK-37 build: all 37 keys are the scale, the pads are the 16 white keys (the scale with low notes on the
+# bottom row; the effects grid, PERFORM and the Pattern page in reading order), their lights, the fader banks, the
+# wheels, < and >, the picker (KNOB BANK)
+listen
+wait 3000
+expect playing 1
+expect pool 0x6AD
+# F Dorian. C3 (keybed key 0) is C, the fifth: out; C6 (key 36) puts it back
+kbkey 0
+expect pool 0x62D
+kbkey 36
+expect pool 0x6AD
+# the middle keys as on the FM-1: F#3 in and out
+tapkey b0
+expect pool 0x6AF
+tapkey b0
+expect pool 0x6AD
+# the pads: the white keys F3..G5, the bottom row first. Pad 8 is F3, the root: it stays; pad 9 is G3
+expect padlayout 0
+pad 8
+wait 200
+said THE ROOT STAYS
+pad 9
+expect pool 0x6A9
+pad 9
+expect pool 0x6AD
+# the top row from G4: pad 0 is G4, the same note
+pad 0
+expect pool 0x6A9
+pad 0
+expect pool 0x6AD
+# their lights: the root a stronger blue, a note out of the scale (A3, pad 10) dark orange
+wait 1000
+pads
+expect padg8 >150
+expect padr10 >90
+expect padb10 <20
+# the effects grid: REC held, the pads in reading order (pad 4 is the fifth effect, Low-pass)
+press REC
+wait 400
+said EFFECTS GRID
+expect padlayout 1
+expect padg0 >80
+expect padg1 <90
+pad 4 down
+wait 300
+said Low-pass
+pads
+expect padg4 >200
+release REC
+wait 300
+pad 4 up
+wait 800
+expect frozen 0
+expect padlayout 0
+# PERFORM (SEL): pads 1-5 the mutes, 6-10 the moves held (the top row first)
+tap SEL
+wait 200
+said PERFORM ON
+expect padlayout 1
+pad 3
+wait 200
+said KICK OFF
+pad 3
+wait 200
+said KICK ON
+pad 5 down
+wait 200
+said THROW
+expect padr5 >200
+pad 5 up
+wait 200
+expect padr5 <90
+tap SEL
+wait 200
+said PERFORM OFF
+expect padlayout 0
+# the Pattern page: the pads its sixteen steps in reading order; a black key held with a pad: an accent
+tap SEQ
+tap SEQ
+tap SEQ
+wait 400
+expect view 16
+expect padlayout 1
+pad 3
+wait 200
+said Step 4 on
+expect par105 1
+expect padb3 >150
+key b0 down
+pad 2
+key b0 up
+wait 200
+said Step 3 accented
+expect par94 4
+tap SEQ
+wait 300
+expect view 4
+expect padlayout 0
+# the Chords page: the pads and the outer keys set the slot's root (D3, keybed key 2: D)
+tap EDIT
+wait 400
+expect view 15
+kbkey 2
+wait 200
+expect par64 2
+pad 9
+wait 200
+expect par64 7
+tap EDIT
+wait 300
+expect view 4
+# the faders: bank B, the space; a fader takes over once it moves
+sbtn FADER_BANK
+expect fbank 1
+expect fcard 1
+expect smkleds 2
+fader 0 127
+expect par8 100
+fader 2 0
+expect par11 0
+shot faders.png
+wait 2000
+expect fcard 0
+# bank C: the shape, Cutoff first (the first reading after a bank change only sets where the fader is)
+sbtn FADER_BANK
+expect fbank 2
+fader 0 0
+expect par12 0
+fader 0 64
+expect par12 50
+# back to A, the levels
+sbtn FADER_BANK
+expect fbank 0
+expect smkleds 0
+fader 0 0
+expect par0 0
+fader 0 64
+expect par0 50
+# the wheels: the tape and the filter, never saved
+wheel pitch 127
+wheel mod 127
+wait 200
+expect warp 127
+expect par12 50
+wheel pitch 0
+wheel mod 0
+wait 200
+expect warp 0
+# < > the pages, as SELECT
+tap HOME
+sbtn RIGHT
+expect view 1
+sbtn RIGHT
+expect view 2
+sbtn LEFT
+sbtn LEFT
+sbtn LEFT
+expect view 0
+# the picker (KNOB BANK): the top row the pieces, the bottom row the modes; the pads pick, not play
+sbtn KNOB_BANK
+expect picker 1
+expect smkleds 1
+expect padlayout 2
+wait 200
+shot picker.png
+pads
+# the picker's states: the other pieces on (light blue), the piece playing active (bright)
+expect padb2 >150
+expect padr2 <90
+expect padr0 >150
+pad 2
+wait 200
+expect piece 2
+expect padr2 >150
+expect padr0 <90
+pad 13
+wait 200
+expect par20 5
+expect pool 0x5AD
+sbtn KNOB_BANK
+expect picker 0
+expect padlayout 0
+expect smkleds 0
+shot main.png

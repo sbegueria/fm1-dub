@@ -12,7 +12,8 @@
  *   HOME ENV ARP LFO SEQ FX GLO   the pages: DUB, CHORD, TEXTURE, BASS, DRUMS, SPACE, SETUP
  *   KNOB 1-4       the page's four values
  *   SAVE           saves (it also saves by itself a few seconds after a change, while resting);
- *                  held 1.5 s: the piece back to its recipe */
+ *                  held 1.5 s: the piece back to its recipe
+ * The SMK-37 build (BOARD_SMK37): the same, and the SMK's own controls (below, "SMK-37"). */
 #include "../dsp/fastmath.h"
 
 /* the pages, one a layer (a button each); SELECT steps through them in this order */
@@ -175,6 +176,10 @@ static void say(const char *a, const char *b) { say_as(a, b, ANN_NOW); }
 /* something did not happen: a screen reader says it whole (what follows does not cut it off) */
 static void warn(const char *a, const char *b) { say_as(a, b, ANN_NOW | ANN_KEEP); }
 void ui_say(const char *a, const char *b) { say(a, b); }
+#if BOARD_SMK37
+static int smk_live(int k, int v);             /* a value as the engine gets it: the mod wheel adds to it */
+static void smk_resend(void);
+#endif
 
 static void itoa_u(uint32_t v, char *b)
 {
@@ -291,7 +296,11 @@ static void knob_set(int k, int v)
         return;
     if (k < P_NPARAMS) {
         proj.par[k] = (int16_t)v;
+#if BOARD_SMK37
+        en_set(k, smk_live(k, v));
+#else
         en_set(k, v);
+#endif
     } else if (k == K_LEDS) {
         proj.leds = (uint8_t)v;
     } else if (k == K_SLOT) {
@@ -395,6 +404,9 @@ static void set_piece(int i)                    /* the piece playing kept as it 
 {
     project_piece(i);
     project_apply();
+#if BOARD_SMK37
+    smk_resend();
+#endif
     en_seed(plat_ms());
     en_regrow();
     say_as("PIECE", piece_name(proj.piece), 0);
@@ -591,6 +603,168 @@ static void pattern_key(uint32_t key, uint32_t keys)
     }
 }
 
+#if BOARD_SMK37
+/* ------------------------------------------------------------- SMK-37 --- */
+/* The SMK-37's controls beyond the FM-1's (plat.h SMK section; the FM-1's keep their DUB-1 meaning):
+ *   pads           the 16 white keys F3..G5, lit as the FM-1's keys are, in colour. As the scale (and the Chords
+ *                  page's roots) low notes on the bottom row; where the white keys are a row of sixteen (the effects
+ *                  grid, the Pattern page's steps, PERFORM's 1-10) the top row is 1-8 and the bottom row 9-16, as
+ *                  the screen reads
+ *   keys           F3..G5 the FM-1's 27; C3..E3 and G#5..C6 more of the scale (on the Chords page, the root too)
+ *   KNOB BANK      the picker on the pads (and the screen): the top row the eight pieces, the bottom row the eight
+ *                  modes; KNOB BANK again: back
+ *   FADER BANK     what the four faders set: A the levels (as the Mix page), B the space, C the shape (Cutoff,
+ *                  Decay, Density, Hits). A fader takes over once it moves; the fader card shows the bank
+ *   < >            the previous / next page (as SELECT)
+ *   pitch wheel    the tape: up faster (the echo's time down to half), down slower (up to twice); the repeats
+ *                  bend as it gets there
+ *   mod wheel      the filter: the chord's Cutoff opened on top of its knob */
+#define SMK_NBANK 3
+#define SMK_CARD_MS 1800u
+static const uint8_t SMK_FADER_PAR[SMK_NBANK][4] = {{P_CHORD, P_PINGS, P_BASS, P_DRUMS},
+                                                    {P_ECHO, P_ETIME, P_FEEDBACK, P_REVERB},
+                                                    {P_CUTOFF, P_DECAY, P_DENSITY, P_HITS}};
+static const char *const SMK_FADER_LABEL[SMK_NBANK][4] = {{"Chord", "Pings", "Bass", "Drums"},
+                                                          {"Echo", "Echo time", "Feedback", "Reverb"},
+                                                          {"Cutoff", "Decay", "Density", "Hits"}};
+static const char *const SMK_BANK_NAME[SMK_NBANK] = {"A LEVELS", "B SPACE", "C SHAPE"};
+static struct {
+    uint32_t sbtn;                     /* the four extra buttons held (SB_*) */
+    uint8_t fbank;                     /* the fader bank, 0..2 */
+    uint8_t flast[4];                  /* each fader's last value, 0xFF: not read yet (takes over once it moves) */
+    int8_t ftouch;                     /* the fader moved last (the card shows it), -1 none */
+    uint8_t pick;                      /* KNOB BANK: the picker up */
+    uint32_t card_until;               /* the fader card */
+    int32_t pitch, modw;               /* the wheels: pitch -127..127, mod 0..127 */
+} smk;
+static void smk_reset(void)
+{
+    memset(&smk, 0, sizeof smk);
+    memset(smk.flast, 0xFF, sizeof smk.flast);
+    smk.ftouch = -1;
+}
+static int smk_fcard(void) { return plat_ms() < smk.card_until; }
+
+static int smk_live(int k, int v)               /* Cutoff: the mod wheel opens it the rest of the way */
+{
+    int lo, hi;
+    if (k != P_CUTOFF || !smk.modw)
+        return v;
+    knob_range(k, &lo, &hi);
+    return v + (hi - v) * (int)smk.modw / 127;
+}
+static void smk_resend(void) { en_set(P_CUTOFF, smk_live(P_CUTOFF, proj.par[P_CUTOFF])); }
+
+/* the pads' layout: the effects grid (REC held) first, then the picker, then the rows of sixteen */
+static int smk_layout(uint32_t btn)
+{
+    if ((btn >> B_REC & 1u) || ui.fx)
+        return SMK_PADS_GRID;
+    if (smk.pick)
+        return SMK_PADS_OWN;
+    return ui.perf || ui.view == V_PAT ? SMK_PADS_GRID : SMK_PADS_PIANO;
+}
+
+static void smk_page(int d)                      /* < >: as SELECT */
+{
+    int v = page_of(ui.view) + d;
+    if (ui.view == V_MIX)
+        v = (int)ui.perf_from + d;
+    if (ui.view == V_CHORDS)
+        v = (int)ui.chords_from + d;
+    if (v >= 0 && v < NPAGES)
+        set_view(v);
+}
+
+static void smk_input(uint32_t btn)
+{
+    uint32_t ph = plat_pad_hits(), sb = plat_smk_buttons(), sp = sb & ~smk.sbtn, now = plat_ms(), i;
+    uint64_t kh = plat_keybed_hits();
+    int32_t pitch, modw;
+    smk.sbtn = sb;
+    for (i = 0; i < SMK_NPADS; i++)              /* the picker: the top row the pieces, the bottom row the modes */
+        if (smk.pick && (ph >> i & 1u)) {
+            if (i >= 8u)
+                set_mode((int)i - 8);
+            else if ((int)i != proj.piece)
+                set_piece((int)i);
+        }
+    if (sp >> SB_KNOB_BANK & 1u) {               /* KNOB BANK: the picker, up or put away */
+        smk.pick = (uint8_t)!smk.pick;
+        smk.card_until = 0;                      /* (one card at a time) */
+        say("PADS", smk.pick ? "PIECE + MODE" : "PLAY");
+    }
+    if (sp >> SB_FADER_BANK & 1u) {              /* FADER BANK: the next bank, on the fader card */
+        smk.fbank = (uint8_t)((smk.fbank + 1u) % SMK_NBANK);
+        memset(smk.flast, 0xFF, sizeof smk.flast);
+        smk.ftouch = -1;
+        smk.card_until = now + SMK_CARD_MS;
+        say("FADERS", SMK_BANK_NAME[smk.fbank]);
+    }
+    if (sp >> SB_LEFT & 1u)
+        smk_page(-1);
+    if (sp >> SB_RIGHT & 1u)
+        smk_page(1);
+    if (sp)
+        ui.turn_t = now;                         /* (a help card: put away) */
+    if (!(btn >> B_REC & 1u) && !ui.fx && !ui.perf && ui.view != V_PAT)
+        for (i = 0; i < SMK_NKEYBED; i++)        /* the outer keys (C3..E3, G#5..C6): their notes, as the keys */
+            if ((i < 5u || i >= 32u) && (kh >> i & 1u)) {
+                if (ui.view == V_CHORDS)
+                    slot_key((i % 12u + 7u) % 12u);   /* (the key of the same note: key 0 is F3) */
+                else
+                    toggle_note((int)(i % 12u));
+            }
+    for (i = 0; i < 4u; i++) {                   /* the faders: a value each, once a fader moves */
+        int v = plat_fader((int)i), k = SMK_FADER_PAR[smk.fbank][i], lo, hi, j;
+        if (v < 0)
+            continue;
+        if (smk.flast[i] == 0xFFu) {
+            smk.flast[i] = (uint8_t)v;
+            continue;
+        }
+        if (v == smk.flast[i])
+            continue;
+        smk.flast[i] = (uint8_t)v;
+        knob_range(k, &lo, &hi);
+        knob_set(k, lo + (v * (hi - lo) + 63) / 127);
+        smk.ftouch = (int8_t)i;
+        smk.card_until = now + SMK_CARD_MS;
+        for (j = 0; j < 4; j++)                  /* the page's own knob of it, lit as if turned */
+            if (VIEW_KNOB[ui.view][j] == k) {
+                ui.touched = (int8_t)j;
+                ui.touch_until = now + 1200u;
+            }
+        ui.act_t = now;
+    }
+    if (plat_wheels(&pitch, &modw)) {
+        char t[8];
+        if (pitch != smk.pitch) {                /* the tape: the echo's time, in % of what it is set to */
+            uint32_t pc = (uint32_t)(100.0f * fm_exp2f((float)pitch * (-1.0f / 127.0f)) + 0.5f), n;
+            smk.pitch = pitch;
+            en_warp((int)pitch);
+            itoa_u(pc, t);
+            for (n = 0; t[n]; n++)
+                ;
+            t[n++] = '%';
+            t[n] = 0;
+            say_as("ECHO TIME", t, 0);
+        }
+        if (modw != smk.modw) {                  /* the filter */
+            smk.modw = modw;
+            smk_resend();
+            t[0] = '+';
+            itoa_u((uint32_t)(modw * 100 / 127), t + 1);
+            say_as("CUTOFF", t, 0);
+        }
+        ui.act_t = now;
+    }
+    if (sb || kh || ph)
+        ui.act_t = now;
+    plat_smk_pads(smk_layout(btn));
+}
+#endif
+
 /* ------------------------------------------------------------ buttons --- */
 static void set_view(int v)
 {
@@ -712,8 +886,15 @@ static void help_tick(uint32_t btn, uint32_t keys)
 
 static void input(void)
 {
+#if BOARD_SMK37
+    uint32_t btn = plat_buttons(), keys, ch, i;
+    int32_t e;
+    smk_input(btn);                              /* (the pads' layout first: plat_keys reads the pads in it) */
+    keys = plat_keys();
+#else
     uint32_t btn = plat_buttons(), keys = plat_keys(), ch, i;
     int32_t e;
+#endif
     ch = btn ^ ui.btn;
     ui.btn = btn;
     for (i = 0; i < NB; i++) {
@@ -802,6 +983,9 @@ static void input(void)
         ui.help = 0;
         project_piece_reset();
         project_apply();
+#if BOARD_SMK37
+        smk_resend();
+#endif
         en_regrow();
         say("RESET", piece_name(proj.piece));
         mark_dirty();
@@ -1554,8 +1738,13 @@ static int help_lines(int b, const char *l[HELP_LINES])
     case B_FX: L("THE SPACE"); L("ECHO, ECHO TIME, FEEDBACK,"); L("REVERB"); break;
     case B_GLO: L("SETUP"); L("ROOT, TUNE, MIDI OUT, LIGHTS"); break;
     case B_EDIT: L("TAP: THE CHORDS (8 SLOTS:"); L(" THE KEYS, THE SLOT'S ROOT)"); L("HOLD: THE NEXT CHORD"); break;
+#if BOARD_SMK37
+    case B_SEL: L("PERFORM: KNOBS MIX; PADS 1-5"); L(" MUTE CHORD PINGS BASS KICK HATS;"); L("6-10 HELD: THROW OPEN SHUT"); L(" KICK DROP ECHO"); break;
+    case B_REC: L("TAP: DUB HOLD (THE ECHO"); L(" REPEATS WHAT IT HOLDS)"); L("HOLD: THE EFFECTS GRID,"); L(" PLAYED ON THE PADS"); break;
+#else
     case B_SEL: L("PERFORM: KNOBS MIX; KEYS 1-5"); L(" MUTE CHORD PINGS BASS KICK HATS;"); L("6-10 HELD: THROW OPEN SHUT"); L(" KICK DROP ECHO"); break;
     case B_REC: L("TAP: DUB HOLD (THE ECHO"); L(" REPEATS WHAT IT HOLDS)"); L("HOLD: THE EFFECTS GRID,"); L(" PLAYED ON THE WHITE KEYS"); break;
+#endif
     case B_OCTDN: L("THE PINGS AN OCTAVE DOWN"); L("WITH OCT+, 5 S: UPDATE MODE"); break;
     case B_OCTUP: L("THE PINGS AN OCTAVE UP"); L("WITH OCT-, 5 S: UPDATE MODE"); break;
     case B_SAVE: L("SAVES ALL EIGHT PIECES"); L("KEEP HOLDING: THE PIECE"); L(" BACK TO ITS RECIPE"); break;
@@ -1587,7 +1776,11 @@ static void grid_band(int32_t oy)                 /* the whole screen, in two ba
     int r, c;
     cv_begin(240, 120, K_BG);
     text_c(120, 2 - oy, &FONT_S, "EFFECTS", K_ACC);
+#if BOARD_SMK37
+    text_c(120, 20 - oy, &FONT_XS, "HOLD A PAD    TAP REC: DUB HOLD", K_DIM);
+#else
     text_c(120, 20 - oy, &FONT_XS, "HOLD A WHITE KEY    TAP REC: DUB HOLD", K_DIM);
+#endif
     for (r = 0; r < 4; r++) {
         int32_t yr = 38 + r * 50;
         cv_text(6, yr - oy, &FONT_XS, GROUP[r], K_DIM);
@@ -1651,7 +1844,11 @@ static void draw_pattern(void)
             }
         }
     }
+#if BOARD_SMK37
+    text_c(120, 104, &FONT_XS, "PADS: STEPS   BLACK KEY + PAD: ACCENT", K_DIM);
+#else
     text_c(120, 104, &FONT_XS, "WHITE: STEPS   BLACK + WHITE: ACCENT", K_DIM);
+#endif
 }
 
 /* the Chords page: the eight slots, the one edited outlined, the one playing lit; an empty slot inside the
@@ -1682,12 +1879,185 @@ static void draw_slots(void)
     text_c(120, 104, &FONT_XS, "KEYS: THE SLOT'S ROOT   EDIT: BACK", K_DIM);
 }
 
+#if BOARD_SMK37
+/* SMK-37: the cards in the main screen's place. The fader card: the bank's four values as four faders, in the
+ * knob strip's columns (the faders sit in a row too), the banks above. The picker: the pieces over their row of
+ * pads, the modes over theirs */
+static void smk_draw_fcard(void)
+{
+    static const uint16_t LAYER[4] = {K_PAD, K_BELL, K_BASS, K_PULSE};
+    int i, now_touch = smk.ftouch >= 0;
+    int32_t x = 10;
+    for (i = 0; i < SMK_NBANK; i++)              /* the banks: the one the faders set, bright */
+        tag(&x, SMK_BANK_NAME[i], i == smk.fbank ? K_TEXT : K_PANEL, i == smk.fbank ? K_BG : K_DIM);
+    for (i = 0; i < 4; i++) {
+        int k = SMK_FADER_PAR[smk.fbank][i], lo, hi, v, hot = now_touch && smk.ftouch == i;
+        int32_t cx = i * 60 + 30, h;
+        uint16_t fill = smk.fbank == 0 ? LAYER[i] : hot ? K_ACC : K_PAD;
+        char t[16];
+        if (i)
+            cv_rect(i * 60, 30, 1, 108, K_LINE);
+        if (hot)
+            cv_round(i * 60 + 3, 27, 54, 114, 6, K_PANEL);
+        knob_range(k, &lo, &hi);
+        v = knob_get(k);
+        caps(t, SMK_FADER_LABEL[smk.fbank][i], sizeof t);
+        text_c(cx, 30, &FONT_XS, t, hot ? K_TEXT : K_DIM);
+        h = hi > lo ? (int32_t)((v - lo) * 70 / (hi - lo)) : 0;
+        cv_round(cx - 4, 48, 8, 74, 3, K_LINE);
+        if (h > 0)
+            cv_round(cx - 4, 48 + 70 - h, 8, h + 4, 3, fill);
+        cv_round(cx - 9, 48 + 70 - h - 1, 18, 6, 2, hot ? K_ACC : K_TEXT);   /* the fader's cap */
+        knob_text(k, t);
+        text_c(cx, 124, &FONT_XS, t, hot ? K_ACC : K_TEXT);
+    }
+}
+
+static const char *const SMK_MODE_SHORT[EN_NMODES] = {"ION", "DOR", "PHR", "LYD", "MIX", "AEO", "P+", "P-"};
+static int smk_mode_now(void) { return proj.pool == EN_MODE_POOL[proj.par[P_MODE]] ? proj.par[P_MODE] : -1; }
+static void smk_draw_picker(void)
+{
+    int i, mode = smk_mode_now();
+    int32_t x;
+    x = cv_text(10, 2, &FONT_XS, "PIECE", K_DIM);
+    cv_text(x + 8, 0, &FONT_B, piece_name(proj.piece), K_TEXT);
+    x = cv_text(10, 64, &FONT_XS, "MODE", K_DIM);
+    cv_text(x + 8, 62, &FONT_B, mode_name(), K_TEXT);
+    for (i = 0; i < 16; i++) {                   /* as the pads: the pieces on the top row, the modes below */
+        int row = i / 8, on = row ? i - 8 == mode : i == proj.piece;
+        int32_t cx = 4 + (i % 8) * 29, cy = row ? 84 : 22;
+        char t[4];
+        caps(t, row ? SMK_MODE_SHORT[i - 8] : piece_name(i), sizeof t);
+        cv_round(cx, cy, 27, 30, 5, on ? (row ? K_PAD : K_TEXT) : K_PANEL);
+        text_c(cx + 13, cy + 9, &FONT_XS, t, on ? K_BG : K_DIM);
+    }
+    text_c(120, 124, &FONT_XS, "THE PADS PICK    KNOB BANK: BACK", K_DIM);
+}
+
+/* 1 = a card has the main screen's place this frame (drawn when it changed) */
+static int smk_card(void)
+{
+    uint32_t h;
+    int i;
+    if (smk_fcard()) {
+        h = hash(0x46414452u, smk.fbank | (uint32_t)(smk.ftouch + 1) << 4);
+        for (i = 0; i < 4; i++)
+            h = hash(h, (uint32_t)knob_get(SMK_FADER_PAR[smk.fbank][i]));
+        if (h != ui.sig[1]) {
+            ui.sig[1] = h;
+            cv_begin(240, MAIN_H, K_BG);
+            smk_draw_fcard();
+            cv_blit(0, MAIN_Y);
+        }
+        return 1;
+    }
+    if (smk.pick) {
+        h = hash(hash(0x5049434Bu, proj.piece | (uint32_t)proj.par[P_MODE] << 8), proj.pool);
+        if (h != ui.sig[1]) {
+            ui.sig[1] = h;
+            cv_begin(240, MAIN_H, K_BG);
+            smk_draw_picker();
+            cv_blit(0, MAIN_Y);
+        }
+        return 1;
+    }
+    return 0;
+}
+
+/* the pads' lights (leds()): what the FM-1's key LEDs show, in colour, each pad of a group lit at least dim. The
+ * scale: out of it dark orange, in it light blue, the root a brighter blue, the chord's tones as it plays bright
+ * white-blue (dub hold: red). The effects grid: each group in its colour, its first pad brighter (the FM-1 lights its key), held white.
+ * The Pattern page: the lane's steps in the lane's colour (accents brighter), the step playing white. PERFORM: the
+ * layers in their colours (dim when out), the moves red while held. The Chords page: the slot's root. The picker:
+ * the piece and the mode lit. Lights Off: the scale dark (the rest stays) */
+static void smk_pad(int p, uint32_t r, uint32_t g, uint32_t b, uint32_t lv)   /* lv: 0..256 of r g b */
+{
+    r = r * lv >> 8;
+    g = g * lv >> 8;
+    b = b * lv >> 8;
+    plat_pad_rgb(p, (uint8_t)(r > 255u ? 255u : r), (uint8_t)(g > 255u ? 255u : g), (uint8_t)(b > 255u ? 255u : b));
+}
+#define SMK_DIM 72u                                /* a pad of a group at rest: clearly lit, well under the others */
+static const uint8_t SMK_RGB_SCALE[3] = {60, 230, 205}, SMK_RGB_HOLD[3] = {240, 80, 70};
+/* three states told apart by colour, not only by level: off dark orange, on light blue, active bright white-blue */
+static const uint8_t SMK_OFF[3] = {110, 38, 0}, SMK_ON[3] = {40, 120, 210}, SMK_ROOT[3] = {70, 170, 255},
+                     SMK_ACT[3] = {190, 230, 255};
+#define SMK_STATE(p, c) smk_pad((p), (c)[0], (c)[1], (c)[2], 256u)
+static void smk_pads(void)
+{
+    static const uint8_t GROUP[4][3] = {{60, 200, 230}, {70, 110, 255}, {170, 100, 240}, {250, 150, 40}};
+    int w, layout = smk_layout(ui.btn), grid = layout == SMK_PADS_GRID;
+    if (layout == SMK_PADS_OWN) {                /* the picker */
+        int mode = smk_mode_now();
+        for (w = 0; w < SMK_NPADS; w++) {
+            int on = w < 8 ? w == proj.piece : w - 8 == mode;
+            SMK_STATE(w, on ? SMK_ACT : SMK_ON);
+        }
+        return;
+    }
+    for (w = 0; w < SMK_NPADS; w++) {            /* white key w on its pad */
+        int p = grid ? w : w < 8 ? w + 8 : w - 8, key = STEP_KEY[w];
+        uint32_t pc = (5u + (uint32_t)key) % 12u;
+        if ((ui.btn >> B_REC & 1u) || ui.fx) {   /* the effects grid */
+            const uint8_t *c = GROUP[w / 4];
+            if (ui.fx >> w & 1u)
+                smk_pad(p, 230, 230, 230, 256u);
+            else
+                smk_pad(p, c[0], c[1], c[2], (w & 3) ? SMK_DIM : 128u);
+        } else if (ui.perf) {                    /* PERFORM: 1-5 the layers, 6-10 the moves */
+            if (w < 3) {
+                static const uint8_t LEVEL[3] = {P_CHORD, P_PINGS, P_BASS};
+                SMK_STATE(p, proj.par[LEVEL[w]] > 0 ? SMK_ON : SMK_OFF);
+            } else if (w < 5) {
+                SMK_STATE(p, ui.mutes >> w & 1u ? SMK_OFF : SMK_ON);
+            } else if (w < 10) {
+                if (ui.moves >> (w - 5) & 1u)
+                    smk_pad(p, SMK_RGB_HOLD[0], SMK_RGB_HOLD[1], SMK_RGB_HOLD[2], 256u);
+                else
+                    SMK_STATE(p, SMK_ON);
+            } else {
+                smk_pad(p, 0, 0, 0, 0u);
+            }
+        } else if (ui.view == V_PAT) {           /* the Pattern page: the lane's steps */
+            uint32_t st = lane_steps(ui.lane) >> w & 1u;
+            uint32_t ac = proj.par[P_DMODE] ? (uint32_t)(uint16_t)proj.par[P_DACC0 + ui.lane] >> w & 1u : 0u;
+            if (en_playing && w == en_drum_pos[0])
+                SMK_STATE(p, SMK_ACT);
+            else
+                SMK_STATE(p, st ? (ac ? SMK_ROOT : SMK_ON) : SMK_OFF);
+        } else if (ui.view == V_CHORDS) {        /* the Chords page: the slot's root */
+            int on = proj.par[P_CQ0 + ui.slot] && pc == (uint32_t)proj.par[P_CR0 + ui.slot];
+            SMK_STATE(p, on ? SMK_ACT : SMK_OFF);
+        } else if (!proj.leds) {
+            smk_pad(p, 0, 0, 0, 0u);
+        } else {                                 /* the scale; the chord's tones as it plays */
+            uint32_t ap = pool_abs(), in = ap >> pc & 1u, root = pc == (uint32_t)proj.par[P_ROOT];
+            int i, tone = 0;
+            for (i = 0; en_playing && i < EN_NPAD; i++)
+                tone |= en_chord[i] && en_chord[i] % 12u == pc;
+            if (tone && en_pad_level > 0.02f) {
+                if (en_frozen)
+                    smk_pad(p, SMK_RGB_HOLD[0], SMK_RGB_HOLD[1], SMK_RGB_HOLD[2], 256u);
+                else
+                    SMK_STATE(p, SMK_ACT);
+            } else {
+                SMK_STATE(p, !in ? SMK_OFF : root ? SMK_ROOT : SMK_ON);
+            }
+        }
+    }
+}
+#endif
+
 static void draw_main(void)
 {
     uint32_t now = plat_ms(), h = hash(2166136261u, (uint32_t)en_frozen << 16 | proj.piece << 24 | (uint32_t)en_playing << 17), i;
     static uint8_t moving;
     if (ui.frame % 3u)                           /* 20 frames a second is plenty */
         return;
+#if BOARD_SMK37
+    if (!grid_up() && !ui.help && smk_card())    /* the fader card or the picker */
+        return;
+#endif
     if (ui.view == V_PAT) {                      /* the Pattern page: the steps */
         h = hash(hash(0x50415454u, ui.lane | (uint32_t)proj.par[P_DMODE] << 4 | (uint32_t)en_drum_pos[0] << 8), en_playing);
         for (i = 0; i < EN_NDRUM; i++)
@@ -1939,6 +2309,10 @@ static void leds(void)
                 k |= 1u << i;
     }
     plat_glow(proj.leds == 1);
+#if BOARD_SMK37
+    plat_smk_leds((uint32_t)smk.pick << SB_KNOB_BANK | (uint32_t)(smk.fbank != 0) << SB_FADER_BANK);
+    smk_pads();
+#endif
     plat_leds(b, k);
 }
 
@@ -2409,6 +2783,9 @@ static void speak_dump(void)
 void ui_init(void)
 {
     memset(&ui, 0, sizeof ui);
+#if BOARD_SMK37
+    smk_reset();
+#endif
     ui.touched = -1;
     lcd_fill(0, 0, 240, 240, K_BG);
     if (!en_playing)
@@ -2475,7 +2852,11 @@ static void splash_band(int f, int32_t oy)
     if (f >= 1)                                  /* the name, struck */
         cv_text(x[0], YC - FH[0] / 2 - oy, F[0], "DUB-1", mix(K_BG, K_TEXT, f >= 3 ? 16 : 6 * f));
     if (f >= 20)
+#if BOARD_SMK37
+        text_c(120, 204 - oy, &FONT_S, "Dub techno for the SMK-37", mix(K_BG, K_ACC, f >= 23 ? 16 : (f - 19) * 4));
+#else
         text_c(120, 204 - oy, &FONT_S, "Dub techno for the FM-1", mix(K_BG, K_ACC, f >= 23 ? 16 : (f - 19) * 4));
+#endif
     if (f >= 22)
         text_c(120, 224 - oy, &FONT_XS, "DUB-1 " EN_VERSION, K_DIM);
     cv_blit(0, (uint32_t)oy);

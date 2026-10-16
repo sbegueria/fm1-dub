@@ -373,7 +373,11 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
 }
 
 /* ------------------------------------------------------------ commands --- */
+#if BOARD_SMK37
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_MUTE, C_PERF, C_FX, C_WARP };
+#else
 enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_MUTE, C_PERF, C_FX };
+#endif
 #define QN 256u                                 /* (a piece is every parameter at once: room for four) */
 _Static_assert(QN >= 2u * (P_NPARAMS + 8), "the command queue can't hold a piece's parameters twice over");
 static uint32_t q[QN];
@@ -399,6 +403,9 @@ void en_regrow(void) { post(C_REGROW, 0, 0); }
 void en_mute(uint32_t m) { post(C_MUTE, (int)(m & 0xFFu), 0); }
 void en_perf(uint32_t f) { post(C_PERF, (int)(f & 0xFFu), 0); }
 void en_fx(uint32_t m) { post(C_FX, 0, (int)(m & 0xFFFFu)); }
+#if BOARD_SMK37
+void en_warp(int bend) { post(C_WARP, 0, bend < -127 ? -127 : bend > 127 ? 127 : bend); }
+#endif
 const char *const EN_FX_NAME[EN_NFX] = {"Throw", "Time x2", "Tape stop", "Swell", "Low-pass", "High-pass", "Wah",
                                         "Phone", "Verb", "Crash", "Freeze", "Wash", "Stutter", "Gate", "Siren", "Riser"};
 
@@ -749,6 +756,9 @@ static int kit;
 static float echo_send, rev_send, echo_len, echo_len_t, echo_fb = 0.6f, ein_gain = 1.0f;
 static float fb_cap = 2.0f;                     /* stopped, the feedback eases under 90%: the tails die */
 static float fx_em = 1.0f, fx_ek = 0.001f, fx_ts = 1.0f;   /* the grid on the echo: its time's multiple, its easing; the tape stop */
+#if BOARD_SMK37
+static float smk_warp = 1.0f;                    /* en_warp: the pitch wheel's multiple of the echo's time */
+#endif
 static float rev_in_gain = 1.0f;                /* falls to 0 while frozen */
 static float tape_lpc = 0.55f, tape_hpc = 0.08f; /* the echo's feedback band-pass */
 static float crackle_vol, cloud_amt;
@@ -2214,6 +2224,9 @@ static void drain(void)
         case C_MUTE: mutes = (uint32_t)a; lanes(); break;
         case C_PERF: perf = (uint32_t)a; lanes(); break;
         case C_FX: fxm = c & 0xFFFFu; break;
+#if BOARD_SMK37
+        case C_WARP: smk_warp = fm_exp2f((float)b * (-1.0f / 127.0f)); break;
+#endif
         }
     }
 }
@@ -2643,6 +2656,10 @@ static void fx_ctl(uint32_t n)                   /* once a chunk: the effects' e
     fx_ts += ((on >> EN_FX_TAPESTOP & 1u ? 4.0f : 1.0f) - fx_ts) * fm_minf(t / (on >> EN_FX_TAPESTOP & 1u ? 0.7f : 0.25f), 1.0f);
     ec = on >> EN_FX_TIME & 1u ? (echo_len_t * 2.0f <= (float)(TAPE_N - 8) ? 2.0f : 0.5f) : 1.0f;
     fx_em = ec * fx_ts;
+#if BOARD_SMK37
+    /* the pitch wheel's warp on top; all of it kept inside the tape (dub hold reads the loop echo_len back) */
+    fx_em = fm_minf(fx_em * smk_warp, (float)(TAPE_N - 8) / fm_maxf(echo_len_t, 1.0f));
+#endif
     fx_ek = fx_ts > 1.01f ? 0.004f : 0.001f;
     /* the master filter's targets: Low-pass down to 350 Hz, High-pass up to 1.3 kHz, Phone a band 450..3 kHz */
     lpt = on >> EN_FX_LOWPASS & 1u ? 8.45f : on >> EN_FX_PHONE & 1u ? 11.55f : 14.2f;

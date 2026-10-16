@@ -18,6 +18,7 @@ ambient firmware for the FM-1, and keeps its platform, its panel and much of its
 - **Read the manual**: <https://sbegueria.github.io/fm1-dub/manual/> (source: [docs/MANUAL.md](docs/MANUAL.md))
 - **Download the firmware file**: [releases](https://github.com/sbegueria/fm1-dub/releases)
 - To build it and listen to changes on a computer, see [EMULATOR.md](EMULATOR.md).
+- **M-Vave SMK-37:** DUB-1 also builds for the SMK-37; see [SMK37.md](SMK37.md).
 
 Installing it is at your own risk, though it's hard to get stuck: the web installer and M-VAVE's own
 updater can put the stock firmware back, and an FM-1 that fails to start twice comes up in a safe mode that the

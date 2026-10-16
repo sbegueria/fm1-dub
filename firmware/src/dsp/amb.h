@@ -105,6 +105,11 @@ enum { EN_FX_THROW, EN_FX_TIME, EN_FX_TAPESTOP, EN_FX_SWELL, EN_FX_LOWPASS, EN_F
        EN_FX_VERB, EN_FX_CRASH, EN_FX_FREEZE, EN_FX_WASH, EN_FX_STUTTER, EN_FX_GATE, EN_FX_SIREN, EN_FX_RISER, EN_NFX };
 extern const char *const EN_FX_NAME[EN_NFX];
 void en_fx(uint32_t mask);
+#if BOARD_SMK37
+/* The SMK-37 build: the pitch wheel on the tape, bend -127..127 (0 at rest): up runs it faster, the echo's time
+ * shorter (to half), down slower (to twice), and the repeats bend as it eases there. Never saved. */
+void en_warp(int bend);
+#endif
 /* MIDI clock in (as FoMni): ticks drive the 1/16 grid (6 a step) while they keep coming */
 enum { EN_CLK_TICK, EN_CLK_START, EN_CLK_CONTINUE, EN_CLK_STOP };
 void en_clock(int msg);
