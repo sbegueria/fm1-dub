@@ -1665,8 +1665,42 @@ static void oct_hold(void)                       /* one OCT held on: its steps *
     oct_step(b);
 }
 
-/* MIDI in (USB and the TRS jack): channel 1 notes add or remove their note from the scale; clock and
- * start / stop drive the grid */
+/* MIDI CC in, channel 1 (a controller's knobs and faders): a fixed map onto the panel's knobs, 0..127 over each
+ * one's whole range (64 a centred knob's 0); the big ring and the reader show it, as a turn would */
+static const struct { uint8_t cc; uint16_t k; } CC_MAP[] = {
+    {1, K_FILTER},                                         /* (the mod wheel: the DJ filter, SELECT's) */
+    {20, P_CHORD}, {21, P_PINGS}, {22, P_BASS}, {23, P_DRUMS},   /* the layers' levels */
+    {24, P_KLVL}, {25, P_HATSLVL}, {26, P_CRACKLE},        /* the Kick, Hats and Noise strips' levels */
+    {27, K_DUB}, {28, K_ENERGY}, {29, K_SPACE},            /* the master actions: Wet, Energy, Duck (for playing) */
+    {71, P_CRES}, {72, P_DECAY}, {73, P_CATT}, {74, P_CCUT},   /* the chord's voice (the GM sound controllers') */
+    {91, P_REVERB}, {92, P_ECHO}, {93, P_FEEDBACK}, {94, P_ETIME}, {95, P_CLOUD},   /* the space */
+    {102, P_DENSITY}, {103, P_VARY}, {104, P_HITS}, {105, P_SWING}, {106, P_SIZE},
+};
+static void cc_in(uint32_t cc, uint32_t v)
+{
+    unsigned i;
+    int k, lo, hi;
+    char n[16], t[12];
+    const char *s;
+    for (i = 0; i < sizeof CC_MAP / sizeof CC_MAP[0] && CC_MAP[i].cc != cc; i++)
+        ;
+    if (i == sizeof CC_MAP / sizeof CC_MAP[0])
+        return;
+    k = CC_MAP[i].k;
+    knob_range(k, &lo, &hi);
+    knob_set(k, lo + (int)((v * (uint32_t)(hi - lo) + 63u) / 127u));
+    knob_text(k, t);
+    s = knob_name(k);
+    for (i = 0; s[i] && i < sizeof n - 1; i++)
+        n[i] = (char)(s[i] >= 'a' && s[i] <= 'z' ? s[i] - 32 : s[i]);
+    n[i] = 0;
+    say_name(n, t);
+    big_show(k, s, K_ACC);
+    ui.turn_t = plat_ms();
+}
+
+/* MIDI in (USB and the TRS jack): channel 1 notes add or remove their note from the scale, its CCs turn knobs
+ * (CC_MAP); clock and start / stop drive the grid */
 static void midi_in(void)
 {
     uint32_t pkt;
@@ -1676,6 +1710,8 @@ static void midi_in(void)
             en_clock(st == 0xF8u ? EN_CLK_TICK : st == 0xFAu ? EN_CLK_START : st == 0xFBu ? EN_CLK_CONTINUE : EN_CLK_STOP);
         else if (st == 0x90u && v)
             toggle_note((int)(n % 12u));
+        else if (st == 0xB0u)
+            cc_in(n, v & 0x7Fu);
     }
 }
 

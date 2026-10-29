@@ -1544,12 +1544,32 @@ same for every piece, and saved. GLO again goes back to Setup.
 MIDI comes in over USB and the TRS jack, and goes out over USB.
 
 - **In, channel 1:** a note adds or removes its note from the scale, like a key.
+- **In, channel 1, CC:** a controller's knobs and faders turn DUB-1's (the table below), the
+  whole 0–127 over the knob's range: a centred knob (the Filter, Resonance, Cutoff) is at its
+  middle at 64. The knob shows large, as when you turn it. The FM-1's USB is a device, like the
+  controller's, so a USB controller reaches it through a computer (or a USB MIDI host box), or by
+  the TRS jack.
 - **In, clock:** the grid follows MIDI clock (six clocks a sixteenth), and start, continue and stop
   start, continue and stop the music. The screen shows EXT for the tempo. When the clock stops
   coming, DUB-1 goes back to its own tempo.
 - **Out** (on by default): the chord on channel 1, the pings on 2, the bass on 3 and the drums on
   10 (kick 36, shaker 42, open hat 46), and, while it plays on its own tempo, clock with
   start / stop. Turning MIDI out off sends All Notes Off on channels 1, 2, 3 and 10.
+
+| CC | Knob | CC | Knob | CC | Knob |
+|---|---|---|---|---|---|
+| 1 | Filter (SELECT's) | 27 | Wet | 92 | Echo |
+| 20 | Chord level | 28 | Energy | 93 | Feedback |
+| 21 | Pings level | 29 | Duck | 94 | Echo time |
+| 22 | Bass level | 71 | Resonance (chord) | 95 | Cloud |
+| 23 | Drums level | 72 | Decay (chord) | 102 | Density |
+| 24 | Kick level | 73 | Attack (chord) | 103 | Vary |
+| 25 | Hats level | 74 | Cutoff (chord) | 104 | Hits |
+| 26 | Noise level (Crackle) | 91 | Reverb | 105 | Swing |
+| | | | | 106 | Size |
+
+Wet, Energy, Duck and the Filter are for playing, as on the panel: they are not saved. The others
+are the piece's, saved with SAVE.
 
 ### Screen reader
 
