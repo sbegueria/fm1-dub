@@ -55,6 +55,25 @@ FM1_INLINE void fm1_usb_attach(void *ep0)
     FM1_USB_CON0 |= 0x3Cu;
 }
 
+/* host mode (the SDK's usb_h_sie_init for USB0): D+ and D- inputs, pulled down (the device's pull-up shows
+ * it there, FS or LS), PHY on, VBUS valid; CID clear: the A side */
+FM1_INLINE void fm1_usb_host_attach(void *ep0)
+{
+    FM1_CLK_CON1 &= ~3u;                                /* USB clock = PLL48M */
+    FM1_USB_EP0_ADR = (uint32_t)(uintptr_t)ep0;
+    FM1_USB_IO_CON0 = (1u << 9) | (1u << 10) | (1u << 4) | (1u << 5);   /* DPDIE DMDIE, DPPD DMPD */
+    FM1_USB_CON0 = (1u << 0) | (1u << 2) | (1u << 5);                   /* PHY_ON, USB_NRST, VBUS */
+}
+FM1_INLINE void fm1_usb_low_speed(uint32_t on)
+{
+    if (on)
+        FM1_USB_CON0 |= 1u << 1;
+    else
+        FM1_USB_CON0 &= ~(1u << 1);
+}
+/* the bus SE0 (D+ and D- both low: nothing attached, or a reset); the SDK's usb_h_dev_status */
+FM1_INLINE uint32_t fm1_usb_se0(void) { return (FM1_USB_CON0 >> 16 & 3u) == 0; }
+
 FM1_INLINE void fm1_usb_off(void)
 {
     FM1_USB_CON0 = 0;
