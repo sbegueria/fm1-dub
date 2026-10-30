@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// The browser build in Node: boot it, press a few keys, expect sound and screen frames.
+// The browser build in Node: boot it, press a few keys, expect sound and screen frames; MIDI in (the page's Web
+// MIDI, web_midi) takes a flood of notes without losing its footing.
 import fs from "fs";
 const wasm = fs.readFileSync(process.argv[2]);
 let mem;
@@ -13,9 +14,10 @@ let peak = 0;
 const WHITE = [0,2,4,6,7,9,11,12,14,16,18,19,21,23,24,26];
 for (let i = 0; i < 400; i++) {
   if (i % 20 === 0 && i < 340) ex.web_keys(1 << WHITE[(i / 20) % 16]);
+  if (i === 200) for (let n = 0; n < 300; n++) ex.web_midi(0x90 | (n & 1), 48 + (n % 24), n & 2 ? 100 : 0);   // (past the queue: dropped)
   ex.web_render(128);
   const l = new Float32Array(mem.buffer, ex.web_out_l(), 128);
   for (const v of l) peak = Math.max(peak, Math.abs(v));
 }
 console.log("peak", peak.toFixed(3), "blits", ex.web_blits());
-process.exit(peak > 0.05 && peak < 1 ? 0 : 1);
+process.exit(typeof ex.web_midi === "function" && peak > 0.05 && peak < 1 ? 0 : 1);

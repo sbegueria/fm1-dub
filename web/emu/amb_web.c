@@ -73,6 +73,14 @@ __attribute__((used, visibility("default"))) void web_enc(int role, int32_t n)
         enc_acc[role] += n;
 }
 __attribute__((used, visibility("default"))) void web_master(uint32_t v) { master = v > 4096u ? 4096u : v; }
+/* MIDI in (the page's Web MIDI): one message, as the FM-1's USB gets it (a USB-MIDI packet, cable 0), into the queue
+ * plat_midi_in drains, as the host's "midi" command */
+__attribute__((used, visibility("default"))) void web_midi(uint32_t st, uint32_t d1, uint32_t d2)
+{
+    const uint32_t cin = st >= 0xF0u ? 0x0Fu : st >> 4;
+    if (mi_w - mi_r < MQ)
+        min_q[mi_w++ % MQ] = cin | (st & 0xFFu) << 8 | (d1 & 0x7Fu) << 16 | (d2 & 0x7Fu) << 24;
+}
 __attribute__((used, visibility("default"))) uint32_t web_lit_buttons(void) { return lit_btn; }
 __attribute__((used, visibility("default"))) uint32_t web_lit_keys(void) { return lit_keys; }
 __attribute__((used, visibility("default"))) uint16_t *web_fb(void) { return fb; }
