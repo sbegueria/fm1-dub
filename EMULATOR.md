@@ -199,4 +199,9 @@ and Edge; the browser asks first). A controller then plays the emulated FM-1 as 
 (notes, CCs) and the clock, start, continue and stop. *From* picks one input, or every one. The page passes each
 message to the firmware's MIDI queue (`web_midi` in `web/emu/amb_web.c`, as the host simulator's `midi` command).
 
+`tests/host/emu_browser_test.mjs build/emu [chromium]` runs the page itself in a headless Chromium (over its
+DevTools protocol: no packages), a fake Web MIDI controller put in it: switched on, MIDI in to the firmware, and, the
+page having MIDI out, DUB-1's answer back. `tests/run_tests.sh` runs it after the emulator's build when it finds a
+Chromium (`CHROME=` names another).
+
 `web/app/build.sh` builds the engine alone into the phone/desktop web app, the same way.

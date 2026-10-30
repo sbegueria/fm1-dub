@@ -49,6 +49,12 @@ fi
 if command -v emcc >/dev/null 2>&1; then
     run emu sh -c "sh web/emu/build.sh >/dev/null && node tests/host/emu_test.mjs build/emu/amb.wasm"
     run app sh -c "sh web/app/build.sh >/dev/null && node tests/host/app_test.mjs build/app/amb.wasm"
+    CHROME="${CHROME:-$(command -v chromium || command -v google-chrome || true)}"
+    if [ -n "$CHROME" ]; then   # (the page itself, in a headless browser, a fake MIDI controller in it)
+        run emu-browser node tests/host/emu_browser_test.mjs build/emu "$CHROME"
+    else
+        echo "  skip emu-browser (no chromium: CHROME=)"
+    fi
 fi
 for s in tests/scenarios/*.amb; do
     n=$(basename "$s" .amb)
