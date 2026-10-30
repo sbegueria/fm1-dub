@@ -1597,7 +1597,7 @@ as it sits, a cell a control, the one you chose outlined, the one that just sent
 | EN16 pushes 1-16 | note 48-63 | Reset (back to the piece's own), or Throw (all the way up while held) |
 
 As it comes, the PBF4 is four tracks, a column each (Chord, Pings, Bass, Drums): its **pot** the
-track's filter (its channel strip's: left darker, right thinner), its **fader** the track's level,
+track's filter (its channel strip's: turned right it closes, darker; left, thinner), its **fader** the track's level,
 its **key** the track on or muted. The Drums column's pot and fader set the kick and the hats both.
 
 - **PBF4 page:** KNOB 1 the control (P1 to B4); KNOB 2 what it turns, or, a key, what it mutes;
@@ -1607,12 +1607,15 @@ its **key** the track on or muted. The Drums column's pot and fader set the kick
   KNOB 4 its push: Off, Reset or Throw. **ALGORITHM** switches the layout:
   - **Free:** each encoder its own target, as above.
   - **Tracks:** a column a track (Chord, Pings, Bass, Drums as it comes; Kick, Hats or Noise too),
-    a row what it sets on each: its channel strip's **Filter** (left darker, right thinner), **Echo**
+    a row what it sets on each: its channel strip's **Filter** (right closes it, darker), **Echo**
     send, **Plate** send, or **Level**; or a row of four **Effects** (Echo, Feedback, Reverb, Size as
     it comes). The Drums column sets the kick's strip and the hats' both. Here KNOB 1 is the cell,
     KNOB 2 the column's track (or, the Effects row, the effect), KNOB 3 the row's setting and KNOB 4
     the row's pushes: the Filter row's reset the filter, the sends' throw the track into the echo
     or the plate while held.
+
+From the Grid every filter closes to the right (darker) and opens to the left, the DJ filter too; DUB-1's own
+knobs keep their way.
 
 The map is global, kept with SAVE. Mutes are the Arrangement page's, as white keys 1-6 make them:
 not saved.

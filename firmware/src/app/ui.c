@@ -2119,6 +2119,13 @@ static void grid_learned(const char *what, uint32_t num, uint32_t ch)   /* Learn
     say("LEARNED", t);
     card_show("LEARNED", t, K_ACC, 0);
 }
+/* (the user's) a filter turned from the Grid closes to the right, darker, and opens to the left: its CC the other way
+ * round from the knob's (the DJ filter's, the channel strips'); DUB-1's own knobs keep theirs */
+static int grid_flipped(int k)
+{
+    return k == K_FILTER || k == P_CLOW || k == P_PLOW || k == P_BLOW || k == P_KLOW || k == P_DLOW || k == P_NLOW;
+}
+static uint32_t grid_v(int k, uint32_t v) { return grid_flipped(k) ? 127u - v : v; }
 static int grid_cc(uint32_t ch, uint32_t cc, uint32_t v)   /* 1: the Grid's */
 {
     int i;
@@ -2138,11 +2145,11 @@ static int grid_cc(uint32_t ch, uint32_t cc, uint32_t v)   /* 1: the Grid's */
         if (gr.pb_cc[i] == cc) {
             const gtarget_t *t = &GT[gr.pb_tgt[i]];
             if (t->k != K_NONE) {
-                cc_knob(t->k, v, t->name, t->col, t->help, 1);
+                cc_knob(t->k, grid_v(t->k, v), t->name, t->col, t->help, 1);
                 gr_fb[i] = (int16_t)knob_get(t->k);   /* (its own move: not sent back) */
             }
             if (t->k2)
-                cc_knob(t->k2, v, t->name, t->col, t->help, 0);
+                cc_knob(t->k2, grid_v(t->k2, v), t->name, t->col, t->help, 0);
             grid_follow(0, i);
             return 1;
         }
@@ -2153,9 +2160,9 @@ static int grid_cc(uint32_t ch, uint32_t cc, uint32_t v)   /* 1: the Grid's */
             uint16_t col;
             const char *help;
             if (en16_knob(i, &k, &k2, nm, &col, &help)) {
-                cc_knob(k, v, nm, col, help, 1);
+                cc_knob(k, grid_v(k, v), nm, col, help, 1);
                 if (k2 >= 0)
-                    cc_knob(k2, v, nm, col, help, 0);
+                    cc_knob(k2, grid_v(k2, v), nm, col, help, 0);
                 gr_fb[12 + i] = (int16_t)knob_get(k);
             }
             grid_follow(1, i);
@@ -4810,7 +4817,8 @@ static void grid_feedback(void)
                 continue;
             knob_range(k, &lo, &hi);
             grid_send(0xB0u | gr.ch, s < 8 ? gr.pb_cc[s] : gr.en_cc[s - 12],
-                      hi > lo ? (uint32_t)(((v - lo) * 127 + (hi - lo) / 2) / (hi - lo)) : 0u);
+                      grid_v(k, hi > lo ? (uint32_t)(((v - lo) * 127 + (hi - lo) / 2) / (hi - lo)) : 0u));   /* (a filter
+                                                  * the Grid's way round) */
         } else if (s < 12) {                     /* a key: lit while its channel is heard */
             const uint32_t bits = GM_BITS[gr.pb_mute[s - 8]];
             if ((v = bits && (ui.mutes & bits) != bits) == gr_fb[s])
