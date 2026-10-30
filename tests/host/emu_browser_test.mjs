@@ -81,7 +81,8 @@ try {
                      new MutationObserver(() => window.__said.push(t.textContent)).observe(t, { childList: true, characterData: true, subtree: true }); })()`);
   await js(`window.__in([0x90, 55, 100])`);
   check(await until(`document.getElementById("midi-last").textContent.startsWith("90 37 64")`), "MIDI in shown: 90 37 64");
-  check(await until(`window.__said.some((t) => /ADDED G|REMOVED G/.test(t))`),
+  // (the screen's "ADDED G", or fm1-reader's words for it, "added G", when the build has the reader)
+  check(await until(`window.__said.some((t) => /(added|removed) G/i.test(t))`),
         "the firmware took it: " + JSON.stringify(await js(`window.__said.filter((t) => /G$/.test(t))`)));
 
   const hasOut = await js(`!!document.getElementById("midi-to")`);
