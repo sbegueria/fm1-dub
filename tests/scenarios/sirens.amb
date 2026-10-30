@@ -141,7 +141,7 @@ wait 600
 release GLO
 reboot
 wait 1000
-expect format 35
+expect format 36
 expect sirk1 9
 expect sirk3 70
 expect sirk4 -4
@@ -151,7 +151,7 @@ expect sirk14 21
 store32
 reboot
 wait 1000
-expect format 35
+expect format 36
 expect sirk1 11
 expect sirk3 50
 expect sirk4 0
@@ -170,6 +170,6 @@ expect sirk1 9
 store31
 reboot
 wait 1000
-expect format 35
+expect format 36
 expect sirk1 11
 expect helpfit 0

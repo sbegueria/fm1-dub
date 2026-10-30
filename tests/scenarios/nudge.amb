@@ -10,7 +10,7 @@ wait 700
 release ENV
 wait 300
 said CHORD NUDGE
-expect view 8
+expect view 31
 press ARP
 wait 700
 release ARP

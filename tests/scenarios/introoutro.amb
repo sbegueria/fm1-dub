@@ -1,0 +1,117 @@
+# (1.4.3, the user's: "the intros and outros themselves are quiet, so a hand-over is quiet too"; and a Segue from the
+# next piece's second phrase, as a Mix; build/design/REPORT-introoutro.txt) Each bar's loudness, K-weighted, against
+# the main's median bar (lvwatch: lvin the intro's level, lvin4 its first 4 bars', lvu10 its bars more than 10 LU
+# under, lvout the outro's, lvoutend its last 8 bars'; LU x10). The classics' intros (build/research/dubtechno,
+# 50 with one of 8 bars or more): 3 bars more than 10 under (the median), the first 4 bars -11.5 dB, then -6.8, -3.8;
+# their outros' last 32 bars -0.8 -1.5 -2.1 -2.4 -5.7 -6.5 -10.2 -20.1 dB, 4 bars each.
+# Before (this take): Haze's intro 8 bars more than 10 LU under, its first 4 -37.7 LU, the whole -2.9; its outro
+# -5.2, its last 8 bars -10.1; a Segue into Haze: the hole 3.8 s, the lowest -16.5 LU, its kick in at 155 sixteenths
+# (bar 9.7), its bass at 232 (14.5).
+wait 1500
+tap PLAY
+wait 1500
+# 1. Haze, an Ambient intro, as a song plays it (LP's too): Intro 32 bars, Main 32, Outro 32
+turn PRESET 7 5
+wait 800
+expect piece 7
+tap GLO
+wait 300
+tap GLO
+wait 300
+expect view 28
+spin K1 1
+wait 300
+expect par158 1
+tap HOME
+wait 300
+tap HOME
+wait 300
+expect view 27
+spin K2 -16
+wait 300
+expect par159 4
+expect par160 4
+expect par161 4
+tap PLAY
+wait 300
+lvwatch
+# 96 bars at 116: 198.6 s
+wait 203000
+expect playing 0
+# (before: 8 bars, -37.7 LU, -2.9, -5.2, -10.1; this take's kick in at bar 4, faded over 3: 7 bars under)
+expect lvu10 <8
+expect lvin4 >-260
+expect lvin >-22
+expect lvout >-42
+expect lvoutend >-85
+# 2. Pressure, a Pulse intro: its first bars in at once (the kick and the bass over a bar or two, not four)
+turn PRESET -1
+wait 800
+expect piece 6
+tap GLO
+wait 300
+tap GLO
+wait 300
+expect view 28
+tap HOME
+wait 300
+tap HOME
+wait 300
+expect view 27
+spin K2 -16
+wait 300
+expect par160 4
+tap PLAY
+wait 300
+lvwatch
+# 96 bars at 126: 182.9 s
+wait 187000
+expect playing 0
+# (before: -5.1 LU, -3.2, -12.0)
+expect lvu10 <2
+expect lvin4 >-49
+expect lvout >-26
+expect lvoutend >-116
+# 3. a Segue, Pressure (Intro None, Main 32, Outro 16) into Haze: Haze from its second phrase, its kick and its bass
+# from the downbeat under the held echo, its chord once the hold lets go (bar 2: 32 sixteenths)
+tap GLO
+wait 300
+tap GLO
+wait 300
+expect view 28
+spin K1 1
+wait 300
+spin K2 1
+wait 300
+expect par158 2
+expect trans 1
+tap HOME
+wait 300
+tap HOME
+wait 300
+expect view 27
+spin K1 -16
+spin K3 -2
+wait 300
+expect par159 0
+expect par160 4
+expect par161 2
+tap PLAY
+wait 300
+trwatch
+lvwatch
+# Pressure's 48 bars at 126: 91.4 s; Haze's 40 at 116: 82.8 s
+wait 176000
+expect piece 7
+expect trrestarts 1
+expect trhole <1600
+expect trlow >-120
+expect trkick <16
+expect trbass <48
+expect trchord >31
+expect trchord <48
+expect trquiet <500
+expect trclick <110
+# (before: 3 bars, -2.8 LU)
+expect lvu10 <2
+expect lvin >-18

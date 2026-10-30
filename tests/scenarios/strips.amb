@@ -133,7 +133,7 @@ wait 600
 release GLO
 reboot
 wait 1000
-expect format 35
+expect format 36
 expect par140 60
 expect par148 28
 expect par144 30
@@ -142,7 +142,7 @@ expect par144 30
 store22
 reboot
 wait 1000
-expect format 35
+expect format 36
 expect par0 50
 expect par140 50
 expect par148 0
@@ -162,7 +162,7 @@ wait 300
 store23
 reboot
 wait 1000
-expect format 35
+expect format 36
 expect par151 23
 expect par156 23
 expect par153 50

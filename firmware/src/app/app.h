@@ -16,7 +16,12 @@
 #define PROJ_WAVE_MARK 0xB1u           /* (format 30, the LFO pages' layout B) proj.rsv[0] in a save whose LFOs
                                          * have a Wave (P_CLWAVE, P_NLWAVE: 0..100); a format 30 save without it is
                                          * the step 2 test builds' (zzo, zzp), those slots their Shape (0..4) */
-#define PROJ_FORMAT 35u                  /* 35: the variety plan's step 5b: Vary on a scale fitted to the records
+#define PROJ_FORMAT 36u                  /* 36: the stab's filter envelope (REPORT-stabenv): Env decay (P_CEDEC),
+                                         * how quickly each stab's filter closes, around its tie to Decay, in the
+                                         * bass's old LFO's slot (P_BFDEC, unread since 1.4.0): no byte more; 35's
+                                         * (and older) read with it 0, as they sounded; the pieces' recipes their
+                                         * own envelope (Env amount and Env decay), a piece never changed takes them;
+                                         * 35: the variety plan's step 5b: Vary on a scale fitted to the records
                                          * (en_vary_amount: the classics' median at 50; 34's and older, their
                                          * Vary and trims as near as they sounded, en_vary34) and the filter's
                                          * slow sweep slower (P_SWEEP, a parameter more: 34's layout read, a piece

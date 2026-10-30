@@ -226,7 +226,7 @@ expect view 8
 tap OCT-
 expect par0 95
 tap ENV
-expect view 12
+expect view 31
 tap OCT-
 expect par0 90
 tap ARP
@@ -415,7 +415,7 @@ wait 300
 store12 5
 reboot
 wait 1000
-expect format 35
+expect format 36
 expect piece 0
 expect par24 3
 expect par113 50
@@ -443,7 +443,7 @@ expect par32 40
 store13
 reboot
 wait 1000
-expect format 35
+expect format 36
 expect par32 40
 expect par115 45
 expect par116 100

@@ -1,11 +1,12 @@
 # the pieces: PRESETS picks one, each remembers its settings, SAVE held resets one, all saved
 wait 500
 expect piece 0
-# Basic's throws down to nothing (the Chord page: ENV) and its cutoff as bright as it goes (the Chord voice page: ENV
-# again; 1.4.0, the user's: the knob around the piece's own, -50..+50)
+# Basic's throws down to nothing (the Chord page: ENV) and its cutoff as bright as it goes (the Chord filter page: ENV
+# twice more, format 36; 1.4.0, the user's: the knob around the piece's own, -50..+50)
 tap ENV
 spin K2 -100
 expect par111 0
+tap ENV
 tap ENV
 spin K1 100
 expect par139 50
@@ -27,7 +28,7 @@ expect par24 2
 wait 20000
 shot steppers.png
 expect sixteenths >150
-# the cutoff (the Chord voice page's first knob), kept with the piece
+# the cutoff (the Chord filter page's first knob), kept with the piece
 spin K1 -100
 expect par139 -50
 wait 3000

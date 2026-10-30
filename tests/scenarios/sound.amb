@@ -5,8 +5,13 @@ tap ENV
 wait 300
 tap ENV
 wait 400
-said Chord voice page, voice Saws: Cutoff 0, Reso 0, Attack 0, Decay 25
+said Chord voice page, voice Saws: Attack 0, Decay 25
 expect view 8
+# (format 36, the user's) ENV a third time: the Chord filter page (Cutoff, Reso, Env, Env decay)
+tap ENV
+wait 400
+said Chord filter page, voice Saws: Cutoff 0, Reso 0, Env -25, Env decay +31
+expect view 31
 spin K2 -100
 wait 200
 expect par38 -50

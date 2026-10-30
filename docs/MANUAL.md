@@ -48,12 +48,12 @@ same code the FM-1 runs, with sound.
 to install on the computer. Don't unplug it while it's writing; when it finishes, the FM-1 restarts
 into DUB-1.
 
-**Or from the command line:** download `dub-1.4.2.fwsc` from the
+**Or from the command line:** download `dub-1.4.3.fwsc` from the
 [releases](https://github.com/sbegueria/fm1-dub/releases), install Python 3 with
 `pip3 install mido python-rtmidi`, and run, in a checkout of the source:
 
 ```
-python3 tools/fm1_install.py dub-1.4.2.fwsc
+python3 tools/fm1_install.py dub-1.4.3.fwsc
 ```
 
 **Go back:** the installer page's "Back to the stock firmware", or M-VAVE's own updater, M-UPGRADE,
@@ -83,7 +83,7 @@ DUB-1 starts playing as soon as it's on. A few minutes with it:
    the Key page: tempo, root, mode, swing), GLO the setup. The page's name is on the rule above the knobs, at its left.
    KNOB 1–4 set the four values at the bottom of the screen; while one turns, the line above them
    says what it does. SELECT is the DJ filter, on every page.
-   Try Cutoff on the Chord voice page (ENV twice), or
+   Try Cutoff on the Chord filter page (ENV three times), or
    Feedback on the Dub page. Or turn SELECT (the Filter) down, and
    bring it back. On a layer's page, OCT− and OCT+ turn that layer down and up; both together, a
    quick press, mute it (and bring it back).
@@ -112,7 +112,7 @@ page, the dub desk); here they are in more detail.
 | EDIT | A tap: the **Chords page** (below): the eight chords coming, to see and change (again: the **Walk page**, the circle of fifths; again, back). Held (half a second): the next chord, at the start of the next bar (at once while resting; in dub hold, once you let go); a card says NEXT CHORD until the chord changes. Held on (1.5 s): **new chords**, the walk's all walked again (yours, the gaps and the one playing kept); a red card, NEW CHORDS. |
 | SEL | A tap: the **Arrangement page** (PERFORM's until 1.4.0): the screen shows each part's level on a desk's meters, the knobs are Width, Wet and Duck (KNOB 2 free: the dub mixer's rides are the Form page's Drift, its moves Motion's), and the keys stop being the scale: they mute and solo the parts (white 1–6 held: a part's channel strip; a black key held: that part thrown into the echo), make the dub moves, play four of the grid's effects and the dub sirens (see below). Again, it stays; a page's button leaves it (SELECT stays the DJ filter here too). Lit while on. **Held** (half a second), on any page: **Lock** on or off (below). |
 | HOME | The **Form** page (Dub until 1.4.0): how the piece unfolds (Energy, Vary, Motion, Drift). Again: the **Song** page (its intro, main and outro, 1.4.0); again: the Key page (tempo, root, mode, swing), and again back to Form; HOME blinks on the Key page. Held on for 1.5 s (nothing turned meanwhile): **a shake of everything**, the chord, the pings, the bass, the drums and the noise at once ("SHAKE ALL"), the page kept; again and again, to explore until something sounds right. Held with SELECT turned: the tempo. |
-| ENV · ARP · LFO · SEQ | The layers' pages: Chord, Pings, Bass, Drums, each its part (see [The pages](#8-the-pages)). Again: the layer's voice page (**Chord voice**, **Pings voice**, **Bass voice**; the drums' **Kick**), then its FM page or, for the drums, the **Hats** page and then the Pattern page, then back. The chord has one more: after its FM page (for every chord voice: its Colour is there), the **Chord LFO** page, then back. Held (half a second): a **nudge** to the layer's sound; held on (1.5 s): a **shake** (below). |
+| ENV · ARP · LFO · SEQ | The layers' pages: Chord, Pings, Bass, Drums, each its part (see [The pages](#8-the-pages)). Again: the layer's voice page (**Chord voice**, **Pings voice**, **Bass voice**; the drums' **Kick**), then its FM page or, for the drums, the **Hats** page and then the Pattern page, then back. The chord has two more: between its voice page and its FM page, the **Chord filter** page (Cutoff, Reso, Env, Env decay), and after its FM page (for every chord voice: its Colour is there, and on the voice page), the **Chord LFO** page, then back. Held (half a second): a **nudge** to the layer's sound; held on (1.5 s): a **shake** (below). |
 | FX · GLO | The **Dub** page, the echo and the plate (Space until 1.4.0; FX again: the **Echo page**, the echo's blur and tone, the plate's size and its cloud, FX blinking; again, back); the Setup page, for what holds for every piece (GLO again: **Song mode**, Endless, Song or Set, and a set's Transition, LP, Segue or Mix; again, back). The lit button shows the page. FX held: a nudge to the space; held on: a shake (a new echo time). **GLO held** (half a second, then let go): **saves** all eight pieces (a card, SAVED); held on (1.5 s): the piece back to its recipe (a red card, RESET). |
 | SELECT | **The DJ filter**, on every page (its only place since 1.4.0's Chord pages; the Arrangement page's Open and Shut keys push on top of it): left shuts it (a low-pass, under water), right opens it (a high-pass, thin and bright), Off in the middle, where it stops on its way through (three clicks to leave it). While it turns, a big ring in the middle shows it (FILTER over it, the amount inside, Shut or Open under it); the page stays. Hold HOME and turn it for the tempo, from any page. The pages are on their buttons; the page's name, on the rule above the knobs, says where you are. |
 | ALGORITHM | On a layer's page (Chord, Pings, Bass, Drums): that layer's **voice** (see [The voices](#the-voices)). On the Noise pages: its character. On the LFO pages: where the LFO goes, its **Target**, as their KNOB 4 (the Chord LFO's: Cutoff, Reso, Colour; the Noise LFO's: Filter, Tone, Air). On the Chords page: the walk's character (Home, Wander, Free). Anywhere else: the middle of the screen: ripples, a scope, a spectrum or the tape (see [The screen](#4-the-screen)). The mode, a piece's choice, is on the Key page (HOME again). |
@@ -125,7 +125,7 @@ page, the dub desk); here they are in more detail.
 **One rule for the buttons:** a button with one page stays on it when you press it again
 (SEL); a button with several steps through them (HOME: Form, Song, Key; EDIT: Chords, Walk; GLO: Setup, Song mode; FX: Dub, Echo; SAVE: Noise,
 Noise voice, Noise LFO; a layer's: its page, its voice page, its FM page; the drums': Drums, Kick, Hats,
-Pattern; the chord's, Chord, Chord voice, Chord FM and Chord LFO). To leave a page, press
+Pattern; the chord's, Chord, Chord voice, Chord filter, Chord FM and Chord LFO). To leave a page, press
 another page's button.
 
 **The Arrangement page** (SEL; PERFORM until 1.4.0). The mixing desk: the screen shows every part's
@@ -436,7 +436,7 @@ three or four of its sound values move, each up to an eighth of its range (up to
 random walk. The walk is pulled back to the piece's recipe: the further a value has gone, the likelier its next
 step goes back (a quarter of the range away, always), so nudging again and again explores round the piece's
 sound and never wanders off. A card in the middle, outlined in amber, says the biggest change
-("CHORD NUDGE", "Resonance −7"), and the page with that knob comes up, the knob lit (the layer's voice
+("CHORD NUDGE", "Env amount −8"), and the page with that knob comes up, the knob lit (the layer's voice
 page, or its FM page, the Hats page, the Noise page: wherever it moved most; on the Arrangement page,
 you stay where you are).
 
@@ -451,7 +451,7 @@ save it (GLO held) or keep it with Lock (SEL held).
 
 | Held | Nudges |
 |---|---|
-| ENV | the chord: Attack, Colour, Reso, its Decay and Cutoff a little; on an FM voice, its ratio and feedback (the page shown: Chord voice, or Chord FM when Colour or the FM moved most) |
+| ENV | the chord: Attack, Colour, Reso, Decay, Cutoff, Env and Env decay; on an FM voice, its ratio and feedback too (the page shown: Chord voice, or Chord filter when Reso, Cutoff, Env or Env decay moved most, or Chord FM when the FM did) |
 | ARP | the pings: Tone, Ratio, Length, Bend (an FM voice: its upper ratio and feedback); now and then one note of one loop (the page shown: Pings voice, or Pings FM) |
 | LFO | the bass: Bite, Shape, Gate, Glide, the Fifth (an FM voice: its ratio and feedback; the page shown: Bass voice, or Bass FM, or the Bass page for the Fifth); its shake also moves the **groove** to a neighbour (Drone, Offbeat, Dotted, Sync, Roller, in that row) |
 | SEQ | the drums: the kick's tune, length and punch, the hats' tone and level (the page shown: Kick, or Hats) |
@@ -466,7 +466,7 @@ second: a nudge (amber) or a shake (red), the layer and what changed; EDIT held,
 CHORD (gone the moment the chord changes); EDIT held on, NEW CHORDS (red); GLO held, SAVED (teal);
 GLO held on, RESET (red); SEL held, LOCK.
 
-![A nudge: an amber card in the middle, CHORD NUDGE, Resonance −7; behind it the Chord voice page, RESO lit at −7](img/screen-nudge.png "A nudge")
+![A nudge: an amber card in the middle, CHORD NUDGE, Env amount −8; behind it the Chord filter page, ENV lit at −33](img/screen-nudge.png "A nudge")
 ![Lock: a card in the middle, LOCK, the groove kept; LOCK in red at the header's right end](img/screen-lock.png "Lock")
 
 ---
@@ -499,7 +499,7 @@ GLO held on, RESET (red); SEL held, LOCK.
   - Messages ("ADDED F#", "NEXT CHORD ON THE BAR", "DUB HOLD ON", "KICK OFF") take the header for a
     moment; a knob turning or a level changing doesn't: its big ring names it.
 - **Above the knobs, the rule:** at its left the page's name in teal and, in grey, its place among its
-  button's pages (**CHORD VOICE 2/4**: the second of four); at its right the page's voice, kit,
+  button's pages (**CHORD VOICE 2/5**: the second of five); at its right the page's voice, kit,
   character or walk (SAWS, TIGHT, VINYL, WANDER; on an LFO page where it goes, TO RESO). Always there:
   a knob's help line shows under the big ring, in the middle.
 - **The main area's corners** are free (1.4.0): the pictures (the ripples, the scope, the spectrum, the
@@ -805,8 +805,11 @@ How one piece hands over to the next is the set's **Transition** (on the same pa
   under it. The last bars change for it: the chord's dry leaves over the outro's last five bars to
   its last, while its stabs go on into the echo (pushed, every one thrown); two bars before the end
   the chord is struck on the downbeat and the echo is held on it, as REC's dub hold does; the outro's
-  last bar is the echo's alone (the next piece is set under it, unheard); the next piece's intro
-  starts on the downbeat under the held echo and the plate, and the hold lets go after its second bar.
+  last bar is the echo's alone (the next piece is set under it, unheard); the next piece starts on
+  the downbeat under the held echo and the plate, and the hold lets go after its second bar. Its intro
+  plays as from its second phrase, as a Mix's (below): its kick, its bass and its noise as that phrase
+  has them, from the downbeat; its chord, pings and hats no sooner than the hold lets go, so the old
+  harmony is the echo's alone for those two bars.
   The kick plays on (one and three) to two bars before the end and leaves over that bar.
   The tempo is the next piece's from the outro's last bar, as the next piece is set under it; the
   echo's time glides to it, as a tape slowing or speeding up (about 5% at most: under a semitone).
@@ -831,13 +834,14 @@ same for every piece, and saved.
 How long each part is, and how the intro goes, is the piece's own, on the Song page (HOME again):
 the **Intro**, the **Main** and the **Outro** in bars, a phrase (8 bars) a click, and its **Kind**:
 
-- **Ambient** first (Fog, Haze, Chamber, Night Drive): the noise from the first bar, then the chord's
-  wash, then the kick, sparse, then the bass, the pings, and the hats last.
+- **Ambient** first (Fog, Haze, Chamber, Night Drive): the noise and the chord's wash from the first
+  bar, then the kick, sparse, a few bars on, the bass just after it, then the pings, and the hats last.
 - **Pulse** first (Steppers, Pressure, Concrete, Basic): the kick, sparse, and the bass from the
   first bar, then the chord, the pings, the noise, and the hats last.
 
 **In the intro** each part comes in at its place in that order, spread over the intro and not on the
-phrase lines (a bar or so either way), each fading in over two to four bars. The kick plays the
+phrase lines (a bar or so either way), each fading in over two to four bars (the first ones, on the
+downbeat, over one or two: the song is heard from its first bar). The kick plays the
 downbeat alone, then one and three, then four on the floor by the intro's end; the hats come in last
 with a few of their hits, more each bar, to the piece's own. The chord's filter starts about an
 octave darker and opens to its Cutoff, and the echo is a little wetter at first, so the wash leads.
@@ -845,7 +849,9 @@ There are no Breaks, Grooves or Thins in the intro: the arrangement starts with 
 four for its first phrases as a piece's opening always is.
 
 **In the outro**, the mirror: the hats leave first, then the pings and the bass; the kick thins (one
-and three, then the downbeat alone) and stops; the chord and the noise stay longest, and for the last
+and three, then the downbeat alone) and stops; the chord and the noise stay longest. The pulse holds
+through most of it, as a record's outro thins (the bass to about four fifths of the way, the kick a
+little longer), so it is not much quieter than the main until its last quarter; for the last
 bars every stab is thrown into the echo and the noise goes into it too, fading, so the song ends on
 the echo's tails and the hiss, then silence. No sections in the outro either. (In a Set's Segue or
 Mix the kick stays to the last bars: above.)
@@ -901,7 +907,7 @@ doesn't have is left empty, so the same thing sits in the same place on every la
 
 | Layer | Its part | Its voice | Then |
 |---|---|---|---|
-| Chord (ENV) | Density, Throws, Change, Vary | Chord voice: Cutoff, Reso, Attack, Decay | Chord FM, Chord LFO |
+| Chord (ENV) | Density, Throws, Change, Vary | Chord voice: Attack, Decay, Colour, — | Chord filter (Cutoff, Reso, Env, Env decay), Chord FM, Chord LFO |
 | Pings (ARP) | Density, Vary, —, — | Pings voice: Octave, Tone, Length, Bend | Pings FM |
 | Bass (LFO) | Groove, Vary, Density, Fifth | Bass voice: Octave, Shape, Gate, Glide | Bass FM (its Bite) |
 | Drums (SEQ) | Kick, Hits, Vary, — | Kick: Tune, Length, Punch, Rumble | Hats: Level, Tone, Length; Pattern |
@@ -987,7 +993,7 @@ or its Air). Each moves two ways at once, a
 **Wave**; how far the two together, the Form page's **Drift** (1.4.0, the variety plan: each its own
 Depth and Drift before), each page's own **Drift** more or less of it (the same name as Form's, as the
 layers' Vary: it is Form's Drift for this LFO). Each has an
-**LFO page**: ENV a fourth time (Chord, Chord voice, Chord FM, **Chord LFO**, then back to Chord), and SAVE
+**LFO page**: ENV a fifth time (Chord, Chord voice, Chord filter, Chord FM, **Chord LFO**, then back to Chord), and SAVE
 a third time (Noise, Noise voice, **Noise LFO**, then back to Noise). The button blinks while you're
 there. Its knobs: **Drift**, **Wave**, **Rate**, **Target** (KNOB 4, or ALGORITHM: where it goes); the
 noise's character is on its other pages.
@@ -1041,7 +1047,7 @@ The lane under it is the layer's, as on its page.
   they would along the Cutoff's (an octave a 5.5th of its sweep: about ±18 of its 100 at Drift 50,
   ±40 at the most), never past the knob's own ends. The filter then stays where its Cutoff is. The
   big ring names it as ALGORITHM turns (DESTINATION over it), the rule over the knobs says TO CUTOFF, TO RESO,
-  TO COLOUR, and the moving knob (see [ENV again: Chord voice](#env-again-chord-voice)) follows it to
+  TO COLOUR, and the moving knob (see [ENV a third time: Chord filter](#env-a-third-time-chord-filter)) follows it to
   its page. Each piece keeps its own; every recipe's is Cutoff.
 - **The noise's Target** (KNOB 4, or ALGORITHM, on the Noise LFO page): **Filter** (the low-pass on
   the whole noise, as ever), **Tone** (the Noise voice's Tone: its rings and its hiss darker and
@@ -1077,7 +1083,8 @@ Most knobs are **relative to the voice as it is**: 0, the middle, is the preset;
 away from it, to −50 or +50 (with the notch at 0). Two are **one-sided**, 0 to 100 from the voice's
 own, since the voice can't go the other way: the chord's **Attack** (0 the voice's strike, slower
 from there) and the pings' **Bend** (0 the voice's own fall, more from there). The chord's
-**Cutoff** is around the piece's own, −50 to +50 (0 the piece's); its Decay is its own, 0–100. The
+**Cutoff** (on the Chord filter page) is around the piece's own, −50 to +50 (0 the piece's); its
+**Env** and **Env decay** are the piece's own, −50 to +50 (0 the voice's); its Decay is its own, 0–100. The
 registers (the pings' and the bass's Octave) come first. Your turns stay when you change the voice,
 so a chord made slower and brighter stays slower and brighter on the next voice. Holding GLO 1.5 s
 (the piece back to its recipe) puts them back to 0. Each piece keeps its own.
@@ -1088,7 +1095,8 @@ it.
 
 | Voice page | KNOB 1 | KNOB 2 | KNOB 3 | KNOB 4 |
 |---|---|---|---|---|
-| Chord voice | **Cutoff**: the low-pass, darker or brighter than the piece's own (see [ENV again: Chord voice](#env-again-chord-voice)) | **Reso**: the filter's resonance | **Attack**: 0 the voice's strike, up to a slow swell | **Decay**: how long a stab rings, 0–100, from 60 ms to 1.5 s (times the voice's own length) |
+| Chord voice | **Attack**: 0 the voice's strike, up to a slow swell | **Decay**: how long a stab rings, 0–100, from 60 ms to 1.5 s (times the voice's own length) | **Colour**: the voice's own colour (also on Chord FM) | — |
+| Chord filter (ENV a third time) | **Cutoff**: the low-pass, darker or brighter than the piece's own (see [ENV a third time: Chord filter](#env-a-third-time-chord-filter)) | **Reso**: the filter's resonance | **Env**: how far each stab opens the filter | **Env decay**: how quickly it closes again |
 | Pings voice | **Octave**: two octaves down to two up | **Tone**: round to metallic (moves the piece's Ping tone) | **Length** | **Bend**: the pitch falling at the strike, 0 the voice's own, up to from four times its note |
 | Bass voice | **Octave**: −1, 0, +1 | **Shape**: up, towards a square; down, towards a pure sine | **Gate**: how long each note holds, against its groove's (Drone's to the whole bar at +50) | **Glide**: how long it slides to the next note, ~1 ms to ~250 ms |
 | Kick | **Tune**: semitones from the key's note, −12 to +12 | **Length**: how long it booms | **Punch**: the kick's start pitch and its click | **Rumble**: a dark roar under the kick, none at 0 |
@@ -1096,8 +1104,10 @@ it.
 | Noise voice | **Air**: the hiss under it | **Tone**: the rings darker or brighter | **Decay**: how long each hit rings | **Width**: the rings mono to wide |
 
 The chord's Decay is the voice's length times its own: an Organ or a Pad rings longer than Saws at
-the same Decay. The filter's own envelope is quicker. How far each stab opens the filter comes with
-the voice and the piece. The bass's Bite and the pings' Ratio are on their FM pages (see
+the same Decay. Each stab opens the filter and closes it again, bright at the strike and darker
+within about 50 ms, as the classic dub techno stab does; how far it opens (Env) and how quickly it
+closes (Env decay) come with the voice and the piece, and are on the Chord filter page. Decay still
+makes the whole stab, its filter too, longer or shorter. The bass's Bite and the pings' Ratio are on their FM pages (see
 [The FM pages](#the-fm-pages)).
 
 ### HOME: Form
@@ -1198,8 +1208,9 @@ again goes back to the Form page.
 
 ![The Chord page: SAWS, DENSITY 3, THROWS 70, CHANGE 64 bars, VARY 0](img/screen-chord.png "The Chord page")
 
-The chord has four pages, ENV pressed in turn: **Chord**, its part (what it plays and how that
-changes); **Chord voice**, its sound; **Chord FM**, the FM voice and its Colour (for every voice; see
+The chord has five pages, ENV pressed in turn: **Chord**, its part (what it plays and how that
+changes); **Chord voice**, its strike and length; **Chord filter**, its filter and the sweep each stab
+makes; **Chord FM**, the FM voice and its Colour (for every voice; see
 [The FM pages](#the-fm-pages)); **Chord LFO**, its slow movement (see [The LFO pages](#the-lfo-pages));
 then back to Chord.
 
@@ -1224,24 +1235,48 @@ Wet moves it on top. The stab's sound, the voice, comes with the piece (ALGORITH
 
 ### ENV again: Chord voice
 
-![The Chord voice page: SAWS, CUTOFF 0, RESO −7 (the LFO on it: its reach two pale lines, a white dot where it is now), ATTACK 0, DECAY 27](img/screen-chord-voice.png "The Chord voice page")
+![The Chord voice page: SAWS, ATTACK 0, DECAY 25, COLOUR 0, KNOB 4 empty; the chord's ripples in the middle](img/screen-chord-voice.png "The Chord voice page")
 
-The chord's sound (the Chord sound page until 1.4.0's Chord pages; the voice's Colour is on the Chord
-FM page, ENV again). ALGORITHM still changes the voice.
+The chord's strike and length (the Chord sound page until 1.4.0's Chord pages; its filter has its own
+page since format 36, the next, ENV again). ALGORITHM still changes the voice. KNOB 4 is empty.
+
+- **Attack:** 0 the voice's strike, up to a slow swell.
+- **Decay:** how long a stab rings, 0–100, from 60 ms to 1.5 s (times the voice's own length). The filter's
+  envelope follows it, at the pace the piece gives it (Env decay, on the Chord filter page).
+- **Colour:** the voice's own colour, the same knob as on the Chord FM page (on every voice, FM or not).
+
+### ENV a third time: Chord filter
+
+![The Chord filter page: SAWS, CUTOFF 0, RESO (the LFO on it: its reach two pale lines, a white dot where it is now), ENV −25, ENV DECAY +31; the picture: the cutoff falling from 1.2 kHz to 510 Hz between 1 and 100 ms, 1.3 oct, half 31 ms](img/screen-chord-filter.png "The Chord filter page")
+
+The chord's filter, a low-pass, and the sweep each stab makes on it (Cutoff and Reso were the Chord
+voice page's; Env and Env decay were on no page, each piece's own). ALGORITHM still changes the voice.
 
 - **Cutoff:** where the low-pass sits, around the piece's own: 0, the middle (the notch there), is
   the piece's brightness; −50 darker, +50 brighter, each step about an 18th of an octave (±2.75
   octaves at the ends), as the main filter turns around its middle. (The piece's own, its recipe's,
   is 110 Hz to about 5 kHz; the filter goes from 90 Hz to 12 kHz.) Each stab opens it further for a
-  moment, the arrangement's sweep moves it (with Drift), and with the piece's looseness each stab sits a little
+  moment (Env), the arrangement's sweep moves it (with Drift), and with the piece's looseness each stab sits a little
   higher or lower (up to about half an octave). (A 0–100 knob until 1.4.0's layers' pages: what you
   had set is kept, as its offset from the piece's own.)
 - **Reso:** the filter's resonance, −50 to +50 around the voice's own.
-- **Attack:** 0 the voice's strike, up to a slow swell.
-- **Decay:** how long a stab rings, 0–100, from 60 ms to 1.5 s (times the voice's own length).
+- **Env:** how far each stab opens the filter, −50 to +50 around the voice's own (0: Saws about 2.5
+  octaves, an Organ 0.7): at −50 not at all, at +50 twice as far. Each piece has its own (Basic −25,
+  Pressure +50).
+- **Env decay:** how quickly it closes again, −50 to +50 around the tie to Decay (0: a quarter of the
+  stab's length and 20 ms), each 12 or 13 steps about twice as slow (±50: 16 times quicker or slower).
+  Each piece has its own (Basic and Steppers +31: the sweep heard, a "wow" rather than a click).
+
+**The picture.** The middle of the screen draws the stab's filter as it plays: the cutoff over time,
+in the chord's teal, up the screen in octaves over the Cutoff (4 octaves the whole height; more, along the top), on a
+time line in decades, 10 ms, 100 ms and 1 s marked under it; the stab's level faint behind it.
+Env moves where the curve starts, Env decay moves its fall left (quicker) or right (slower), and
+Decay moves both the fall and the ring behind it. At the left, the cutoff at the strike and at rest,
+in Hz; at the right, how far it opens (Basic: 1.3 oct) and its half-time (half 31 ms), a white dot on the
+curve where it is half closed. At Env −50, NO SWEEP.
 
 **The moving knob.** The Chord LFO (its wave and its drift) moves the knob its Destination names:
-the Cutoff (every recipe's), Reso, here, or Colour, on the Chord FM page. That knob shows it: two
+the Cutoff (every recipe's) or Reso, here, or Colour, on the Chord FM page. That knob shows it: two
 pale lines, just outside and just inside its ring, span how far they reach either way, and a white
 dot on the ring is where it is now, moving as you hear it. The knob's own place, the middle they
 swing around, is where its teal ends (its own dot left out while the LFO moves it).
@@ -1527,8 +1562,8 @@ same for every piece, and saved. GLO again goes back to Setup.
   as ever, the song's line along the header, the outro after Main's bars); PLAY again starts it from
   its intro. Turned to Endless, at once (the song let go, playing on).
 - **Transition** (KNOB 2): how a set goes from one piece to the next: **LP** (each song ends, a
-  pause, then the next), **Segue** (the next song from the bar after the outro, the echo held under
-  it) or **Mix** (the tempo glides to the next piece's over the last phrase; its pulse on the
+  pause, then the next), **Segue** (the next song from the bar after the outro, as from its intro's
+  second phrase, the echo held under it) or **Mix** (the tempo glides to the next piece's over the last phrase; its pulse on the
   downbeat under the old echo). See [Songs](#songs-an-intro-the-main-an-outro). Only in Set mode:
   in Endless and Song it's grey, and a turn only says so (its setting kept). LP in projects saved
   before it (before format 33).
@@ -1545,30 +1580,30 @@ MIDI comes in over USB and the TRS jack, and goes out over USB.
 
 - **In, channel 1:** a note adds or removes its note from the scale, like a key.
 - **In, channel 1, CC:** a controller's knobs and faders turn DUB-1's (the table below), the
-  whole 0–127 over the knob's range: a centred knob (the Filter, Resonance, Cutoff) is at its
+  whole 0–127 over the knob's range: a centred knob (the Filter, Reso, Cutoff, Wet, Energy) is at its
   middle at 64. The knob shows large, as when you turn it. The FM-1's USB is a device, like the
   controller's, so a USB controller reaches it through a computer (or a USB MIDI host box), or by
   the TRS jack.
-- **In, clock:** the grid follows MIDI clock (six clocks a sixteenth), and start, continue and stop
-  start, continue and stop the music. The screen shows EXT for the tempo. When the clock stops
-  coming, DUB-1 goes back to its own tempo.
-- **Out** (on by default): the chord on channel 1, the pings on 2, the bass on 3 and the drums on
-  10 (kick 36, shaker 42, open hat 46), and, while it plays on its own tempo, clock with
-  start / stop. Turning MIDI out off sends All Notes Off on channels 1, 2, 3 and 10.
 
-| CC | Knob | CC | Knob | CC | Knob |
-|---|---|---|---|---|---|
-| 1 | Filter (SELECT's) | 27 | Wet | 92 | Echo |
-| 20 | Chord level | 28 | Energy | 93 | Feedback |
-| 21 | Pings level | 29 | Duck | 94 | Echo time |
-| 22 | Bass level | 71 | Resonance (chord) | 95 | Cloud |
-| 23 | Drums level | 72 | Decay (chord) | 102 | Density |
-| 24 | Kick level | 73 | Attack (chord) | 103 | Vary |
-| 25 | Hats level | 74 | Cutoff (chord) | 104 | Hits |
-| 26 | Noise level (Crackle) | 91 | Reverb | 105 | Swing |
-| | | | | 106 | Size |
+| CC | Knob |
+|---|---|
+| 1 | Filter (SELECT's DJ filter) |
+| 20–23 | The layers' levels: Chord, Pings, Bass, Drums |
+| 24 | Kick level (its channel strip) |
+| 25 | Hats Level (the Hats page) |
+| 26 | Noise level (its channel strip) |
+| 27, 28 | Wet (the Arrangement page), Energy (the Form page) |
+| 29 | Duck (the Arrangement page) |
+| 71–74 | The chord: Reso, Decay, Attack, Cutoff (Reso and Cutoff on the Chord filter page, Decay and Attack on the Chord voice page) |
+| 91–94 | The Dub page: Reverb, Echo, Feedback, Echo time |
+| 95 | Cloud (the Echo page) |
+| 102 | Density (the Pings page) |
+| 103 | Vary (the Form page) |
+| 104 | Hits (the Drums page) |
+| 105 | Swing (the Key page) |
+| 106 | Size (the Echo page) |
 
-Wet, Energy, Duck and the Filter are for playing, as on the panel: they are not saved. The others
+Wet, Energy and the Filter are for playing, as on the panel: they are not saved. The others
 are the piece's, saved with SAVE.
 
 ### Screen reader
@@ -1791,10 +1826,12 @@ The defaults are Basic's; each piece has its own.
 | ALGORITHM | Kit (Drums page) | 5 kits | Tight |
 | ALGORITHM | Target (Chord LFO page, its KNOB 4 too) | Cutoff, Reso, Colour | Cutoff |
 | ALGORITHM | Target (Noise LFO page, its KNOB 4 too) | Filter, Tone, Air | Filter |
-| Chord voice | Cutoff | −50 – +50 around the piece's own (its recipe's 0–100: 110 Hz – about 5 kHz; Basic's 40) | 0 |
-| Chord voice | Reso | −50 – +50 | 0 |
 | Chord voice | Attack | 0–100 (from the voice's own strike) | 0 |
 | Chord voice | Decay | 0–100 (60 ms – 1.5 s, times the voice's) | 25 |
+| Chord filter | Cutoff | −50 – +50 around the piece's own (its recipe's 0–100: 110 Hz – about 5 kHz; Basic's 40) | 0 |
+| Chord filter | Reso | −50 – +50 | 0 |
+| Chord filter | Env | −50 – +50 (how far each stab opens the filter: none – the voice's own – twice) | the piece's (0; Basic −25, Steppers −30, Concrete −15, Pressure +50) |
+| Chord filter | Env decay | −50 – +50 (how quickly it closes: each 12.5 twice as slow; 0 the tie to Decay) | the piece's (0; Basic +31, Steppers +31, Concrete +25, Pressure +12) |
 | Chord, Pings, Bass FM | Algo | Voice, 1–8, 2-op | Voice |
 | Chord, Bass FM | Ratio (operators 3 and 4) | −50 – +50 | 0 |
 | Pings FM | Ratio (the modulator), Upper (operators 3 and 4) | −50 – +50 | 0 |

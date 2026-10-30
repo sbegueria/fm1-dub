@@ -55,7 +55,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Kick tune", -12, 12, 0}, {"Kick len", -50, 50, 0}, {"Punch", -50, 50, 0},   {"Hat tone", -50, 50, 0},
     {"Chord alg", 0, 9, 0},   {"Chord ratio", -50, 50, 0}, {"Chord fb", 0, 100, 0}, {"Chord depth", 0, 100, 0},
     {"Ping alg", 0, 9, 0},    {"Ping ratio", -50, 50, 0}, {"Ping fb", 0, 100, 0}, {"Ping LFO", 0, 100, 0},
-    {"Bass alg", 0, 9, 0},    {"Bass ratio", -50, 50, 0}, {"Bass fb", 0, 100, 0}, {"Bass LFO", 0, 100, 0},
+    {"Bass alg", 0, 9, 0},    {"Bass ratio", -50, 50, 0}, {"Bass fb", 0, 100, 0}, {"Env decay", -50, 50, 0},
     {"Root 1", 0, 11, 0}, {"Root 2", 0, 11, 0}, {"Root 3", 0, 11, 0}, {"Root 4", 0, 11, 0},
     {"Root 5", 0, 11, 0}, {"Root 6", 0, 11, 0}, {"Root 7", 0, 11, 0}, {"Root 8", 0, 11, 0},
     {"Kind 1", 0, EN_NCQ - 1, 0}, {"Kind 2", 0, EN_NCQ - 1, 0}, {"Kind 3", 0, EN_NCQ - 1, 0}, {"Kind 4", 0, EN_NCQ - 1, 0},
@@ -102,7 +102,9 @@ const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PAR
  * MIDI out are taken from here by neither: they belong to the player, not the piece */
 /*                  Cho Pin Bas Dru  Den Var Dri Hit  Ech ET Rev Fdb  Cut Dec PTo Mot  Tun MI Tem Rt Md Oc
  *                  CV BO Grv Fif Swi Hat  Stb Crk Dck Siz  Clo PV BV Kit
- *                  then the sound pages' sixteen, all 0: the voices as they are; then the noise's five (its controls, its character);
+ *                  then the sound pages' sixteen, 0: the voices as they are (format 36, REPORT-stabenv: the chord's Env amount,
+ *                  its 4th, each piece's own); then the FM pages' twelve (the last, format 36, the chord's Env decay: the
+ *                  filter's envelope's time around its tie to Decay, each piece's own, after its record); then the noise's five (its controls, its character);
  *                  then Throws, Ghost, Notes, Hats level (50, 50, 100, 50: the pieces as they were);
  *                  then the chord's Ghost, the kick's density, the echo's Blur, Tone and Width, the noise's Decay;
  *                  then the noise's Width, Plate and Echo, the hats' length; then the noise's LFO, the kick's rumble;
@@ -134,8 +136,8 @@ static const struct {
 } PIECES[EN_NPIECES] = {
     {"Basic",      {52, 30, 68, 80, 30, 50, 5, 8, 55, 1, 35, 62, 40, 25, 40, 12, 0, 1, 122, 5, 1, 0,
                     0, 0, 1, 20, 5, 50, 3, 8, 50, 55, 30, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, -25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 0, 31,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     0, 56, 66, 0, 0,
@@ -178,8 +180,8 @@ static const struct {
                     30, -25, 50, 25, 1}},
     {"Steppers",   {52, 35, 80, 82, 35, 58, 6, 41, 50, 1, 30, 50, 55, 25, 50, 8, 0, 1, 126, 2, 1, 0,
                     0, 0, 2, 35, 45, 60, 2, 5, 60, 50, 20, 1, 1, 2,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, -30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 31,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     5, 62, 61, 0, 0,
@@ -222,8 +224,8 @@ static const struct {
                     100, -12, -15, 24, 1}},
     {"Concrete",   {58, 45, 70, 85, 25, 86, 5, 58, 50, 1, 25, 62, 60, 20, 60, 16, 0, 1, 136, 0, 7, 0,
                     6, 0, 4, 30, 10, 75, 3, 5, 50, 45, 15, 2, 3, 2,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 75, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, -15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 75, 0, 0, 0, 0, 0, 0, 0, 25,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     0, 56, 66, 10, 0,
@@ -266,8 +268,8 @@ static const struct {
                     85, 25, 30, 40, 1}},
     {"Pressure",   {55, 20, 75, 92, 20, 76, 6, 39, 55, 1, 20, 55, 48, 30, 35, 8, 0, 1, 126, 4, 2, 0,
                     5, 0, 1, 10, 5, 65, 2, 30, 70, 40, 40, 3, 4, 1,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 12,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     -13, 18, 69, -10, 1,
@@ -1169,7 +1171,8 @@ typedef struct {
     uint8_t note, midi_note;
 } stab_t;
 static stab_t stab[EN_NPAD];
-static float chord_vol, cut_base = 800.0f, st_dec = 0.9995f, st_fdec = 0.99f, st_t60 = 0.3f;
+static float chord_vol, cut_base = 800.0f, st_dec = 0.9995f, st_fdec = 0.99f, st_t60 = 0.3f,
+             st_ft = 0.095f;                    /* (format 36) the filter's envelope's time (its -60 dB, s) */
 static float st_env, st_amp, st_fenv, st_throw, throw_dec, st_cofs, st_lc[2], st_lc2[2];
 #ifndef EN_RUMBLE
 #define EN_RUMBLE 1                              /* (the kick's rumble: off in 1.3.0; 1.4.0, the second try: on) */
@@ -2092,7 +2095,7 @@ EN_COLD static void bass_hit(int first, int up, int st)
     {
         int bv = (unsigned)par[P_BVOICE] < EN_NBV ? par[P_BVOICE] : 0;
         if (BV_PATCH[bv])
-            fm_note(&bfm, BV_PATCH[bv], mtof(bass.note), 1.0f, fm_q(P_BFRAT), fm_d(P_BFDEC));
+            fm_note(&bfm, BV_PATCH[bv], mtof(bass.note), 1.0f, fm_q(P_BFRAT), 1.0f);   /* (the patch's decay) */
     }
     bass.midi_note = (uint8_t)n;
     hit(2, first ? 1.0f : 0.75f);
@@ -2151,7 +2154,8 @@ static uint8_t song_bo_on, song_fixed, song_ask, song_end_now;   /* (an outro co
 static uint32_t song_b0, song_bo, song_be;       /* the bars the main, the outro and the silence start on */
 static float song_ent[EN_NPART], song_fd[EN_NPART], song_cap[EN_NPART];   /* each part's entry and fade (bars); its
                                                   * fader as the outro began (a part not in yet stays out) */
-static float song_io;                            /* (1.4.2) a Mix's intro: its entries a phrase sooner (bars) */
+static float song_io;                            /* (1.4.2) a Mix's intro, a Segue's (1.4.3): its entries a phrase
+                                                  * sooner (bars) */
 static uint8_t song_mx;                          /* (1.4.2) the song entered by a Mix */
 static float song_co, song_wet = 1.0f, song_hits = 1.0f, song_nthr;   /* the chord's cutoff (octaves), the echo's send
                                                   * (x), the hats' share of their hits, the noise into the echo (0..1) */
@@ -2176,16 +2180,23 @@ EN_COLD static int tr_on(void) { return tr_mode != EN_TR_LP && tr_tempo > 0 && s
 EN_COLD static void tempo_set(void);
 EN_COLD static void echo_time(void);
 /* each part's entry into the intro (a share of it) and its exit from the outro (where it starts, how long it takes,
- * shares of it): Ambient first (Fog, Haze, Chamber, Night Drive) and Pulse first (Steppers, Pressure, Concrete, Basic) */
-static const float SONG_IN[2][EN_NPART] = {{0.06f, 0.60f, 0.45f, 0.30f, 0.78f, 0.0f},
+ * shares of it): Ambient first (Fog, Haze, Chamber, Night Drive) and Pulse first (Steppers, Pressure, Concrete, Basic).
+ * (1.4.3, the user's: "the intros and outros themselves are quiet, so a hand-over is quiet too";
+ * build/design/REPORT-introoutro.txt) Ambient's wash from the downbeat, its kick and bass a few bars on, not a third
+ * of the way (Chamber's, Night Drive's, Haze's intros 11-12 bars of 32 more than 10 LU under the main; the classics'
+ * 3, their first 4 bars -11.5 dB, the next -6.8, then -3.8); the outro's pulse to its last quarter, the bass to 4/5,
+ * the kick to 7/8 (the classics' outros -2.4 dB at half way, -6.5 at 3/4, -20 in the last 4 bars; the Pulse pieces'
+ * -9, -17, -35) */
+static const float SONG_IN[2][EN_NPART] = {{0.0f, 0.42f, 0.17f, 0.09f, 0.72f, 0.0f},
                                            {0.25f, 0.45f, 0.0f, 0.0f, 0.78f, 0.58f}};
-static const float SONG_OUT[EN_NPART][2] = {{0.78f, 0.22f}, {0.25f, 0.2f}, {0.4f, 0.2f}, {0.55f, 0.15f}, {0.0f, 0.15f},
-                                            {0.72f, 0.28f}};
+static const float SONG_OUT[EN_NPART][2] = {{0.84f, 0.16f}, {0.3f, 0.25f}, {0.55f, 0.25f}, {0.68f, 0.2f}, {0.0f, 0.2f},
+                                            {0.8f, 0.2f}};
 /* (1.4.2: the Mix's hole, build/design/REPORT-mixgap.txt) a Segue's and a Mix's outro: the pulse to the hand-over, as
- * a DJ's outgoing record: the hats and the pings out first as ever, the bass a little later, the kick last, whole (one
- * and three from the outro's half) to 2 bars before the end and out over that bar (song_tick); the last bar the
- * echo's, the next piece set under it, its kick on the downbeat. The chord as song_tick has it (its dry out, thrown) */
-static const float SONG_OUT_TR[EN_NPART][2] = {{0.78f, 0.22f}, {0.25f, 0.2f}, {0.5f, 0.25f}, {1.0f, 1.0f}, {0.0f, 0.15f},
+ * a DJ's outgoing record: the hats and the pings out first as ever (1.4.3: as an LP's), the bass a little later, the
+ * kick last, whole (one and three from the outro's half) to 2 bars before the end and out over that bar (song_tick);
+ * the last bar the echo's, the next piece set under it, its kick on the downbeat. The chord as song_tick has it (its
+ * dry out, thrown); the noise as 1.4.2's */
+static const float SONG_OUT_TR[EN_NPART][2] = {{0.84f, 0.16f}, {0.3f, 0.25f}, {0.55f, 0.25f}, {1.0f, 1.0f}, {0.0f, 0.2f},
                                                {0.72f, 0.28f}};   /* (the chord's and the kick's: song_tick's own) */
 float en_song_in(int kind, int part) { return SONG_IN[kind ? 1 : 0][(unsigned)part < EN_NPART ? part : 0]; }
 float en_song_out(int part) { return SONG_OUT[(unsigned)part < EN_NPART ? part : 0][0]; }
@@ -2227,18 +2238,23 @@ EN_COLD static void song_start(void)                     /* PLAY from the top: E
     song_bo_on = 1;
     song_ph = song_b0 ? EN_SG_INTRO : EN_SG_MAIN;
     for (i = 0; i < EN_NPART; i++) {             /* (each part's entry, off the phrase lines; its fade, 2-4 bars, done by
-                                                  * the intro's end) */
+                                                  * the intro's end; 1.4.3: the first in, on the downbeat, 1-2 bars:
+                                                  * the song not silent for its first two) */
         const float e = SONG_IN[par[P_SKIND] ? 1 : 0][i] * (float)song_b0;
         song_ent[i] = e > 0.0f ? fm_clampf(e + 2.0f * frand() - 1.0f, 1.0f, (float)song_b0 - 1.0f) : 0.0f;
-        song_fd[i] = fm_clampf(fm_minf(2.0f + 2.0f * frand(), (float)song_b0 - song_ent[i]), 1.0f, 4.0f);
+        song_fd[i] = fm_clampf(fm_minf((e > 0.0f ? 2.0f : 1.0f) * (1.0f + frand()), (float)song_b0 - song_ent[i]),
+                               1.0f, 4.0f);
         fd_pos[i] = fd_tgt[i] = fd_g[i] = en_fader[i] = song_b0 ? 0.0f : 1.0f;
     }
-    if (tr_in && song_b0 >= 16u) {               /* (1.4.2: a Mix: the intro as from its second phrase, its length
-                                                  * kept: the parts due in its first phrase on the Mix's own entries
-                                                  * below, the rest a phrase sooner, the kick's Half and Four, the
-                                                  * filter's opening too: the next record's beat in under the old echo,
-                                                  * not a lone downbeat for a dozen bars; the bars, the song's line and
-                                                  * its main where Intro has them) */
+    song_ent[2] = fm_maxf(song_ent[2], song_ent[3]);   /* (1.4.3: Ambient's kick and bass close: the bass no sooner) */
+    if ((tr_in || tr_after == EN_TR_SEGUE) && song_b0 >= 16u) {   /* (1.4.2: a Mix: the intro as from its second
+                                                  * phrase, its length kept: the parts due in its first phrase on the
+                                                  * Mix's own entries below, the rest a phrase sooner, the kick's Half
+                                                  * and Four, the filter's opening too: the next record's beat in under
+                                                  * the old echo, not a lone downbeat for a dozen bars; the bars, the
+                                                  * song's line and its main where Intro has them. 1.4.3, the user's:
+                                                  * a Segue's too, its kick as that phrase has it, its chord, pings and
+                                                  * hats once its hold lets go: song_tick) */
         song_io = 8.0f;
         for (i = 0; i < EN_NPART; i++)
             song_ent[i] -= 8.0f;
@@ -2274,7 +2290,7 @@ static int song_kick(void)
         if (tr_on())                             /* (a hand-over's: the piece's own longer, then one and three to the
                                                   * end, never the lone downbeat) */
             return o < 0.5f ? -1 : KS_HALF;
-        return o < 0.25f ? -1 : o < 0.42f ? KS_HALF : KS_ONE;
+        return o < 0.4f ? -1 : o < 0.6f ? KS_HALF : KS_ONE;
     }
     return -1;
 }
@@ -2348,6 +2364,14 @@ EN_COLD static void song_tick(void)                      /* each sixteenth: the 
             for (i = 0; i < EN_NPART; i++)
                 fd_tgt[i] = AT[i] < 0.0f ? 1.0f : fm_minf(fd_tgt[i], fm_clampf((t - AT[i]) * 0.5f, 0.0f, 1.0f));
         }
+    } else if (song_io > 0.0f && tr_after == EN_TR_SEGUE && t < 4.0f) {   /* (1.4.3: a Segue's new piece, from its
+                                                  * second phrase: the kick, the bass and the noise as that phrase has
+                                                  * them, from the downbeat; the chord, the pings and the hats no
+                                                  * sooner than the held echo lets go (bar 2): the old harmony alone
+                                                  * over the pulse, as a Segue's) */
+        for (i = 0; i < EN_NPART; i++)
+            if ((EN_M_CHORD | EN_M_PINGS | EN_M_HATS) >> i & 1u)
+                fd_tgt[i] = fm_minf(fd_tgt[i], fm_clampf((t - 2.0f) * 0.5f, 0.0f, 1.0f));
     }
     for (i = 0; i < EN_NPART; i++)
         if (fd_tgt[i] <= 0.0f && fd_pos[i] < 0.001f)
@@ -3179,7 +3203,7 @@ EN_COLD static void tick(void)
         en_drum_pos[d] = (uint8_t)st;
     {   /* (1.4.0, the overview's pings row) this bar's sixteenths a ping falls on: those that rang so far, kept; then
          * the loops' notes ahead, where each loop will be (a pass's end may still change them) */
-        uint32_t m = en_lane_png & ((st & 1 ? 2u : 1u) << st) - 1u;
+        uint32_t m = en_lane_png & (((st & 1 ? 2u : 1u) << st) - 1u);   /* (the parentheses GCC 12+ asks for) */
         int q;
         if (!st)
             m = 0u;
@@ -3676,7 +3700,9 @@ void en_env_shape(int layer, float *lvl, float *aux, int n, float *secs)
         float xa = (float)par[P_CATT] * 0.01f;   /* (1.3.0: 0 the voice's strike, 100 a swell) */
         a = fm_clampf(CV[cvoice].att * fm_exp2f(-(xa > 0.0f ? CV_ATT_SPAN[cvoice] : 3.0f) * xa), 0.00004f, 0.3f);
         t60 = st_t60;
-        ft = 0.25f * st_t60 + 0.02f;
+        ft = st_ft * (1.0f / 6.9f);              /* (format 36: Env decay's; st_ft its -60 dB, as the stab's filter
+                                                  * closes it, st_fdec: the picture's curve exp(-t / ft) on the same
+                                                  * time. It drew it 6.9 times slower than it plays) */
         fe = fm_clampf(CV[cvoice].fenv * fm_maxf(1.0f + rel(P_CENV), 0.0f) / 3.4f, 0.0f, 1.0f);
         T = fm_clampf(t60 * 1.2f, 0.25f, 4.0f);
         break;
@@ -3715,6 +3741,15 @@ void en_env_shape(int layer, float *lvl, float *aux, int n, float *secs)
         aux[i] = fe > 0.0f ? fe * fm_expf(-t / ft) : 0.0f;
     }
     *secs = T;
+}
+
+EN_COLD void en_chord_env(float *oct, float *ft, float *att, float *t60)
+{
+    const float xa = (float)par[P_CATT] * 0.01f;   /* (as render_stabs has them) */
+    *oct = CV[cvoice].fenv * fm_maxf(1.0f + rel(P_CENV), 0.0f);
+    *ft = st_ft;
+    *att = 1.0f / (fm_clampf(CV[cvoice].att * fm_exp2f(-(xa > 0.0f ? CV_ATT_SPAN[cvoice] : 3.0f) * xa), 0.00004f, 0.3f) * EN_SR);
+    *t60 = st_t60;
 }
 
 /* ------------------------------------------------------------ parameters --- */
@@ -3999,11 +4034,13 @@ EN_COLD static void apply(int p, int v)
                                                   * own, P_CUTOFF the recipe's; the filter's own ends past them) */
         cut_base = 110.0f * fm_exp2f((float)(pe(P_CUTOFF) + pe(P_CCUT)) * 0.055f);
         break;
-    case P_DECAY: case P_CVOICE:                 /* 60 ms .. 1.5 s (times the voice's); the filter's envelope, quicker */
+    case P_DECAY: case P_CVOICE: case P_CEDEC:   /* 60 ms .. 1.5 s (times the voice's); the filter's envelope, quicker */
         cvoice = (unsigned)par[P_CVOICE] < EN_NCV ? par[P_CVOICE] : 0;
         st_t60 = 0.06f * fm_exp2f((float)pe(P_DECAY) * 0.0464f) * CV[cvoice].dec;
         st_dec = fm_expf(-6.9f / (st_t60 * EN_SR));
-        st_fdec = fm_expf(-6.9f * 32.0f / ((0.25f * st_t60 + 0.02f) * EN_SR));   /* (1.3.0: a shorter strike) */
+        st_ft = (0.25f * st_t60 + 0.02f) * fm_exp2f((float)pe(P_CEDEC) * 0.08f);   /* (1.3.0: a shorter strike; format
+                                                  * 36, REPORT-stabenv: Env decay, its own time around that tie) */
+        st_fdec = fm_expf(-6.9f * 32.0f / (st_ft * EN_SR));
         break;
     case P_PTONE: case P_PTON: btone = en_tone_at(par[P_PTONE], par[P_PTON]) * 0.01f; break;   /* (format 32: as the
                                                   * hats' Tone, the room either side) */

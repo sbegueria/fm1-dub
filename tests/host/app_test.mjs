@@ -12,7 +12,7 @@ let fails = 0;
 const check = (ok, what) => { if (!ok) { console.log("FAIL", what); fails++; } };
 check(ex.app_npieces() === 8, "eight pieces");
 check(cstr(ex.app_piece_name(2)) === "Steppers", "piece 2 is Steppers");
-check(ex.app_piece_par(1, 18) === 118, "Chamber's tempo 118");
+check(ex.app_piece_par(1, 18) === 128, "Chamber's tempo 128");
 check(cstr(ex.app_param_text(6, 6)) === "Hold" && cstr(ex.app_param_text(6, 4)) === "32 bars", "Drift's text");
 check(cstr(ex.app_chord_name(2, 2, 5, 9, 0)) === "Dm7", "a chord's name: " + cstr(ex.app_chord_name(2, 2, 5, 9, 0)));
 ex.app_init();

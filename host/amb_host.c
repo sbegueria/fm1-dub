@@ -14,6 +14,9 @@
  *   master N                     MASTER pot 0..4096
  *   midi B0 B1 B2                incoming USB MIDI message (hex bytes)
  *   wav FILE | wavstop           start / stop recording the output
+ *   lvwatch                      each bar's loudness from here, K-weighted (expect lvin, lvin4, lvu10, lvout, lvoutend:
+ *                                the song's intro and outro against its main, LU x10; lvu10 the intro's bars 10 LU
+ *                                under it)
  *   peakreset                    restart the output peak (expect peak_db_min / peak_db_max)
  *   shot FILE.png                save the screen
  *   storescreen N                the project saved with the piece's view N, as a 1.4.0 build with six views would
@@ -30,6 +33,9 @@
  *   recipe N                     piece N back to its recipe, unplayed (a piece never changed, as on a device)
  *   store30s                     save it as step 2's test builds did (zzo, zzp: format 30, the LFOs' Shape, Sine
  *                                or Wander, in the Wave's slots, no layout B mark)
+ *   store35                      save it as 1.4.2 did (format 35: today's layout, Env decay's slot the bass's old
+ *                                LFO's, unread: the playing piece a stray 37 in it, to show it read as 0; every
+ *                                older store the recipes' envelope as it was, Env amount and that slot 0)
  *   store34                      save it as the variety plan's step 5 did (format 34: Vary on its old scale, no
  *                                sweep's pace)
  *   store32                      save it as the variety plan's step 4 did (format 32: today's layout without the
@@ -349,7 +355,7 @@ static double trw_acc, trw_sq, trw_x1[2], trw_x2[2];
                                                   * around it, 10 ms either side) */
 static float trw_ring[TRW_N][2];
 static uint32_t trw_w;
-static uint32_t trw_n, trw_bars_was, trw_t_restart, trw_t_cue, trw_onset_t, trw_was[5];
+static uint32_t trw_n, trw_bars_was, trw_t_restart, trw_t_cue, trw_onset_t, trw_was[5], trw_nev, trw_click_ms;
 /* (1.4.2: the Mix's hole, build/design/REPORT-mixgap.txt) the hand-over's loudness as a loudness meter has it (BS.1770:
  * K-weighted, 100 ms steps; the momentary 400 ms, the short-term 3 s), against the music's: the 16 s before the outro
  * (or what there was since trwatch). trhole: the longest stretch of the momentary more than 12 LU under it, from the
@@ -424,6 +430,72 @@ static void trk_sample(float l, float r)
         }
     }
 }
+/* (1.4.3: the songs' intros and outros, build/design/REPORT-introoutro.txt) lvwatch: each bar's loudness from here,
+ * K-weighted (trk's two filters), its mean power, by the song's bar (en_bars / 16; a Set's next piece from its own bar
+ * 0, the bars before it dropped). Against the main's median bar (its bars so far): lvin, the intro's level (its mean
+ * power, LU x10); lvin4, its first 4 bars'; lvu10, its bars more than 10 LU under; lvout, the outro's; lvoutend, its
+ * last 8 bars' (lv_get) */
+#define LV_N 512
+static double lv_z[2][2][2], lv_p[LV_N];
+static uint32_t lv_c[LV_N], lv_bars_was, lv_b0, lv_bo, lv_be;
+static int lv_on;
+static void lv_sample(float l, float r)
+{
+    const float x[2] = {l, r};
+    const uint32_t b = en_bars / 16u;
+    int c, st;
+    double e = 0.0;
+    if (en_bars < lv_bars_was) {                 /* (a Set's next piece: its own bars) */
+        memset(lv_p, 0, sizeof lv_p);
+        memset(lv_c, 0, sizeof lv_c);
+    }
+    lv_bars_was = en_bars;
+    lv_b0 = en_song_b0;
+    if (en_song_be)
+        lv_bo = en_song_bo, lv_be = en_song_be;
+    for (c = 0; c < 2; c++) {
+        double v = x[c];
+        for (st = 0; st < 2; st++) {
+            const double y = trk_b[st][0] * v + lv_z[c][st][0];
+            lv_z[c][st][0] = trk_b[st][1] * v - trk_a[st][1] * y + lv_z[c][st][1];
+            lv_z[c][st][1] = trk_b[st][2] * v - trk_a[st][2] * y;
+            v = y;
+        }
+        e += v * v;
+    }
+    if (b < LV_N)
+        lv_p[b] += e, lv_c[b]++;
+}
+static int lv_cmp(const void *a, const void *b)
+{
+    const double x = *(const double *)a, y = *(const double *)b;
+    return x < y ? -1 : x > y;
+}
+static int lv_get(const char *what)              /* (-999: nothing to measure yet) */
+{
+    static double m[LV_N];
+    const uint32_t me = lv_be ? lv_bo : LV_N;
+    uint32_t i, n = 0, a, z, k = 0;
+    double ref, sum = 0.0;
+    for (i = lv_b0; i < me && i < LV_N; i++)     /* (the main's bars, whole) */
+        if (lv_c[i] > 44100u && i + 1u < LV_N && lv_c[i + 1u])
+            m[n++] = lv_p[i] / (double)lv_c[i];
+    if (!n)
+        return -999;
+    qsort(m, n, sizeof m[0], lv_cmp);
+    ref = m[n / 2];
+    if (!strcmp(what, "lvu10")) {
+        for (i = 0; i < lv_b0; i++)
+            k += lv_c[i] && lv_p[i] / (double)lv_c[i] < ref * 0.1;
+        return (int)k;
+    }
+    a = !strcmp(what, "lvin") || !strcmp(what, "lvin4") ? 0u : !strcmp(what, "lvout") ? lv_bo : lv_be - 8u;
+    z = !strcmp(what, "lvin") ? lv_b0 : !strcmp(what, "lvin4") ? 4u : lv_be;
+    for (i = a, n = 0; i < z && i < LV_N; i++)
+        if (lv_c[i])
+            sum += lv_p[i], k += lv_c[i];
+    return k ? (int)floor(100.0 * log10(sum / (double)k / ref) + 0.5) : -999;
+}
 static void trw_sample(float l, float r)
 {
     const uint32_t w = trw_w % TRW_N, o = (trw_w + TRW_N - 882u) % TRW_N, m = (trw_w + TRW_N - 441u) % TRW_N;
@@ -441,7 +513,7 @@ static void trw_sample(float l, float r)
                        (!trw_t_restart || now_ms < trw_t_restart + 2010u) && now_ms > trw_onset_t + 50u;   /* (not a
                                                   * strike's own edge: a drum, a stab, a noise hit) */
         if (in && (int)(100.0 * d2 / (rms + 1e-4)) > trw_click)
-            trw_click = (int)(100.0 * d2 / (rms + 1e-4));
+            trw_click = (int)(100.0 * d2 / (rms + 1e-4)), trw_click_ms = now_ms;
         trw_x2[c] = trw_x1[c], trw_x1[c] = xm;
     }
     if (++trw_n >= 11025u) {                      /* (250 ms) */
@@ -467,6 +539,10 @@ static void trw_ms(void)                          /* (each ms: the song's place)
                 trw_onset_t = now_ms;
             trw_was[k] = now[k];
         }
+        if (en_nev_w != trw_nev && heard[4])     /* (1.4.3: the noise's dry clicks too, the vinyl's: struck, not a
+                                                  * hand-over's step; under a hand-over's quiet start they read high) */
+            trw_onset_t = now_ms;
+        trw_nev = en_nev_w;
     }
     if (!trw_t_cue && en_tr_cue)
         trw_t_cue = now_ms;
@@ -640,6 +716,8 @@ static void run_ms(uint32_t ms)
                 s[1] = (int16_t)(r * 32767.0f);
                 if (trw_on)
                     trw_sample(l, r);
+                if (lv_on)
+                    lv_sample(l, r);
                 if (wav) {
                     fwrite(s, 2, 2, wav);
                     wav_frames++;
@@ -730,6 +808,10 @@ static int expect(const char *what, const char *val)
         got = trw_quiet_ms;
     else if (!strcmp(what, "trclick"))           /* the largest step against the level around it, x100 (cue .. +2 s) */
         got = trw_click;
+    else if (!strcmp(what, "trclickat"))         /* (1.4.3) where it was: ms after the cue (trclickdb: the downbeat's) */
+        got = (int)(trw_click_ms - trw_t_cue);
+    else if (!strcmp(what, "trclickdb"))
+        got = (int)(trw_t_restart - trw_t_cue);
     else if (!strcmp(what, "trrestarts"))        /* the next piece's downbeats without a stop */
         got = trw_restarts;
     else if (!strcmp(what, "trchord"))           /* the next piece's chord in, sixteenths after its downbeat (-1: not yet) */
@@ -744,6 +826,10 @@ static int expect(const char *what, const char *val)
         got = trw_swell;
     else if (!strcmp(what, "trlow"))             /* and its lowest, LU x10 */
         got = trw_low;
+    else if (!strncmp(what, "lv", 2) && (!strcmp(what + 2, "in") || !strcmp(what + 2, "in4") ||
+                                         !strcmp(what + 2, "u10") || !strcmp(what + 2, "out") ||
+                                         !strcmp(what + 2, "outend")))
+        got = lv_get(what);                       /* (1.4.3: lvwatch's, LU x10 against the main; lvu10 bars) */
     else if (!strcmp(what, "trdip"))             /* the next piece's first 8 bars: a fader's largest fall (x1000) */
         got = trw_dip;
     else if (!strcmp(what, "trjump"))            /* and its largest rise in a ms (x1000; the kick's left out) */
@@ -974,6 +1060,25 @@ static void lc_fold(int16_t *par, int n)        /* (before 28: the strips' Low c
  * as 1.4.0's test builds had them): every older format's store writes them where a piece has today's (a piece never
  * changed then known by its old recipe on the upgrade, as on a device); (format 35) a Vary and its trims changed, on
  * the old scale (the knob the amount itself), as near as they sound now (en_vary34 the way back) */
+static void env_before36(void)                   /* (format 36, REPORT-stabenv) an older format's store: Env amount
+                                                  * and the bass's old LFO's slot, Env decay's now, as the recipes had
+                                                  * them then (0) where a piece has today's */
+{
+    int16_t rec[P_NPARAMS];
+    uint16_t pool;
+    int i;
+    for (i = 0; i < NPIECES; i++) {
+        int16_t *p = proj.slot[i].par;
+        en_piece(i, rec, &pool);
+        if (p[P_CENV] == rec[P_CENV])
+            p[P_CENV] = 0;
+        if (p[P_CEDEC] == rec[P_CEDEC])
+            p[P_CEDEC] = 0;
+    }
+    proj.par[P_CENV] = proj.slot[proj.piece].par[P_CENV];
+    proj.par[P_CEDEC] = proj.slot[proj.piece].par[P_CEDEC];
+}
+
 static void models_before5(void)
 {
     static const uint8_t MP[10] = {P_VARY, P_CVARY, P_PVARY, P_BVARY, P_DVARY, P_NVARY, P_MOTION, P_MOVE, P_CLTRIM,
@@ -1139,19 +1244,23 @@ int main(int argc, char **argv)
     while (fgets(line, sizeof line, sc)) {
         char cmd[32] = {0}, a[256] = {0}, b[64] = {0}, c[64] = {0};
         static project_t st_keep;
-        int st_old, st_pre5;
+        int st_old, st_pre5, st_pre36;
         lineno++;
         if (line[0] == '#' || sscanf(line, "%31s %255s %63s %63s", cmd, a, b, c) < 1)
             continue;
         st_old = !strncmp(cmd, "store", 5) && strcmp(cmd, "storefile") && strcmp(cmd, "storescreen") &&
-                 strcmp(cmd, "store32") && strcmp(cmd, "store34");   /* (32, 34: today's meanings, but Vary's
-                                                  * and the sweep's; no Transition in 32) */
+                 strcmp(cmd, "store32") && strcmp(cmd, "store34") && strcmp(cmd, "store35");   /* (32, 34, 35:
+                                                  * today's meanings, but Vary's and the sweep's (32, 34) or the
+                                                  * envelope (35); no Transition in 32) */
         st_pre5 = st_old || !strcmp(cmd, "store32") || !strcmp(cmd, "store34");
-        if (st_pre5) {                           /* (step 5) every older format's store: the recipes before it */
+        st_pre36 = st_pre5 || !strcmp(cmd, "store35");
+        if (st_pre36) {                          /* (format 36) every older format's store: the envelope as before */
             keep();
             st_keep = proj;
-            models_before5();
+            env_before36();
         }
+        if (st_pre5)                             /* (step 5) every older format's store: the recipes before it */
+            models_before5();
         if (st_old) {                            /* (format 31) an older format's store: the pieces' Motion as their
                                                   * recipes had it then, where it's today's */
             zones_before32();                    /* (format 32: the rescaled knobs, in their old meaning) */
@@ -1237,6 +1346,11 @@ int main(int argc, char **argv)
             trk_init();
             trw_acc = trw_sq = 0.0, trw_n = 0, trw_t_restart = trw_t_cue = 0, trw_bars_was = en_bars, trw_w = 0;
             memset(trw_ring, 0, sizeof trw_ring);
+        } else if (!strcmp(cmd, "lvwatch")) {     /* (1.4.3) the song's bars' loudness from here (lvin, lvout ..) */
+            if (!trw_on)
+                trk_init();                      /* (the K-weighting's coefficients) */
+            memset(lv_z, 0, sizeof lv_z), memset(lv_p, 0, sizeof lv_p), memset(lv_c, 0, sizeof lv_c);
+            lv_bars_was = en_bars, lv_b0 = lv_bo = lv_be = 0, lv_on = 1;
         } else if (!strcmp(cmd, "tlog")) {         /* tlog FILE: the song's state every 50 ms (tempo, place, faders) */
             snprintf(out, sizeof out, "%s/%s", dir, a);
             tlog = fopen(out, "w");
@@ -1422,6 +1536,14 @@ int main(int argc, char **argv)
                 o.slot[i].par[P_CLWAVE] = (int16_t)(o.slot[i].par[P_CLWAVE] ? 0 : 4);
                 o.slot[i].par[P_NLWAVE] = (int16_t)(o.slot[i].par[P_NLWAVE] ? 0 : 4);
             }
+            plat_store_save(OBJ_PROJ, &o, sizeof o);
+        } else if (!strcmp(cmd, "store35")) {    /* (format 36) the project as 1.4.2 saved it (35: today's layout,
+                                                  * Env decay's slot unread) */
+            static project_t o;
+            o = proj;
+            o.format = 35u;
+            o.par[P_CEDEC] = o.slot[o.piece].par[P_CEDEC] = 37;   /* (the slot unread then: what it held, stray) */
+            o.rsv[0] = PROJ_WAVE_MARK;
             plat_store_save(OBJ_PROJ, &o, sizeof o);
         } else if (!strcmp(cmd, "store34")) {    /* (format 35) the project as step 5 saved it (34: 34's layout,
                                                   * Vary on its old scale, no sweep's pace) */
@@ -1748,7 +1870,7 @@ int main(int argc, char **argv)
             printf("line %d: unknown command %s\n", lineno, cmd);
             return 2;
         }
-        if (st_pre5)
+        if (st_pre36)
             proj = st_keep;
     }
     wav_close();

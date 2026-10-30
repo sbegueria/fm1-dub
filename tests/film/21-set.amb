@@ -82,12 +82,15 @@ tap ENV
 wait 300
 expect view 8
 # Chord voice: Attack 0 -> 25 (each stab a swell, as Aries' pad)
-spin K3 25
+spin K1 25
 wait 300
 tap ENV
-wait 300
+wait 200
+expect view 31
 tap ENV
-wait 300
+wait 200
+tap ENV
+wait 200
 expect view 22
 # Chord LFO: its Drift -12 (Fog's)
 spin K1 -100
@@ -214,12 +217,15 @@ tap ENV
 wait 300
 expect view 8
 # Chord voice: Decay 20 -> 45 (longer, a pad's tail: Abraxas' chord rings 255 ms)
-spin K4 25
+spin K2 25
 wait 300
 tap ENV
-wait 300
+wait 200
+expect view 31
 tap ENV
-wait 300
+wait 200
+tap ENV
+wait 200
 expect view 22
 # Chord LFO: its Drift +50 -> +15 (the recipe's wobble calmed)
 spin K1 100
@@ -433,13 +439,16 @@ tap ENV
 wait 300
 expect view 8
 # Chord voice: Attack 0 -> 40 (a slow swell), Decay 40 -> 85 (long)
-spin K3 40
-spin K4 45
+spin K1 40
+spin K2 45
 wait 300
 tap ENV
-wait 300
+wait 200
+expect view 31
 tap ENV
-wait 300
+wait 200
+tap ENV
+wait 200
 expect view 22
 # Chord LFO: its Drift +12 (Night Drive's as the song was made; its recipe's +25 since step 5)
 spin K1 100
@@ -613,12 +622,16 @@ tap ENV
 wait 300
 expect view 8
 # Chord voice: Cutoff +15 (a brighter chord: Elysian's is the album's brightest)
+wait 300
+tap ENV
+wait 200
+expect view 31
+# Chord filter (format 36: its own page, ENV a third time): the Cutoff
 spin K1 17
-wait 300
 tap ENV
-wait 300
+wait 200
 tap ENV
-wait 300
+wait 200
 expect view 22
 # Chord LFO: its Drift +3 (Pressure's)
 spin K1 100
@@ -836,13 +849,17 @@ tap ENV
 wait 300
 expect view 8
 # Chord voice: Cutoff +10 (brighter), Decay 80 -> 35 (Bcn Dub is a stab track: short stabs)
+spin K2 -45
+wait 300
+tap ENV
+wait 200
+expect view 31
+# Chord filter (format 36: its own page, ENV a third time): the Cutoff
 spin K1 12
-spin K4 -45
-wait 300
 tap ENV
-wait 300
+wait 200
 tap ENV
-wait 300
+wait 200
 expect view 22
 # Chord LFO: its Drift -25 (Haze's)
 spin K1 -100

@@ -18,7 +18,8 @@
      song_tick() and its Transition blocks, song_outro(), tr_on(), tr_restart(), tick() (the song's end, the wait),
      bar_start() (the chord struck two bars before the end), apply() (P_SMODE, P_SMAIN, P_SOUTRO), C_PLAY). The screens:
      build/cheatsheets/src/extra4.amb on the host build of d7185a2.
-     Re-checked against the firmware at 671d9be for the 1.4.0 release (step 6: build/design/REPORT-docs-sheets.txt). -->
+     Re-checked against the firmware at 671d9be for the 1.4.0 release (step 6: build/design/REPORT-docs-sheets.txt).
+     1.4.3: SONG_IN / SONG_OUT, song_kick()'s outro and a Segue from the second phrase (build/design/REPORT-introoutro.txt). -->
 <div class="sheet">
 <header><span class="badge">DUB-1</span><h1>Songs and sets</h1>
 <span class="sub">Endless, a song, a set of the pieces and their hand-overs, as of 1.4.0 (build 671d9be). FM-1 firmware.</span></header>
@@ -60,7 +61,7 @@
 <h2>3 · Transition <span class="where">GLO x2 · KNOB 2 · Set only</span></h2>
 <div class="intro">Grey in Endless and Song: "Only in Set mode". The set's last piece ends as LP.</div>
 <div class="row"><div class="n">LP<small>the default</small></div><div class="d">"Each song ends; a pause, then the next": PLAY off, the tails ring out, the next intro 6 s on.</div></div>
-<div class="row"><div class="n">Segue</div><div class="d">"The next song from the bar after the outro": no stop. The chord's dry out over bars -5 to -1, into the echo; the kick on to -2; struck at -2, the echo held into the next song's bar 2. The new tempo from the last bar, the echo gliding to it like tape.</div></div>
+<div class="row"><div class="n">Segue</div><div class="d">"The next song from the bar after the outro": no stop. The chord's dry out over bars -5 to -1, into the echo; the kick on to -2; struck at -2, the echo held to the next song's bar 2, that song as from its second phrase. Its tempo from the last bar, the echo gliding like tape.</div></div>
 <div class="row"><div class="n">Mix</div><div class="d">"Tempos glide; the next pulse under the echo" (card 6).</div></div>
 </div>
 
@@ -153,7 +154,7 @@
 
 <div class="card full">
 <h2>7 · The parts in and out <span class="where">the recipes' 32 bars</span></h2>
-<div class="intro">Each part at its place, a bar or so either way, in over 2 to 4 bars; the hats with a few hits, more each bar. The chord's filter opens from an octave down, the echo a little wetter; no sections till the main. From 60% of the outro every stab is thrown, the noise into the echo.</div>
+<div class="intro">Each part at its place, a bar or so either way, in over 2 to 4 bars (the first, on the downbeat, 1 to 2); the hats with a few hits, more each bar. The chord's filter opens from an octave down, the echo a little wetter; no sections till the main. From 60% of the outro every stab is thrown, the noise into the echo.</div>
 <figure style="margin:2px 0 3px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 104" role="img" aria-label="Each part coming in, in the intro of each Kind, and leaving, in the outro">
 <text x="40.0" y="29.0" text-anchor="end" font-size="10.5" font-weight="700" fill="#1f7f75">CHORD</text>
 <text x="40.0" y="40.5" text-anchor="end" font-size="10.5" font-weight="700" fill="#4a72b0">PINGS</text>
@@ -172,17 +173,17 @@
 <text x="196.0" y="100.0" text-anchor="middle" font-size="9.5" font-weight="400" fill="#7d8787" class="mono">24</text>
 <line x1="246.0" y1="18.0" x2="246.0" y2="90.0" stroke="#7d8787" stroke-width="1"/>
 <text x="246.0" y="100.0" text-anchor="middle" font-size="9.5" font-weight="400" fill="#7d8787" class="mono">32</text>
-<path d="M58.0,29.0 L76.8,22.0 H246.0 V29.0 Z" fill="#1f7f75" opacity="0.9"/>
-<path d="M166.0,40.5 L184.8,33.5 H246.0 V40.5 Z" fill="#4a72b0" opacity="0.9"/>
-<path d="M136.0,52.0 L154.8,45.0 H246.0 V52.0 Z" fill="#a08a48" opacity="0.9"/>
-<path d="M106.0,63.5 L124.8,56.5 H246.0 V63.5 Z" fill="#c8743a" opacity="0.9"/>
-<line x1="162.0" y1="56.5" x2="162.0" y2="63.5" stroke="#fff" stroke-width="1.2"/>
-<text x="137.1" y="63.1" text-anchor="middle" font-size="7.6" font-weight="700" fill="#fff">ONE</text>
-<line x1="211.0" y1="56.5" x2="211.0" y2="63.5" stroke="#fff" stroke-width="1.2"/>
-<text x="186.5" y="63.1" text-anchor="middle" font-size="7.6" font-weight="700" fill="#fff">HALF</text>
-<text x="228.5" y="63.1" text-anchor="middle" font-size="7.6" font-weight="700" fill="#fff">FOUR</text>
-<path d="M202.0,75.0 L220.8,68.0 H246.0 V75.0 Z" fill="#8f9a9a" opacity="0.55"/>
-<path d="M46.0,86.5 L64.8,79.5 H246.0 V86.5 Z" fill="#8f8270" opacity="0.9"/>
+<path d="M46.0,29.0 L58.5,22.0 H246.0 V29.0 Z" fill="#1f7f75" opacity="0.9"/>
+<path d="M130.0,40.5 L148.8,33.5 H246.0 V40.5 Z" fill="#4a72b0" opacity="0.9"/>
+<path d="M80.0,52.0 L98.8,45.0 H246.0 V52.0 Z" fill="#a08a48" opacity="0.9"/>
+<path d="M64.0,63.5 L82.8,56.5 H246.0 V63.5 Z" fill="#c8743a" opacity="0.9"/>
+<line x1="136.8" y1="56.5" x2="136.8" y2="63.5" stroke="#fff" stroke-width="1.2"/>
+<text x="103.5" y="63.1" text-anchor="middle" font-size="7.6" font-weight="700" fill="#fff">ONE</text>
+<line x1="200.5" y1="56.5" x2="200.5" y2="63.5" stroke="#fff" stroke-width="1.2"/>
+<text x="168.7" y="63.1" text-anchor="middle" font-size="7.6" font-weight="700" fill="#fff">HALF</text>
+<text x="223.2" y="63.1" text-anchor="middle" font-size="7.6" font-weight="700" fill="#fff">FOUR</text>
+<path d="M190.0,75.0 L208.8,68.0 H246.0 V75.0 Z" fill="#8f9a9a" opacity="0.55"/>
+<path d="M46.0,86.5 L58.5,79.5 H246.0 V86.5 Z" fill="#8f8270" opacity="0.9"/>
 <text x="262.0" y="12.0" text-anchor="start" font-size="12.5" font-weight="700" fill="#1c2526">INTRO · PULSE</text>
 <line x1="262.0" y1="18.0" x2="262.0" y2="90.0" stroke="#7d8787" stroke-width="1"/>
 <text x="262.0" y="100.0" text-anchor="middle" font-size="9.5" font-weight="400" fill="#7d8787" class="mono">0</text>
@@ -196,8 +197,8 @@
 <text x="462.0" y="100.0" text-anchor="middle" font-size="9.5" font-weight="400" fill="#7d8787" class="mono">32</text>
 <path d="M312.0,29.0 L330.8,22.0 H462.0 V29.0 Z" fill="#1f7f75" opacity="0.9"/>
 <path d="M352.0,40.5 L370.8,33.5 H462.0 V40.5 Z" fill="#4a72b0" opacity="0.9"/>
-<path d="M262.0,52.0 L280.8,45.0 H462.0 V52.0 Z" fill="#a08a48" opacity="0.9"/>
-<path d="M262.0,63.5 L280.8,56.5 H462.0 V63.5 Z" fill="#c8743a" opacity="0.9"/>
+<path d="M262.0,52.0 L274.5,45.0 H462.0 V52.0 Z" fill="#a08a48" opacity="0.9"/>
+<path d="M262.0,63.5 L274.5,56.5 H462.0 V63.5 Z" fill="#c8743a" opacity="0.9"/>
 <line x1="342.0" y1="56.5" x2="342.0" y2="63.5" stroke="#fff" stroke-width="1.2"/>
 <text x="305.1" y="63.1" text-anchor="middle" font-size="7.6" font-weight="700" fill="#fff">ONE</text>
 <line x1="412.0" y1="56.5" x2="412.0" y2="63.5" stroke="#fff" stroke-width="1.2"/>
@@ -218,17 +219,17 @@
 <text x="678.0" y="100.0" text-anchor="middle" font-size="9.5" font-weight="400" fill="#7d8787" class="mono">32</text>
 <line x1="598.0" y1="18.0" x2="598.0" y2="90.0" stroke="#1c2526" stroke-width="1" stroke-dasharray="2.5 2"/>
 <text x="601.0" y="16.0" text-anchor="start" font-size="8.5" font-weight="700" fill="#1c2526">THROWN</text>
-<path d="M478.0,22.0 H634.0 L678.0,29.0 H478.0 Z" fill="#1f7f75" opacity=".9"/>
-<path d="M478.0,33.5 H528.0 L568.0,40.5 H478.0 Z" fill="#4a72b0" opacity=".9"/>
-<path d="M478.0,45.0 H558.0 L598.0,52.0 H478.0 Z" fill="#a08a48" opacity=".9"/>
-<path d="M478.0,56.5 H588.0 L618.0,63.5 H478.0 Z" fill="#c8743a" opacity=".9"/>
-<line x1="528.0" y1="56.5" x2="528.0" y2="63.5" stroke="#fff" stroke-width="1.2"/>
-<text x="503.0" y="63.1" text-anchor="middle" font-size="7.6" font-weight="700" fill="#fff">ITS OWN</text>
-<line x1="562.0" y1="56.5" x2="562.0" y2="63.5" stroke="#fff" stroke-width="1.2"/>
-<text x="545.0" y="63.1" text-anchor="middle" font-size="7.6" font-weight="700" fill="#fff">HALF</text>
-<text x="572.0" y="63.1" text-anchor="middle" font-size="7.6" font-weight="700" fill="#fff">ONE</text>
-<path d="M478.0,68.0 H478.0 L508.0,75.0 H478.0 Z" fill="#8f9a9a" opacity=".9"/>
-<path d="M478.0,79.5 H622.0 L678.0,86.5 H478.0 Z" fill="#8f8270" opacity=".9"/>
+<path d="M478.0,22.0 H646.0 L678.0,29.0 H478.0 Z" fill="#1f7f75" opacity=".9"/>
+<path d="M478.0,33.5 H538.0 L588.0,40.5 H478.0 Z" fill="#4a72b0" opacity=".9"/>
+<path d="M478.0,45.0 H588.0 L638.0,52.0 H478.0 Z" fill="#a08a48" opacity=".9"/>
+<path d="M478.0,56.5 H614.0 L654.0,63.5 H478.0 Z" fill="#c8743a" opacity=".9"/>
+<line x1="558.0" y1="56.5" x2="558.0" y2="63.5" stroke="#fff" stroke-width="1.2"/>
+<text x="518.0" y="63.1" text-anchor="middle" font-size="7.6" font-weight="700" fill="#fff">ITS OWN</text>
+<line x1="598.0" y1="56.5" x2="598.0" y2="63.5" stroke="#fff" stroke-width="1.2"/>
+<text x="578.0" y="63.1" text-anchor="middle" font-size="7.6" font-weight="700" fill="#fff">HALF</text>
+<text x="608.0" y="63.1" text-anchor="middle" font-size="7.6" font-weight="700" fill="#fff">ONE</text>
+<path d="M478.0,68.0 H478.0 L518.0,75.0 H478.0 Z" fill="#8f9a9a" opacity=".9"/>
+<path d="M478.0,79.5 H638.0 L678.0,86.5 H478.0 Z" fill="#8f8270" opacity=".9"/>
 <text x="40.0" y="100.0" text-anchor="end" font-size="9.5" font-weight="400" fill="#7d8787" class="plain">bars</text>
 </svg></figure>
 </div>

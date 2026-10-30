@@ -1,5 +1,5 @@
 # the FM pages: a third press on an FM voice; the algorithm overridden, kept by the piece; a non-FM voice: greyed.
-# (1.4.0) The chord's fourth press: its LFO page (format 30, layout B: Drift on Form's Drift, Wave: the wave's share
+# (1.4.0) The chord's fifth press (its fourth before format 36's Chord filter page): its LFO page (format 30, layout B: Drift on Form's Drift, Wave: the wave's share
 # against the wander, Rate: 1 to 32 bars, Target, ALGORITHM's too); then back. The pings' and the
 # bass's FM pages: their fourth knob none now (their LFO gone). (1.4.0, the user's) The Chord FM page for every voice,
 # its fourth knob Colour (on a voice not FM the only one); ALGORITHM on the Chord LFO page its Destination (Cutoff,
@@ -13,6 +13,7 @@ wait 200
 turn ALGO 1
 wait 300
 said VOICE Keys
+tap ENV
 tap ENV
 tap ENV
 wait 400
@@ -85,6 +86,7 @@ expect view 1
 turn ALGO -1
 wait 300
 said VOICE Saws
+tap ENV
 tap ENV
 tap ENV
 wait 300
@@ -166,6 +168,7 @@ expect par22 0
 tap ENV
 tap ENV
 tap ENV
+tap ENV
 wait 300
 expect view 22
 spin K1 30
@@ -174,6 +177,7 @@ expect par166 -20
 tap ENV
 wait 300
 expect view 1
+tap ENV
 tap ENV
 tap ENV
 wait 300

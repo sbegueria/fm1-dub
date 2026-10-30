@@ -117,7 +117,7 @@ wait 600
 release GLO
 reboot
 wait 1000
-expect format 35
+expect format 36
 expect par110 1
 expect par106 20
 # a 1.2.0 project (format 10): read, everything kept (Basic's chord level, set to 50 here), the noise from the
@@ -132,7 +132,7 @@ expect par0 50
 store10
 reboot
 wait 1000
-expect format 35
+expect format 36
 expect par111 70
 expect par113 100
 expect par0 50
@@ -165,7 +165,7 @@ expect par121 95
 store14
 reboot
 wait 1000
-expect format 35
+expect format 36
 expect par121 85
 expect par124 0
 # a 1.3.0 Noise space project (format 15): kept, the noise's LFO from the recipe (Fog's 0: its drift 35)
@@ -179,14 +179,14 @@ expect par121 95
 store15
 reboot
 wait 1000
-expect format 35
+expect format 36
 expect par121 95
 expect par125 0
 # a 1.3.0 noise-LFO project (format 16): kept, the kick's rumble from the recipe (Fog's 62)
 store16
 reboot
 wait 1000
-expect format 35
+expect format 36
 expect par121 95
 expect par126 62
 # (from 16: the noise's LFO as it was, Fog's 0)
@@ -205,7 +205,7 @@ expect par128 0
 store18
 reboot
 wait 1000
-expect format 35
+expect format 36
 expect par121 95
 expect par125 0
 expect par167 -15

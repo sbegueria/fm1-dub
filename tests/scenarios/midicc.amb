@@ -45,3 +45,10 @@ wait 20
 expect par0 50
 wait 300
 shot cc.png
+# CC 29: the Arrangement page's Duck (P_DUCK, the piece's: saved), at both ends
+midi B0 1D 00
+wait 20
+expect par30 0
+midi B0 1D 7F
+wait 20
+expect par30 >50

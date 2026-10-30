@@ -1176,9 +1176,20 @@ rapidly closes", in the classics and in this set; not measured yet).
 - **New voices for variety:** bring in some of the other Felucca instruments.
 - An important overhaul of DUB-1: talk and plan before committing to anything (after 1.5.0 and 1.6.0's plans).
 
+## From the wiki's sources (2026-10-29, REPORT-wiki-reddit.md sections 7-8)
+- **The CPU clock:** hal/fm1_clock.h only reads the clock; under m-bootloader 1.2, or a V16 boot area if its 320 MHz
+  holds [?], DUB-1 would run ~11% slower. felucca-bsp's clock reset (MPL-2.0) could set 360 MHz back. Check on a unit.
+- **fm1-base** (MPL-2.0, usable from GPL DUB-1): the second core with cpu2_fallback and the idle-loop pause;
+  velocity and aftertouch for live play; MIDI thru and USB host; USB audio. For the playability and second-core plans.
+
 ## For the wiki, later (the user, 2026-10-29)
 - The Reddit thread "Claude skill" on r/MVaveFM1 and its linked references, "very useful for our wiki":
   https://www.reddit.com/r/MVaveFM1/comments/1xh6o7m/claude_skill/ (not read yet; the user is short of tokens).
+
+## For research, later (the user, 2026-10-30)
+- **Tessera**, another generative firmware project: https://rastapopolix.github.io/tessera/ (not read yet). To check
+  how it generates, what it plays and how it's played, against DUB-1: ideas for the voices overhaul and playability, and
+  for the wiki if it runs on the FM-1.
 
 ## 1.5.0: sets, their cues, the web (the user, 2026-10-27)
 1. **Writing and loading sets**, of fewer than eight pieces too (Set mode ends at the set's last; the other slots as

@@ -1129,6 +1129,9 @@ int project_load(void)
                                                   * layout, its Transition kept, the sirens' knobs after it unsaved:
                                                   * their defaults, below) */
             proj.format = PROJ_FORMAT;
+        if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == 35u)   /* (35: today's layout; Env decay's slot the
+                                                  * bass's old LFO's, unread: 0, below) */
+            proj.format = PROJ_FORMAT;
         if (old30 && proj.rsv[0] != PROJ_WAVE_MARK) {
             /* (a step 2 test build's, zzo's or zzp's: the LFOs' Shape in the Wave's slots; the Shape Wander, the
              * wander alone, Wave 0, the waves half each, 50; a piece never changed, known by that build's recipe,
@@ -1244,6 +1247,16 @@ int project_load(void)
             en_vary34(proj.slot[i].par);
             proj.slot[i].par[P_SWEEP] = 0;
         }
+    }
+    if (fmt_in >= 8u && fmt_in < 36u) {          /* (before 36, REPORT-stabenv: Env decay, P_CEDEC, in the bass's old
+                                                  * LFO's slot, unread since 1.4.0: 0, the filter's envelope tied to
+                                                  * Decay as it was; Env amount as saved. A piece never changed takes
+                                                  * today's recipe below, its new envelope with it) */
+        for (i = 0; i < NPIECES; i++)
+            fresh[i] = (uint8_t)(fresh[i] || untouched_now(&proj.slot[i], i));
+        proj.par[P_CEDEC] = 0;
+        for (i = 0; i < NPIECES; i++)
+            proj.slot[i].par[P_CEDEC] = 0;
     }
     if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == PROJ_FORMAT) {   /* (the ranges as they are now) */
         if (proj.trans >= EN_NTRANS || old || old30 || old31)

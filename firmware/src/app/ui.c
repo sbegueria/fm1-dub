@@ -29,14 +29,16 @@
  * pages, the layer's button pressed again) */
 enum { V_DUB, V_CHORD, V_TEXTURE, V_BASS, V_DRUMS, V_SPACE, V_SETUP, NPAGES, V_MIX = NPAGES, V_CSND, V_PSND, V_BSND,
        V_DSND, V_CFM, V_PFM, V_BFM, V_CHORDS, V_PAT, V_PERF, V_KEY, V_NSND, V_ESND, V_NSND2, V_CLFO, V_NLFO, V_HATS, V_NVOX,
-       V_STRIP, V_SONG, V_SMODE, V_WALK, V_SIREN, NVIEWS };
+       V_STRIP, V_SONG, V_SMODE, V_WALK, V_SIREN, V_CFILT, NVIEWS };
 /* (V_PERF: PERFORM's knobs, the Arrangement page; V_STRIP a part's white key held (V_MIX, white 6 held, gone).
  * V_SONG (1.4.0, the user's: song structure): HOME again, the piece's song (its Intro, Main, Outro, Kind), HOME's
  * second; V_SMODE: GLO again, Song mode (Endless, Song, Set), the Setup page's second (the player's, as Tune).
  * V_WALK (1.4.0, the user's): EDIT again, the Chords page's second: the circle of fifths, the walk's character and
  * Change. V_SIREN (format 34, the user's): a siren's key held in the Arrangement page, that siren's knobs (sir_page),
  * till it's let go. V_KEY: HOME again, the key and the tempo, the Form page's second. V_CLFO, V_NLFO (1.4.0): the chord's LFO, ENV a fourth time (after its FM page), and
- * the noise's, SAVE a third time; for now, till the big redesign) */
+ * the noise's, SAVE a third time; for now, till the big redesign). V_CFILT (format 36, the user's: "a page dedicated to
+ * the filter"): the chord's filter, ENV a third time (Chord, Chord voice, Chord filter, Chord FM, Chord LFO): Cutoff,
+ * Reso, Env and Env decay; the Chord voice page keeps Attack and Decay. Its number the last: the others kept */
 /* (1.4.0, the user's: the names; the identifiers kept: V_DUB the Form page, HOME's; V_SPACE the Dub page, FX's, the echo
  * and the plate; V_PERF the Arrangement page, SEL's, PERFORM's that was. The layers' pages: each its part, then its
  * voice, then FM: V_DSND the Kick page, V_HATS the hats' (SEQ a third time), V_NVOX the Noise voice (SAVE again)) */
@@ -44,11 +46,12 @@ static const char *const VIEW_NAME[NVIEWS] = {"Form", "Chord", "Pings", "Bass", 
                                               "Chord voice", "Pings voice", "Bass voice", "Kick",
                                               "Chord FM", "Pings FM", "Bass FM", "Chords", "Pattern", "Arrangement", "Key", "Noise",
                                               "Echo", "Noise space", "Chord LFO", "Noise LFO", "Hats", "Noise voice",
-                                              "Strip", "Song", "Song mode", "Walk", "Siren"};
+                                              "Strip", "Song", "Song mode", "Walk", "Siren", "Chord filter"};
 #define B_NONE 0xFFu
 static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_ENV, B_ARP, B_LFO, B_SEQ, B_FX, B_GLO, B_NONE, B_NONE, B_NONE, B_NONE,
                                          B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_SAVE, B_NONE, B_NONE,
-                                         B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE};
+                                         B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE,
+                                         B_NONE};
 /* HOME's screen views (the stored numbers; 3 and 4 gone, 1.4.0): ui_screen_ok */
 enum { SCR_RIPPLES = 0, SCR_SCOPE = 1, SCR_SPEC = 2, SCR_TAPE = 5 };
 #define SCR_N 4
@@ -57,7 +60,7 @@ static int sound_of(int v) { return v == V_CHORD ? V_CSND : v == V_TEXTURE ? V_P
 static int fm_of(int v) { return v == V_CHORD ? V_CFM : v == V_TEXTURE ? V_PFM : v == V_BASS ? V_BFM : -1; }
 static int parent_of(int v)
 {
-    return v == V_CSND || v == V_CFM || v == V_CLFO ? V_CHORD : v == V_PSND || v == V_PFM ? V_TEXTURE : v == V_BSND || v == V_BFM ? V_BASS
+    return v == V_CSND || v == V_CFILT || v == V_CFM || v == V_CLFO ? V_CHORD : v == V_PSND || v == V_PFM ? V_TEXTURE : v == V_BSND || v == V_BFM ? V_BASS
          : v == V_DSND || v == V_HATS || v == V_PAT ? V_DRUMS : -1;
 }
 static int noise_page(int v) { return v == V_NSND || v == V_NVOX || v == V_NSND2 || v == V_NLFO; }   /* (SAVE's) */
@@ -181,9 +184,10 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
     {P_ECHO, P_ETIME, P_FEEDBACK, P_REVERB},
     {P_TUNE, P_MIDI, K_LEDS, K_SAVE},
     {P_CHORD, P_PINGS, P_BASS, P_DRUMS},
-    {P_CCUT, P_CRES, P_CATT, P_DECAY},           /* (1.4.0, the user's: the chord's voice, the filter first, its Cutoff
-                                                  * around the piece's own; Colour on the FM page. Env, P_CENV, off the
-                                                  * page: the voices and the recipes) */
+    {P_CATT, P_DECAY, P_CCOL, K_NONE},           /* (1.4.0, the user's: the chord's voice; Colour on the FM page.
+                                                  * Format 36, the user's: the filter its own page, V_CFILT, its Cutoff,
+                                                  * Reso, Env and Env decay; here the stab's strike and length, and
+                                                  * Colour (the FM page's too); KNOB 4 free, the Wet the Arrangement's) */
     {P_POCT, P_PTON, P_PLEN, P_PBEND},           /* (1.4.0, the user's: the voices, each its register first) */
     {P_BASSOCT, P_BSHAPE, P_BLEN, P_BSLIDE},     /* (Bite to the FM page, every voice's) */
     {P_KTUNE, P_KLEN, P_KPUNCH, P_RUMBLE},       /* (the Kick page: the rumble back, the user's second try) */
@@ -220,6 +224,10 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
     {K_WALK, P_DRIFT, K_NONE, K_NONE},           /* (1.4.0, the user's) the Walk page: EDIT again; the walk's character
                                                   * (also on ALGORITHM, as ever) and Change, the Chord page's too */
     {K_SPITCH, K_SRATE, K_SDEPTH, K_SECHO},      /* (format 34, the user's) a siren's page: its key held */
+    {P_CCUT, P_CRES, P_CENV, P_CEDEC},           /* (format 36, the user's) the Chord filter page: the Cutoff around the
+                                                  * piece's own, Reso; Env, how far each stab opens it (the voice's own
+                                                  * at 0, none at the left, twice at the right), Env decay, how quickly
+                                                  * it closes (REPORT-stabenv) */
 };
 static const uint16_t STRIP_PAR[NSTRIP][4] = {
     {P_CHORD, P_CECHO, P_CPLATE, P_CLOW}, {P_PINGS, P_PECHO, P_PPLATE, P_PLOW}, {P_BASS, P_BECHO, P_BPLATE, P_BLOW},
@@ -232,10 +240,11 @@ static int vknob(int v, int i)                   /* a page's knob i: VIEW_KNOB's
 }
 static void page_pos(int v, int *n, int *m)     /* (1.4.0, the user's) a page's place among its button's: n of m (m 1: alone) */
 {
-    static const uint8_t SEQ[9][4] = {{V_DUB, V_SONG, V_KEY}, {V_CHORD, V_CSND, V_CFM, V_CLFO}, {V_TEXTURE, V_PSND, V_PFM},
+    static const uint8_t SEQ[9][5] = {{V_DUB, V_SONG, V_KEY}, {V_CHORD, V_CSND, V_CFILT, V_CFM, V_CLFO}, {V_TEXTURE, V_PSND, V_PFM},
                                       {V_BASS, V_BSND, V_BFM}, {V_DRUMS, V_DSND, V_HATS, V_PAT}, {V_SPACE, V_ESND},
                                       {V_NSND, V_NVOX, V_NLFO}, {V_SETUP, V_SMODE}, {V_CHORDS, V_WALK}};
-    static const uint8_t LEN[9] = {3, 4, 3, 3, 4, 2, 3, 2, 2};   /* (1.4.0: HOME's Song page, GLO's Song mode, EDIT's Walk) */
+    static const uint8_t LEN[9] = {3, 5, 3, 3, 4, 2, 3, 2, 2};   /* (1.4.0: HOME's Song page, GLO's Song mode, EDIT's Walk;
+                                                  * format 36: ENV's Chord filter) */
     int s, i;
     for (s = 0; s < 9; s++)
         for (i = 0; i < LEN[s]; i++)
@@ -262,7 +271,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Echo", "Echo time", "Feedback", "Reverb"},
     {"Tune", "MIDI out", "Lights", "Save"},
     {"Chord", "Pings", "Bass", "Drums"},
-    {"Cutoff", "Reso", "Attack", "Decay"},
+    {"Attack", "Decay", "Colour", ""},
     {"Octave", "Tone", "Length", "Bend"},
     {"Octave", "Shape", "Gate", "Glide"},        /* (1.4.0, the user's: the common words) */
     {"Tune", "Length", "Punch", "Rumble"},
@@ -285,6 +294,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Mode", "Transition", "", "Values"},
     {"Walk", "Change", "", ""},
     {"Pitch", "Rate", "Depth", "Echo"},
+    {"Cutoff", "Reso", "Env", "Env decay"},
 };
 /* what each knob does, a line: under the big ring in the middle while it's being turned (each fits 228 px: the
  * host's expect helpfit) */
@@ -302,8 +312,7 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
     {"Fine tuning, in cents", "Notes and clock out over MIDI", "The keys' and buttons' lights",
      "A turn saves all eight pieces"},
     {"The chord's level", "The pings' level", "The bass's level", "The drums' level"},
-    {"Darker, or brighter, than the piece's own", "The filter's resonance", "The strike: a snap, to a swell",
-     "How long each stab rings"},
+    {"The strike: a snap, to a swell", "How long each stab rings", "The voice's own colour", ""},
     {"The pings two octaves down to two up", "The ping, round to metallic", "How long each ping rings",
      "The pitch falling at the strike"},
     {"The bass an octave down or up", "A pure sine, to a square", "How long each note holds (its gate)",
@@ -342,6 +351,8 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
      "The knobs' numbers: shown a moment, or always"},
     {"Home, Wander or Free: how far it roams", "How long a chord lasts", "", ""},
     {"Up or down an octave", "How fast it goes round", "How far its pitch swings", "Into the echo; past half, repeats stack"},
+    {"Darker, or brighter, than the piece's own", "The filter's resonance", "How far each stab opens it; left: not at all",
+     "How quickly it closes again: quick to slow"},
 };
 /* (format 34) the siren page's help, each siren its own (the big ring's, as KNOB_HELP's) */
 static const char *const SIR_HELP[EN_NSIR][4] = {
@@ -1451,7 +1462,10 @@ static void button(int b)
     }
     if (parent_of(ui.view) >= 0 && b == VIEW_BTN[parent_of(ui.view)]) {   /* again: an FM voice's FM page; then back */
         int pv = parent_of(ui.view);
-        if (ui.view == sound_of(pv) && fm_of(pv) >= 0)   /* (on a voice that isn't FM, the page says so) */
+        if (ui.view == V_CSND)
+            set_view(V_CFILT);                   /* (format 36, the user's) the chord: its filter, then its FM */
+        else if ((ui.view == sound_of(pv) || ui.view == V_CFILT) && fm_of(pv) >= 0)   /* (on a voice that isn't FM,
+                                                  * the page says so) */
             set_view(fm_of(pv));
         else if (ui.view == V_CFM)
             set_view(V_CLFO);                    /* (1.4.0) the chord: its LFO, then back */
@@ -1671,7 +1685,7 @@ static const struct { uint8_t cc; uint16_t k; } CC_MAP[] = {
     {1, K_FILTER},                                         /* (the mod wheel: the DJ filter, SELECT's) */
     {20, P_CHORD}, {21, P_PINGS}, {22, P_BASS}, {23, P_DRUMS},   /* the layers' levels */
     {24, P_KLVL}, {25, P_HATSLVL}, {26, P_CRACKLE},        /* the Kick, Hats and Noise strips' levels */
-    {27, K_DUB}, {28, K_ENERGY}, {29, K_SPACE},            /* the master actions: Wet, Energy, Duck (for playing) */
+    {27, K_DUB}, {28, K_ENERGY}, {29, P_DUCK},             /* Wet, Energy (for playing) and the Arrangement page's Duck */
     {71, P_CRES}, {72, P_DECAY}, {73, P_CATT}, {74, P_CCUT},   /* the chord's voice (the GM sound controllers') */
     {91, P_REVERB}, {92, P_ECHO}, {93, P_FEEDBACK}, {94, P_ETIME}, {95, P_CLOUD},   /* the space */
     {102, P_DENSITY}, {103, P_VARY}, {104, P_HITS}, {105, P_SWING}, {106, P_SIZE},
@@ -1695,8 +1709,8 @@ static void cc_in(uint32_t cc, uint32_t v)
         n[i] = (char)(s[i] >= 'a' && s[i] <= 'z' ? s[i] - 32 : s[i]);
     n[i] = 0;
     say_name(n, t);
-    big_show(k, s, K_ACC);
-    ui.turn_t = plat_ms();
+    big_show(k, s, K_ACC);                       /* (not a turn: ui.turn_t left, so a controller sending doesn't
+                                                  * cancel HOME's Shake, the nudges or EDIT's held keys) */
 }
 
 /* MIDI in (USB and the TRS jack): channel 1 notes add or remove their note from the scale, its CCs turn knobs
@@ -1728,13 +1742,16 @@ static void midi_in(void)
 #define NNUDGE 6
 static const uint8_t NUDGE_BTN[NNUDGE] = {B_ENV, B_ARP, B_LFO, B_SEQ, B_FX, B_SAVE};
 static const char *const NUDGE_NAME[NNUDGE] = {"CHORD", "PINGS", "BASS", "DRUMS", "SPACE", "NOISE"};
-static const uint8_t NUDGE_PAR[NNUDGE][8] = {   /* (the FM ones, the last two of the first three, on an FM voice only) */
-    {P_CATT, P_CCOL, P_CRES, P_DECAY, P_CATT, P_CCUT, P_CFRAT, P_CFB},   /* (Env, on no page now, left be) */
-    {P_PTON, P_PRAT, P_PLEN, P_PBEND, P_PTON, P_PLEN, P_PFRAT, P_PFB},   /* (1.4.0: Wet, off the page, left be) */
-    {P_BBITE, P_BSHAPE, P_BLEN, P_BSLIDE, P_FIFTH, P_BLEN, P_BFRAT, P_BFB},
-    {P_KTUNE, P_KLEN, P_KPUNCH, P_HTONE, P_KLEN, P_HATSLVL, P_HTONE, P_KTUNE},   /* (Hats: their level, against the kick) */
-    {P_ECHO, P_FEEDBACK, P_REVERB, P_SIZE, P_CLOUD, P_ECHO, P_ECHO, P_ECHO},   /* (the space: FX; its shake, a new echo time) */
-    {P_NCOL, P_NGRAIN, P_NTUNE, P_NROOM, P_NCOL, P_NGRAIN, P_NTUNE, P_NCOL},   /* (the noise: SAVE; its shake, a new character) */
+#define NUDGE_NP 10                             /* (format 36: ten, the chord's filter envelope in) */
+static const uint8_t NUDGE_PAR[NNUDGE][NUDGE_NP] = {   /* (the FM ones, the last two of the first three, on an FM voice
+                                                        * only; a repeat is chosen once) */
+    {P_CATT, P_CCOL, P_CRES, P_DECAY, P_CCUT, P_CENV, P_CEDEC, P_CATT, P_CFRAT, P_CFB},   /* (format 36, the user's: Env
+                                                  * and Env decay, the Chord filter page's, nudged too) */
+    {P_PTON, P_PRAT, P_PLEN, P_PBEND, P_PTON, P_PLEN, P_PTON, P_PTON, P_PFRAT, P_PFB},   /* (1.4.0: Wet, off the page, left be) */
+    {P_BBITE, P_BSHAPE, P_BLEN, P_BSLIDE, P_FIFTH, P_BLEN, P_BLEN, P_BLEN, P_BFRAT, P_BFB},
+    {P_KTUNE, P_KLEN, P_KPUNCH, P_HTONE, P_KLEN, P_HATSLVL, P_HTONE, P_KTUNE, P_KTUNE, P_KTUNE},   /* (Hats: their level, against the kick) */
+    {P_ECHO, P_FEEDBACK, P_REVERB, P_SIZE, P_CLOUD, P_ECHO, P_ECHO, P_ECHO, P_ECHO, P_ECHO},   /* (the space: FX; its shake, a new echo time) */
+    {P_NCOL, P_NGRAIN, P_NTUNE, P_NROOM, P_NCOL, P_NGRAIN, P_NTUNE, P_NCOL, P_NCOL, P_NCOL},   /* (the noise: SAVE; its shake, a new character) */
 };
 static uint32_t nudge_seed = 0x9E3779B9u;
 static int nrand(int n)
@@ -1762,13 +1779,15 @@ static uint8_t nudge_quiet;                      /* (HOME held on: the shakes al
 static void nudge(int layer, int how)
 {
     /* (1.4.0: the layer's pages its knobs are on: the first the one shown, unless another's moved most) */
-    static const uint8_t SND[NNUDGE][3] = {{V_CSND, V_CFM, V_CHORD}, {V_PSND, V_PFM, V_TEXTURE}, {V_BSND, V_BFM, V_BASS},
-                                           {V_DSND, V_HATS, V_DRUMS}, {V_SPACE, V_ESND, V_SPACE}, {V_NVOX, V_NSND, V_NSND}};
+    /* (format 36: the chord's four, its filter page between) */
+    static const uint8_t SND[NNUDGE][4] = {{V_CSND, V_CFILT, V_CFM, V_CHORD}, {V_PSND, V_PFM, V_TEXTURE, V_TEXTURE},
+                                           {V_BSND, V_BFM, V_BASS, V_BASS}, {V_DSND, V_HATS, V_DRUMS, V_DRUMS},
+                                           {V_SPACE, V_ESND, V_SPACE, V_SPACE}, {V_NVOX, V_NSND, V_NSND, V_NSND}};
     static const uint8_t VOICE[NNUDGE] = {P_CVOICE, P_PVOICE, P_BVOICE, P_KIT, P_ETIME, P_NCHAR};
     int16_t rec[P_NPARAMS];
     uint16_t pool;
     int j, best = -1, bd = 0, fm, n, np = 0;
-    uint8_t pick[8];
+    uint8_t pick[NUDGE_NP];
     char vn[24] = "";
     if (how == NUDGE_SHAKE && layer == 4) {      /* the space's: another echo time */
         int nt = en_param_info(P_ETIME)->hi + 1, cur = proj.par[P_ETIME], v = (cur + 1 + nrand(nt - 1)) % nt;
@@ -1803,7 +1822,7 @@ static void nudge(int layer, int how)
             vn[k] = 0;
         }
     }
-    for (j = 0; j < (fm ? 8 : 6); j++) {         /* (the values to choose from, each once) */
+    for (j = 0; j < (fm ? NUDGE_NP : NUDGE_NP - 2); j++) {         /* (the values to choose from, each once) */
         int q, dup = 0;
         for (q = 0; q < np; q++)
             dup |= pick[q] == NUDGE_PAR[layer][j];
@@ -1864,7 +1883,7 @@ static void nudge(int layer, int how)
     }
     if (!ui.perf && !nudge_quiet) {
         int sv = SND[layer][0], q;
-        for (q = 0; q < 3 && how == NUDGE_HAND; q++) {   /* (1.4.0: the page whose knob moved most: the voice page, the FM
+        for (q = 0; q < 4 && how == NUDGE_HAND; q++) {   /* (1.4.0: the page whose knob moved most: the voice page, the FM
                                                   * one, the Hats page...) */
             for (j = 0; j < 4 && !(VIEW_KNOB[SND[layer][q]][j] == best && !fm_knob_off(SND[layer][q], j)); j++)
                 ;
@@ -3186,34 +3205,6 @@ static void draw_spec(void)
     }
 }
 
-/* a sound page: its layer's envelope (its level; the chord's filter envelope, the pings' bend, the kick's
- * pitch, dimmer), over the time it lasts */
-static void draw_env(int layer_view)
-{
-    float lv[48], ax[48], secs;
-    int i, layer = layer_view == V_CHORD ? 0 : layer_view == V_TEXTURE ? 1 : layer_view == V_BASS ? 2 : 3;
-    int32_t x0 = 58, w = 124, y0 = 8, h = 76;
-    char t[12];
-    en_env_shape(layer, lv, ax, 48, &secs);
-    cv_rect(x0, y0 + h, w + 4, 1, K_LINE);
-    cv_rect(x0, y0, 1, h, K_LINE);
-    for (i = 0; i < 48; i++) {
-        int32_t x = x0 + 2 + i * w / 47, ya = y0 + h - (int32_t)(ax[i] * (float)h), yl = y0 + h - (int32_t)(lv[i] * (float)h);
-        if (ax[i] > 0.01f)
-            cv_rect(x, ya, 2, 2, K_LINE);
-        cv_rect(x, yl, 2, y0 + h - yl, mix(K_BG, K_PAD, 5));
-        cv_rect(x, yl, 2, 2, K_PAD);
-    }
-    itoa_u((uint32_t)(secs * 1000.0f + 0.5f), t);
-    {
-        uint32_t k = 0;
-        while (t[k])
-            k++;
-        t[k++] = ' ', t[k++] = 'm', t[k++] = 's', t[k] = 0;
-    }
-    cv_text(x0 + w - text_w(&FONT_XS, t), y0 + h + 1, &FONT_XS, t, K_DIM);
-}
-
 /* an FM page: the voice's algorithm, as the FM synths draw it: the operators as boxes, each modulator above
  * the one it modulates, the carriers on the bottom line (they're heard), op 4's feedback a loop */
 static const int8_t ALG_XY[EN_FM_NALG][4][2] = {   /* each op's place (x in half steps from the middle, y up) */
@@ -3768,6 +3759,123 @@ static void lfo_units(int k, float re, char *hi, char *lo)   /* (its reach's end
         en_param_text(p, v - dl < lo0 ? lo0 : v - dl, lo);
     }
 }
+/* (format 36, the user's) the Chord filter page's picture: the stab's filter envelope as it plays, its cutoff over
+ * time (octaves over the Cutoff's, up the screen: 4 the height, Saws' own 2.5; past it, along the top), on a time line
+ * in decades (1 ms .. 4 s: Env decay
+ * moves the fall left and right, Env how high it starts); the stab's level faint behind it (Attack, Decay: the
+ * filter closes within the ring); at the left, the cutoff at the strike and at rest, in Hz; at the right, how far it
+ * opens and its half-time (a dot on the curve). The engine's own numbers (en_chord_env): the fall exp(-6.9 t / ft),
+ * as the stab's filter closes it */
+static void cf_ms(float s, char *b)              /* (a time: 4.6 ms, 23 ms, 1.2 s) */
+{
+    char t[12];
+    int j = 0, k;
+    const int ms10 = (int)(s * 10000.0f + 0.5f);  /* (tenths of a ms) */
+    if (ms10 < 100)                               /* (under 10 ms: a tenth) */
+        itoa_u((uint32_t)(ms10 / 10), t);
+    else if (ms10 < 10000)
+        itoa_u((uint32_t)((ms10 + 5) / 10), t);
+    else
+        itoa_u((uint32_t)((ms10 + 500) / 10000), t);
+    for (k = 0; t[k]; k++)
+        b[j++] = t[k];
+    if (ms10 < 100)
+        b[j++] = '.', b[j++] = (char)('0' + ms10 % 10);
+    else if (ms10 >= 10000)
+        b[j++] = '.', b[j++] = (char)('0' + (ms10 + 500) / 1000 % 10);
+    b[j++] = ' ';
+    if (ms10 < 10000)
+        b[j++] = 'm';
+    b[j++] = 's', b[j] = 0;
+}
+static void cf_cat(char *b, const char *s)       /* (a string's end, another after it) */
+{
+    while (*b)
+        b++;
+    while (*s)
+        *b++ = *s++;
+    *b = 0;
+}
+#define CF_X0 8
+#define CF_X1 232
+#define CF_YT 8                                  /* (4 octaves over the Cutoff) */
+#define CF_YB 74                                 /* (the Cutoff, at rest) */
+#define CF_OCT 11.966f                           /* (log2(4 s / 1 ms): the time line's octaves) */
+static int32_t cf_x(float t)                     /* a time (s) on the line */
+{
+    return CF_X0 + (int32_t)(fm_log2f(fm_maxf(t, 0.001f) * 1000.0f) * (float)(CF_X1 - CF_X0) / CF_OCT + 0.5f);
+}
+static int32_t cf_y(float oct)                   /* octaves over the Cutoff, up the picture */
+{
+    return CF_YB - (int32_t)(fm_clampf(oct * 0.25f, 0.0f, 1.0f) * (float)(CF_YB - CF_YT) + 0.5f);
+}
+static void draw_cfilt(void)
+{
+    static const float TICK[3] = {0.01f, 0.1f, 1.0f};
+    static const char *const TICK_S[3] = {"10 ms", "100 ms", "1 s"};
+    float oct, ft, ta, t60;
+    int32_t x, yp = CF_YB, k;
+    char a[20], b[20];
+    en_chord_env(&oct, &ft, &ta, &t60);
+    for (k = 0; k < 3; k++) {                    /* (the decades: a dotted line up, the time under it) */
+        int32_t y;
+        x = cf_x(TICK[k]);
+        for (y = CF_YT; y < CF_YB; y += 3)
+            cv_rect(x, y, 1, 1, mix(K_BG, K_LINE, 10));
+        text_c(x, CF_YB + 2, &FONT_XS, TICK_S[k], K_DIM);
+    }
+    for (x = CF_X0; x <= CF_X1; x++) {           /* (the stab's level, faint, under it: 0.6 the height) */
+        const float t = 0.001f * fm_exp2f((float)(x - CF_X0) * CF_OCT / (float)(CF_X1 - CF_X0)),
+                    l = (1.0f - fm_expf(-t / ta)) * fm_expf(-6.9f * t / t60);
+        const int32_t h = (int32_t)(fm_clampf(l, 0.0f, 1.0f) * (float)(CF_YB - CF_YT) * 0.6f + 0.5f);
+        if (h > 0)
+            cv_rect(x, CF_YB - h, 1, h, mix(K_BG, K_PAD, 3));
+    }
+    cv_rect(CF_X0, CF_YB, CF_X1 - CF_X0 + 1, 1, K_LINE);
+    for (x = CF_X0; x <= CF_X1; x++) {           /* (the cutoff: bold, the chord's colour) */
+        const float t = 0.001f * fm_exp2f((float)(x - CF_X0) * CF_OCT / (float)(CF_X1 - CF_X0));
+        const int32_t y = cf_y(oct * fm_expf(-6.9f * t / ft)), y0 = x == CF_X0 ? y : yp, a0 = y0 < y ? y0 : y,
+                      a1 = y0 > y ? y0 : y;
+        cv_rect(x, a0 - 1, 1, a1 - a0 + 2, K_PAD);
+        yp = y;
+    }
+    {   /* (its ends in Hz at the left: the strike's over the curve's start, the rest's over the line) */
+        const float cb = en_chord_cut();
+        lfo_hz(fm_clampf(cb * fm_exp2f(oct), 20.0f, 20000.0f), a);
+        lfo_hz(cb, b);
+        if (oct >= 0.4f) {
+            const int32_t y = cf_y(oct) - 15 < 0 ? 0 : cf_y(oct) - 15;
+            cv_shade(CF_X0 - 2, y + 1, text_w(&FONT_XS, a) + 4, 12, 2, 12u, K_BG);
+            cv_text(CF_X0, y, &FONT_XS, a, K_DIM);
+        }
+        cv_shade(CF_X0 - 2, CF_YB - 14, text_w(&FONT_XS, b) + 4, 12, 2, 12u, K_BG);
+        cv_text(CF_X0, CF_YB - 15, &FONT_XS, b, K_DIM);
+    }
+    if (oct < 0.01f) {                           /* (Env at its left: no sweep) */
+        text_c((CF_X0 + CF_X1) / 2, 8, &FONT_XS, "NO SWEEP", K_DIM);
+        return;
+    }
+    {   /* (how far it opens, and its half-time, at the right; the half a dot on the curve) */
+        const float half = ft * (0.6931472f / 6.9f);
+        const int32_t xh = cf_x(half);
+        const int o10 = (int)(oct * 10.0f + 0.5f);
+        char d[2] = {0, 0};
+        if (xh > CF_X0 && xh <= CF_X1)
+            cv_disc(xh, cf_y(0.5f * oct), 2, K_TEXT);
+        itoa_u((uint32_t)(o10 / 10), a);
+        d[0] = (char)('0' + o10 % 10);
+        cf_cat(a, ".");
+        cf_cat(a, d);
+        cf_cat(a, " oct");
+        b[0] = 0;
+        cf_cat(b, "half ");
+        cf_ms(half, b + 5);
+        cv_shade(CF_X1 - text_w(&FONT_XS, b) - 2, 3, text_w(&FONT_XS, b) + 4, 26, 2, 12u, K_BG);
+        cv_text(CF_X1 - text_w(&FONT_XS, a), 2, &FONT_XS, a, K_DIM);
+        cv_text(CF_X1 - text_w(&FONT_XS, b), 15, &FONT_XS, b, K_DIM);
+    }
+}
+
 static void draw_lfo(int k)
 {
     const int32_t xl = 4, xn = 120, xr = 236, half = xn - xl, yc = 44, rr = 36;   /* (the picture's rows, 8..80, the
@@ -4806,6 +4914,9 @@ static void draw_main(void)
     main_begin(K_BG);
     if (ui.view >= V_CFM && ui.view <= V_BFM) {  /* an FM page: the algorithm */
         draw_alg(layer_of(ui.view));
+        moving = 0;
+    } else if (ui.view == V_CFILT) {            /* (format 36) the Chord filter page: the stab's filter envelope */
+        draw_cfilt();
         moving = 0;
     } else if (lfo_page(ui.view)) {              /* (1.4.0) an LFO page: its path */
         draw_lfo(ui.view == V_NLFO);

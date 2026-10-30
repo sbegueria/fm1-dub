@@ -9,7 +9,9 @@
  * for the outro at T seconds (HOME held + PLAY; a song: Song_mode=1 Intro=2 Main=4 Outro=2, in phrases); siren=S@T taps
  * PERFORM's dub siren S (0 Wail, 1 Whoop, 2 Hi-lo, 3 Laser) at T, siren=S@T0-T1 holds it (its key down at T0, the hold a
  * third of a second on, let go at T1); sirknob=S:K:V sets siren S's knob K (0 Pitch, 1 Rate, 2 Depth, 3 Echo: amb.h
- * EN_SK_*) to V, sirknob=S:K:V0:V1@T0-T1 sweeps it from V0 to V1 over T0..T1 (a step a block); sirlog=FILE writes the siren's pitch each block (s, on, semitones, Hz); log prints each
+ * EN_SK_*) to V, sirknob=S:K:V0:V1@T0-T1 sweeps it from V0 to V1 over T0..T1 (a step a block); sirlog=FILE writes the siren's pitch each block (s, on, semitones, Hz); fdlog=FILE writes, each bar,
+ * its start (s), the bar, the song's place (0 off, 1 intro, 2 main, 3 outro, 4 end) and the six parts' faders as heard
+ * (en_fader: the chord, the pings, the bass, the kick, the hats, the noise); log prints each
  * bar's section and stabs, the song's place, the kick's and the hats' lanes, and the chord as it moves.
  *   cc -O2 -ffp-contract=off -DEN_HOST -Ifirmware/src/dsp -o build/host/en_render host/en_render.c \
  *      firmware/src/dsp/amb.c -lm */
@@ -52,7 +54,7 @@ int main(int argc, char **argv)
     int nfx = 0, fxn[16];
     double sr0[16], sr1[16];
     int nsr = 0, srn[16], srs[16];
-    FILE *slog = 0;
+    FILE *slog = 0, *flog = 0;
     int nsk = 0, skn[16][2], skv[16][2], skl[16];
     double skt[16][2];
     uint32_t fxwas = 0;
@@ -95,6 +97,8 @@ int main(int argc, char **argv)
             } else {
                 nsk++;
             }
+        } else if (!strncmp(a, "fdlog=", 6)) {
+            flog = fopen(a + 6, "w");
         } else if (!strncmp(a, "sirlog=", 7)) {
             slog = fopen(a + 7, "w");
         } else if (!strncmp(a, "outro=", 6)) {
@@ -178,6 +182,9 @@ int main(int argc, char **argv)
         done += n;
         if (slog)
             fprintf(slog, "%.4f %u %.3f %.2f\n", done / 44100.0, en_sir_on, (double)en_sir_st, (double)en_sir_hz);
+        if (flog && en_bars / 16u != last16 / 16u)
+            fprintf(flog, "%.4f %u %u %.4f %.4f %.4f %.4f %.4f %.4f\n", t, en_bars / 16u, en_song_ph, (double)en_fader[0],
+                    (double)en_fader[1], (double)en_fader[2], (double)en_fader[3], (double)en_fader[4], (double)en_fader[5]);
         if (logit && en_bars / 16u != last16 / 16u) {
             char nm[16];
             int pcs[4], k;
@@ -204,5 +211,7 @@ int main(int argc, char **argv)
     fclose(f);
     if (slog)
         fclose(slog);
+    if (flog)
+        fclose(flog);
     return 0;
 }

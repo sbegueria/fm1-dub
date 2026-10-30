@@ -4,7 +4,7 @@
 storefile tests/host/proj-1.2.0.bin
 reboot
 wait 500
-expect format 35
+expect format 36
 expect piece 0
 # Basic as today has it (Stabs 3, a count since format 32: 1.2.0's 30; Feedback 62, 1.2.0's 60), its noise Vinyl
 expect par28 3
@@ -31,7 +31,7 @@ expect par0 50
 storefile tests/host/proj-1.3.0-test14.bin
 reboot
 wait 500
-expect format 35
+expect format 36
 expect par11 62
 expect par29 8
 storefile tests/host/proj-1.3.0-test14-resaved15.bin
@@ -45,7 +45,7 @@ expect par29 8
 storefile tests/host/proj-1.4.0-test18.bin
 reboot
 wait 500
-expect format 35
+expect format 36
 expect piece 0
 expect par125 25
 expect par127 2
@@ -69,7 +69,7 @@ expect par6 3
 store20
 reboot
 wait 500
-expect format 35
+expect format 36
 expect piece 3
 expect par6 3
 expect par133 0
@@ -87,15 +87,16 @@ wait 300
 expect piece 3
 tap ENV
 tap ENV
+tap ENV
 wait 300
-expect view 8
+expect view 31
 spin K1 10
 wait 300
 expect par139 8
 store21
 reboot
 wait 500
-expect format 35
+expect format 36
 expect piece 3
 expect par6 3
 expect par12 46
@@ -127,7 +128,7 @@ expect par157 2
 store24
 reboot
 wait 500
-expect format 35
+expect format 36
 expect piece 3
 expect par6 3
 expect par157 0
@@ -162,7 +163,7 @@ expect par161 7
 store25
 reboot
 wait 500
-expect format 35
+expect format 36
 expect piece 3
 expect par6 3
 expect par157 2
@@ -187,7 +188,7 @@ expect par161 3
 store26
 reboot
 wait 500
-expect format 35
+expect format 36
 expect piece 0
 expect par161 3
 # (the variety study: Basic's Mixer 45, Fog's 90)
@@ -220,7 +221,7 @@ wait 300
 store27
 reboot
 wait 1000
-expect format 35
+expect format 36
 expect par148 28
 expect par149 0
 # (1.4.0, format 29, the variety plan's step 1) a Filter project (format 28): Evolve Form's Vary, as it was; each
@@ -248,7 +249,7 @@ expect par135 -50
 store28
 reboot
 wait 1000
-expect format 35
+expect format 36
 expect piece 0
 expect par5 60
 expect par133 -16
@@ -260,7 +261,7 @@ expect par164 100
 store29
 reboot
 wait 1000
-expect format 35
+expect format 36
 expect piece 0
 expect par5 60
 expect par133 -16
@@ -293,7 +294,7 @@ recipe 5
 store30s
 reboot
 wait 1000
-expect format 35
+expect format 36
 expect piece 0
 expect par5 60
 expect par165 41
@@ -336,7 +337,7 @@ recipe 6
 store30 60
 reboot
 wait 1000
-expect format 35
+expect format 36
 expect piece 0
 expect par15 24
 expect par163 60
@@ -391,7 +392,7 @@ wait 300
 store31
 reboot
 wait 1000
-expect format 35
+expect format 36
 expect piece 0
 expect par7 41
 expect par113 67
@@ -431,7 +432,7 @@ recipe 6
 store34
 reboot
 wait 1000
-expect format 35
+expect format 36
 expect piece 0
 expect par5 60
 expect par133 -16
@@ -441,3 +442,30 @@ wait 300
 expect piece 6
 expect par5 76
 expect par169 1
+# (format 36, REPORT-stabenv) a 1.4.2 project (format 35): Env decay's slot the bass's old LFO's, unread (the playing
+# piece a stray 37 there): read as 0; a piece changed (Basic, its Vary) keeps the envelope it had (Env amount 0, Env
+# decay 0: the tie to Decay); the pieces never changed (Pressure, Steppers) today's recipe, their new envelope
+turn PRESET -6
+wait 300
+expect piece 0
+# (Pressure and Steppers back to their recipes, unplayed: never changed)
+recipe 6
+recipe 2
+store35
+reboot
+wait 1000
+expect format 36
+expect piece 0
+expect par5 60
+expect par39 0
+expect par63 0
+turn PRESET 6
+wait 300
+expect piece 6
+expect par39 50
+expect par63 12
+turn PRESET -4
+wait 300
+expect piece 2
+expect par39 -30
+expect par63 31

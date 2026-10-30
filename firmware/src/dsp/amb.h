@@ -66,7 +66,13 @@ enum {
      * feedback, the modulators' decay: relative, -50 .. +50 */
     P_CALG, P_CFRAT, P_CFB, P_CFDEC,
     P_PALG, P_PFRAT, P_PFB, P_PFDEC,
-    P_BALG, P_BFRAT, P_BFB, P_BFDEC,
+    P_BALG, P_BFRAT, P_BFB,
+    P_CEDEC,                                          /* (format 36, REPORT-stabenv) the chord's filter envelope, how
+                                                       * quickly it closes, -50..+50 around its tie to Decay (0: as
+                                                       * before, a quarter of the stab's T60 and 20 ms; each step
+                                                       * 0.08 octave of its time: x1/16 .. x16). Recipes only, on no
+                                                       * page. (The bass's old LFO's slot, P_BFDEC, unread since 1.4.0:
+                                                       * 0 in an older save) */
     /* the chords (EDIT's page): eight slots. A slot is one of three: a chord written (a kind, EN_CQ_*, not 0: its root
      * 0..11, absolute, and its type, EN_CX_*); the walk's (kind 0, root 1..7: a degree of the scale, plus one, so it
      * follows the key and the mode; type: its voicing, 0 or 1); or a gap (kind 0, root 0: the chord before it held).
@@ -105,7 +111,8 @@ enum {
     P_RUMBLE,                                         /* (1.3.0, format 17) the kick's rumble */
     /* (1.4.0, format 19, REPORT10) the chord's LFO and the noise's: their rate (1, 2, 4, 8, 16, 32 bars, or Drift: a
      * slow random wander, a new place every 8-32 bars, glided to); their depth the Chord LFO and Noise LFO knobs.
-     * (The pings' and the bass's LFO gone: P_PFDEC and P_BFDEC kept in the format, the engine leaves them be) */
+     * (The pings' and the bass's LFO gone: P_PFDEC kept in the format, the engine leaves it be; P_BFDEC's slot, since
+     * format 36, P_CEDEC) */
     P_CLRATE, P_NLRATE,
     P_CLWAVE, P_NLWAVE,                               /* (1.4.0, format 20, the user's: their wave's shape; format 30,
                                                        * the LFO pages' layout B, the user's: the slots of the Shape,
@@ -471,6 +478,10 @@ int en_kick_note(int root);                    /* the kick's note (MIDI) for the
  * of its level (0..1) over *secs seconds, and of a second curve (the chord's filter envelope, the kick's
  * pitch; else 0) */
 void en_env_shape(int layer, float *lvl, float *aux, int n, float *secs);
+/* (format 36, the Chord filter page's picture) the stab as it plays now: its filter envelope's depth (octaves over the
+ * cutoff at the strike: the voice's, times Env's 0..2), its time to -60 dB (s: Decay's, Env decay's), the strike's
+ * time constant (s) and the stab's length to -60 dB (s) */
+void en_chord_env(float *oct, float *ft, float *att, float *t60);
 /* the FM pages: is the layer's voice FM now (0 chord, 1 pings, 2 bass), and its algorithm as it plays (0..8) */
 int en_voice_fm(int layer);
 #define EN_NPROG 8

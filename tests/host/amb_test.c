@@ -1505,10 +1505,11 @@ int main(void)
         CHECK(off[2] > off[0] + 2 && off[1] > off[0], "Wave: 50 %d and 0 %d no closer than 100's %d", off[1], off[2], off[0]);
     }
 
-    /* the bass's and the pings' LFO gone: their old knobs (P_BFDEC, P_PFDEC) change nothing; (format 30) nor do the
-     * chord's and the noise's old Depth and Drift; their Trims and Form's Drift do (the test hears a change) */
+    /* the pings' LFO gone: its old knob (P_PFDEC) changes nothing (the bass's, P_BFDEC, Env decay's slot since format
+     * 36: below); (format 30) nor do the chord's and the noise's old Depth and Drift; their Trims and Form's Drift do
+     * (the test hears a change) */
     {
-        int b, pg, ch, nz, cw, nw;
+        int b = 1, pg, ch, nz, cw, nw;
         fresh();
         en_seed(3);
         en_set(P_BASS, 100);
@@ -1516,19 +1517,91 @@ int main(void)
         en_set(P_MOVE, 50);
         en_play(1);
         run(2.0f);
-        b = same_with(P_BFDEC, 100);
         pg = same_with(P_PFDEC, 100);
         ch = same_with(P_CFDEC, 100) && same_with(P_CLWALK, 100);   /* (format 30: the old Depths and Drifts unread) */
         nz = same_with(P_NLFO, 100) && same_with(P_NLWALK, 100);
         cw = same_with(P_CLTRIM, 50);            /* (the Trims: heard) */
         nw = same_with(P_NLTRIM, 50);            /* (the noise's, a filter on the whole noise) */
-        printf("  the old LFO knobs: the bass's %s, the pings' %s; the chord's old %s, the noise's %s; the Trims %s, %s\n",
-               b ? "nothing" : "heard", pg ? "nothing" : "heard", ch ? "nothing" : "heard", nz ? "nothing" : "heard",
+        printf("  the old LFO knobs: the pings' %s; the chord's old %s, the noise's %s; the Trims %s, %s\n",
+               pg ? "nothing" : "heard", ch ? "nothing" : "heard", nz ? "nothing" : "heard",
                cw ? "nothing" : "heard", nw ? "nothing" : "heard");
         CHECK(b == 1 && pg == 1 && ch == 1 && nz == 1 && cw == 0 && nw == 0 && same_with(P_MOVE, 100) == 0,
               "LFOs: the bass's %d, the pings' %d, the chord's old %d, the noise's old %d, the Trims %d %d (1: unheard)",
               b, pg, ch, nz, cw, nw);
         en_set(P_TEMPO, 122);
+    }
+
+    /* (format 36, REPORT-stabenv) Env decay: the chord's filter envelope's own time around its tie to Decay. At 0 the
+     * tie as it was (a quarter of the stab's T60 and 20 ms: the picture's envelope, en_env_shape, on that time);
+     * each 12.5 a doubling (+25: four times as long, -25 a quarter); heard; Decay still moves it at any setting; and
+     * each piece's recipe within the knob's range */
+    {
+        float lv[400], ax[400], T, Ts;
+        int k, hz[3], heard, d0, d1;
+        const int v[3] = {0, 25, -25};
+        fresh();
+        en_seed(3);
+        en_set(P_CVOICE, 0);
+        en_set(P_DECAY, 35);
+        for (k = 0; k < 3; k++) {
+            int j = 0;
+            en_set(P_CEDEC, v[k]);
+            run(0.01f);
+            en_env_shape(0, lv, ax, 400, &T);
+            while (j < 399 && ax[j] > 0.5f * ax[0])
+                j++;
+            hz[k] = j;
+        }
+        Ts = T;
+        {
+            const float t60 = 0.06f * exp2f(35.0f * 0.0464f), ft = 0.25f * t60 + 0.02f,   /* (Saws: x1) */
+                        want = ft * logf(2.0f) / 6.9f / Ts * 399.0f;   /* (the picture's half, in its steps, at 0:
+                                                  * ft its -60 dB, as the engine closes it; the picture drew it 6.9
+                                                  * times slower before the Chord filter page) */
+            printf("  Env decay: the picture's half at 0, +25, -25: %d, %d, %d steps (the tie's %.1f)\n", hz[0], hz[1], hz[2],
+                   (double)want);
+            CHECK(fabsf((float)hz[0] - want) <= 1.5f, "Env decay 0: the half %d steps, the tie's %.1f", hz[0], (double)want);
+        }
+        CHECK(hz[1] >= 3 * hz[0] && hz[1] <= 5 * hz[0] && hz[2] * 3 <= hz[0] + 2, "Env decay +25 x4 (%d), -25 x1/4 (%d) of %d",
+              hz[1], hz[2], hz[0]);
+        {   /* (the Chord filter page's picture, en_chord_env: Env 0 the voice's own depth (Saws 2.5 octaves), its
+             * left none, its right twice; the time the engine's, as the picture's above) */
+            float o[3], f, ta, t6;
+            const int ev[3] = {-50, 0, 50};
+            for (k = 0; k < 3; k++) {
+                en_set(P_CENV, ev[k]);
+                run(0.01f);
+                en_chord_env(&o[k], &f, &ta, &t6);
+            }
+            en_set(P_CENV, 0);
+            printf("  Env -50, 0, +50: the sweep %.2f, %.2f, %.2f octaves; its time %.1f ms, the stab's %.0f ms\n", (double)o[0],
+                   (double)o[1], (double)o[2], (double)(f * 1000.0f), (double)(t6 * 1000.0f));
+            CHECK(o[0] < 0.001f && fabsf(o[1] - 2.5f) < 0.01f && fabsf(o[2] - 5.0f) < 0.01f && ta > 0.0f,
+                  "en_chord_env: Env -50, 0, +50 gave %.2f, %.2f, %.2f octaves", (double)o[0], (double)o[1], (double)o[2]);
+        }
+        en_set(P_CEDEC, 25);
+        en_set(P_DECAY, 60);                     /* (Decay still moves it) */
+        run(0.01f);
+        en_env_shape(0, lv, ax, 400, &T);
+        for (d1 = 0; d1 < 399 && ax[d1] > 0.5f * ax[0]; d1++)
+            ;
+        d0 = (int)((float)hz[1] * Ts / T + 0.5f);   /* (35's, on 60's grid) */
+        CHECK(d1 > d0, "Env decay with Decay 60: the half at %d steps, Decay 35's %d", d1, d0);
+        en_set(P_DECAY, 35);
+        en_set(P_CHORD, 100);
+        en_play(1);
+        run(2.0f);
+        heard = !same_with(P_CEDEC, 0);
+        printf("  Env decay -50 against 0: %s\n", heard ? "heard" : "nothing");
+        CHECK(heard, "Env decay: -50 and 0 alike");
+        for (k = 0; k < EN_NPIECES; k++) {
+            int16_t rp[P_NPARAMS];
+            uint16_t pl;
+            en_piece(k, rp, &pl);
+            CHECK(rp[P_CEDEC] >= -50 && rp[P_CEDEC] <= 50 && rp[P_CENV] >= -50 && rp[P_CENV] <= 50,
+                  "piece %d: Env decay %d, Env amount %d", k, rp[P_CEDEC], rp[P_CENV]);
+        }
+        en_play(0);
     }
 
     /* (1.4.0, the variety study) Energy leans, it doesn't lock: at Motion 65, Energy -50 and +50 both leave Motion's

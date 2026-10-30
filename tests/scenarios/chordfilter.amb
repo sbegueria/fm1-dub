@@ -1,0 +1,84 @@
+# (format 36, the user's: "a page dedicated to the filter") the Chord filter page: ENV a third time (Chord, Chord voice,
+# Chord filter, Chord FM, Chord LFO, back), its knobs Cutoff, Reso, Env, Env decay (P_CCUT 139, P_CRES 38, P_CENV 39,
+# P_CEDEC 63); the Chord voice page Attack and Decay alone. Basic's own: Env -25, Env decay +31 (REPORT-stabenv)
+listen
+wait 3000
+tap ENV
+wait 300
+expect view 1
+tap ENV
+wait 400
+said Chord voice page, voice Saws: Attack 0, Decay 25
+expect view 8
+tap ENV
+wait 400
+said Chord filter page, voice Saws: Cutoff 0, Reso 0, Env -25, Env decay +31
+expect view 31
+expect par39 -25
+expect par63 31
+shot filter.png
+# Env: up 10 (no notch on the way), then down to its left end (none: NO SWEEP on the picture)
+spin K3 10
+wait 300
+expect par39 -15
+said Env -15
+expect bigring 1
+spin K3 -100
+wait 300
+expect par39 -50
+said Env -50
+wait 2500
+shot filter_nosweep.png
+# Env decay: down 10, then up past the tie's notch at 0 is not needed: 31 -> 21 -> 50
+spin K4 -10
+wait 300
+expect par63 21
+said Env decay +21
+spin K4 100
+wait 300
+expect par63 50
+said Env decay +50
+wait 2500
+shot filter_slow.png
+# Reso and Cutoff, as on the Chord voice page before
+spin K2 -100
+wait 200
+expect par38 -50
+said Reso -50
+spin K1 -100
+wait 200
+expect par139 -50
+said Cutoff -50
+# the piece keeps them; the reset puts the recipe's back
+turn PRESET 1
+wait 400
+turn PRESET -1
+wait 400
+expect par39 -50
+expect par63 50
+press GLO
+wait 1700
+release GLO
+wait 300
+expect par39 -25
+expect par63 31
+# ENV on: Chord FM, Chord LFO, back to Chord
+tap ENV
+wait 300
+expect view 12
+tap ENV
+wait 300
+expect view 22
+tap ENV
+wait 300
+expect view 1
+# held, a nudge: the page whose knob moved most (the voice, the filter or the FM page): here Env, the filter's
+# (format 36, the user's: ENV's nudge moves Env and Env decay too)
+press ENV
+wait 700
+release ENV
+wait 300
+said CHORD NUDGE Env amount
+expect view 31
+wait 6000
+expect peak_db_max -0.5
