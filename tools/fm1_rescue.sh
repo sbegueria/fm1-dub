@@ -29,7 +29,7 @@ for f in "$DIR"/*.fwsc "$HOME"/Downloads/*.fwsc "$HOME"/Desktop/*.fwsc; do
 done
 if [ -z "$PKG" ]; then
     echo "Downloading the stock firmware (M-VAVE's FM-1 V15) ..."
-    curl -fsSL -o "$DIR/FM-1.download" "https://yms-file-store.oss-cn-hongkong.aliyuncs.com/software/firmware/FM-1.fwsc"
+    curl -fsSL -o "$DIR/FM-1.download" "https://github.com/m-vave/fm1_open/raw/b178ac43c25f010c60a878056fb5331fe693fd62/sdk/firmware/FM-1_015.fwsc"
     if [ "$(shasum -a 256 "$DIR/FM-1.download" | cut -d' ' -f1)" != "$STOCK" ]; then
         echo "The downloaded file is not the expected V15 firmware. Nothing was done; send this output."
         exit 1

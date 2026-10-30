@@ -194,4 +194,9 @@ node tests/host/emu_test.mjs build/emu/amb.wasm   # its test
 sibling checkout of fm1-reader (`../fm1-reader`) for the screen reader's voice; without it, it
 prints a note and the emulator still works.
 
+**MIDI in.** Under the FM-1, *Connect MIDI* lets the page read this computer's MIDI inputs (Web MIDI: Chrome
+and Edge; the browser asks first). A controller then plays the emulated FM-1 as it would over USB: channel messages
+(notes, CCs) and the clock, start, continue and stop. *From* picks one input, or every one. The page passes each
+message to the firmware's MIDI queue (`web_midi` in `web/emu/amb_web.c`, as the host simulator's `midi` command).
+
 `web/app/build.sh` builds the engine alone into the phone/desktop web app, the same way.

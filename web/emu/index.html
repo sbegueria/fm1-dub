@@ -131,6 +131,17 @@ kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); b
     every message. The same words as the <a href="https://charlesvestal.github.io/fm1-reader/">FM-1 Screen Reader</a> says for the FM-1 itself.
     This page's voice is <a href="https://github.com/espeak-ng/espeak-ng">eSpeak NG</a> (GPL-3.0), running in the page.</p>
 </section>
+<section class="reader midi" aria-labelledby="h-midi">
+  <h2 id="h-midi">MIDI in</h2>
+  <p class="said"><span class="lbl">Last message:</span> <span id="midi-last">none yet</span></p>
+  <div class="row">
+    <button id="midi-on" type="button">Connect MIDI</button>
+    <label>From <select id="midi-from" disabled><option value="">every input</option></select></label>
+    <span id="midi-status" role="status"></span>
+  </div>
+  <p class="note">A controller on this computer plays the FM-1 here as it would over USB: notes, CCs, clock and start / stop.
+    Chrome and Edge (Web MIDI); the browser asks first.</p>
+</section>
 <!-- for the computer's screen reader: what the screen says, read as it changes -->
 <div id="live-a" class="sr" aria-live="assertive" aria-atomic="true"></div>
 <div id="live-p" class="sr" aria-live="polite" aria-atomic="true"></div>
@@ -697,6 +708,50 @@ function saveStore(store) {
     localStorage.setItem(STORE_KEY, JSON.stringify(raw));
   } catch { /* storage unavailable: this session only */ }
 }
+
+// ---------------------------------------------------------------- MIDI in
+// Web MIDI: a controller on this computer, into the firmware as the FM-1's USB would take it (web_midi). Channel
+// messages and the real-time clock, start, continue and stop; SysEx and the rest left out.
+const HEX = (b) => b.toString(16).toUpperCase().padStart(2, "0");
+let midiAccess = null;
+function midiInputs() { return midiAccess ? [...midiAccess.inputs.values()] : []; }
+function midiList() {
+  const sel = $("midi-from"), was = sel.value, ins = midiInputs();
+  sel.replaceChildren(new Option("every input", ""), ...ins.map((i) => new Option(i.name || i.id, i.id)));
+  sel.value = ins.some((i) => i.id === was) ? was : "";
+  sel.disabled = !ins.length;
+  $("midi-status").textContent = ins.length ? `${ins.length} input${ins.length > 1 ? "s" : ""}: ${ins.map((i) => i.name).join(", ")}`
+                                            : "No MIDI input: plug a controller in.";
+  for (const i of ins) i.onmidimessage = midiMessage;
+}
+function midiMessage(e) {
+  const from = $("midi-from").value, d = e.data;
+  if (from && e.target.id !== from) return;
+  const st = d[0];
+  if (st >= 0xF8) {
+    if (st === 0xF8 || st === 0xFA || st === 0xFB || st === 0xFC) send({ type: "midi", st, d1: 0, d2: 0 });
+    return;
+  }
+  if (st < 0x80 || st >= 0xF0) return;
+  const two = (st & 0xF0) !== 0xC0 && (st & 0xF0) !== 0xD0;
+  send({ type: "midi", st, d1: d[1] ?? 0, d2: two ? (d[2] ?? 0) : 0 });
+  $("midi-last").textContent = `${[st, d[1] ?? 0].concat(two ? [d[2] ?? 0] : []).map(HEX).join(" ")}  (channel ${(st & 15) + 1}, from ${e.target.name})`;
+}
+$("midi-on").addEventListener("click", async () => {
+  if (!navigator.requestMIDIAccess) {
+    $("midi-status").textContent = "This browser has no Web MIDI: use Chrome or Edge.";
+    return;
+  }
+  try {
+    midiAccess = await navigator.requestMIDIAccess({ sysex: false });
+    midiAccess.onstatechange = midiList;
+    midiList();
+    $("midi-on").disabled = true;
+    $("midi-on").textContent = "MIDI connected";
+  } catch (err) {
+    $("midi-status").textContent = "MIDI not allowed: " + (err && err.message || err);
+  }
+});
 
 // ---------------------------------------------------------------- switching on
 const status = $("status"), cpu = $("cpu");

@@ -61,6 +61,8 @@ class Amb extends AudioWorkletProcessor {
       this.ex.web_enc(m.role, m.n | 0);
     } else if (m.type === "master") {
       this.ex.web_master(m.value | 0);
+    } else if (m.type === "midi") {                 // MIDI in (the page's Web MIDI): one message
+      if (this.ex.web_midi) this.ex.web_midi(m.st >>> 0, m.d1 >>> 0, m.d2 >>> 0);
     } else if (m.type === "reader") {               // the screen reader on (HELLO now, then every 2 s) or off (BYE)
       this.reader = !!m.on;
       this.sysex(this.reader ? RD_HELLO : RD_BYE);
