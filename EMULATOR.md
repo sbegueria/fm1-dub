@@ -203,4 +203,9 @@ feedback, `plat_midi_send`) always, the engine's notes and clock (`plat_midi_out
 clock* is ticked; the worklet collects them (`web_mout_*`) about 30 times a second. In the host simulator the
 feedback is in `midi_out.txt` marked `fb`, and `expect fbcount` / `expect fblast` check it.
 
+`tests/host/emu_browser_test.mjs build/emu [chromium]` runs the page itself in a headless Chromium (over its
+DevTools protocol: no packages), a fake Web MIDI controller put in it: switched on, MIDI in to the firmware, and, the
+page having MIDI out, DUB-1's answer back. `tests/run_tests.sh` runs it after the emulator's build when it finds a
+Chromium (`CHROME=` names another).
+
 `web/app/build.sh` builds the engine alone into the phone/desktop web app, the same way.
