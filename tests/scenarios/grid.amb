@@ -37,7 +37,7 @@ midi 90 28 7F
 wait 50
 expect fblast 0x90287F
 expect fbcount 47
-# the PBF4: fader F1 (CC 36) the chord's level, pot P1 (CC 32) the DJ filter
+# the PBF4, a column a track: fader F1 (CC 36) the chord's level, pot P1 (CC 32) the chord's track filter
 midi B0 24 00
 wait 20
 expect par0 0
@@ -46,10 +46,15 @@ wait 20
 expect par0 100
 midi B0 20 00
 wait 20
-expect filter -50
+expect par148 -50
 midi B0 20 40
 wait 20
-expect filter 0
+expect par148 0
+# pot P4 (CC 35): the drums' filter, the kick's strip and the hats' both
+midi B0 23 7F
+wait 20
+expect par156 50
+expect par151 50
 # another channel: not the Grid's
 midi B1 24 00
 wait 20
@@ -141,15 +146,16 @@ expect view 31
 spin K3 -40
 wait 1600
 shot learn.png
-midi B0 46 00
-wait 20
-expect filter 0
+# (the chord's filter -50 here, Tracks' encoder 1 left it so: the binding CC's own value doesn't move it)
 midi B0 46 7F
 wait 20
-expect filter 50
-midi B0 20 00
+expect par148 -50
+midi B0 46 40
 wait 20
-expect filter 50
+expect par148 0
+midi B0 20 7F
+wait 20
+expect par148 0
 # saved (GLO held), and kept over a reboot
 press GLO
 wait 700
@@ -158,6 +164,6 @@ wait 100
 expect dirty 0
 reboot
 wait 300
-midi B0 46 00
+midi B0 46 7F
 wait 20
-expect filter -50
+expect par148 50

@@ -1590,11 +1590,15 @@ as it sits, a cell a control, the one you chose outlined, the one that just sent
 
 | | Sends | Does (as it comes) |
 |---|---|---|
-| PBF4 pots P1-P4 | CC 32-35 | Filter, Wet, Energy, Duck |
+| PBF4 pots P1-P4 | CC 32-35 | the track filter (the channel strip's) of the column's track: Chord, Pings, Bass, Drums |
 | PBF4 faders F1-F4 | CC 36-39 | the Chord's, Pings', Bass's and Drums' levels |
 | PBF4 keys B1-B4 | note 40-43 | mute the channel over them: Chord, Pings, Bass, Drums (again: back) |
 | EN16 encoders 1-16 | CC 48-63 | the echo, the plate, the chord's voice, the mix (the page shows which) |
 | EN16 pushes 1-16 | note 48-63 | Reset (back to the piece's own), or Throw (all the way up while held) |
+
+As it comes, the PBF4 is four tracks, a column each (Chord, Pings, Bass, Drums): its **pot** the
+track's filter (its channel strip's: left darker, right thinner), its **fader** the track's level,
+its **key** the track on or muted. The Drums column's pot and fader set the kick and the hats both.
 
 - **PBF4 page:** KNOB 1 the control (P1 to B4); KNOB 2 what it turns, or, a key, what it mutes;
   KNOB 3 its number, its far left **Learn**: move the control and it binds (any channel: the

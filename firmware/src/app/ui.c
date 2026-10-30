@@ -428,9 +428,9 @@ typedef struct {
 } grid_t;
 static const grid_t GRID_DEFAULT = {
     GRID_MAGIC, 0, 0, 0, 0,
-    {1, 2, 3, 4, 5, 6, 7, 8}, {32, 33, 34, 35, 36, 37, 38, 39},   /* the pots Filter, Wet, Energy, Duck; the faders the
-                                                  * four layers' levels */
-    {0, 1, 2, 6}, {40, 41, 42, 43},              /* each key the channel over it */
+    {29, 30, 31, 32, 5, 6, 7, 8}, {32, 33, 34, 35, 36, 37, 38, 39},   /* a column a track, Chord, Pings, Bass, Drums: its
+                                                  * pot its filter (the channel strip's), its fader its level, */
+    {0, 1, 2, 6}, {40, 41, 42, 43},              /* its key its mute */
     {17, 18, 19, 27, 16, 25, 20, 26, 12, 13, 14, 15, 28, 24, 22, 23},   /* the echo, the plate, the chord's voice, the mix */
     {48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63},
     {2, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},   /* the echo and the plate thrown, the rest reset */
@@ -438,14 +438,18 @@ static const grid_t GRID_DEFAULT = {
     {0, 1, 2, 6}, {0, 1, 2, 4}, {17, 18, 16, 25}, {1, 2, 2, 1}
 };
 static grid_t gr;
-/* what a pot, fader or encoder can turn: a knob of DUB-1's (a parameter, or a master action) */
+/* what a pot, fader or encoder can turn: a knob of DUB-1's (a parameter, or a master action), and a second with it
+ * (k2, 0: none; the drums' filter, the kick's strip and the hats'); cell: its name in a page's cell (0: name) */
 typedef struct {
     const char *name;
     uint16_t k;
     uint16_t col;
     const char *help;
+    uint16_t k2;
+    const char *cell;
 } gtarget_t;
-#define GT_N 29
+#define GT_N 36
+#define GT_STRIP_HELP "Left darker, right thinner, before the sends"
 static const gtarget_t GT[GT_N] = {
     {"Off", K_NONE, K_DIM, "Turns nothing"},
     {"Filter", K_FILTER, K_ACC, "Shut: under water. Open: thin"},
@@ -476,6 +480,13 @@ static const gtarget_t GT[GT_N] = {
     {"Blur", P_EBLUR, K_ACC, "Clean repeats, to a dissolving wash"},
     {"Echo tone", P_ETONE, K_ACC, "The repeats darker, or brighter"},
     {"Width", P_EWIDTH, K_ACC, "The whole mix mono, to wide"},
+    {"Chord filter", P_CLOW, K_PAD, GT_STRIP_HELP, 0, "Filter"},   /* (the channel strips' filters, a track's: V_STRIP's) */
+    {"Pings filter", P_PLOW, K_BELL, GT_STRIP_HELP, 0, "Filter"},
+    {"Bass filter", P_BLOW, K_BASS, GT_STRIP_HELP, 0, "Filter"},
+    {"Drums filter", P_KLOW, K_PULSE, GT_STRIP_HELP, P_DLOW, "Filter"},
+    {"Kick filter", P_KLOW, K_PULSE, GT_STRIP_HELP, 0, "Filter"},
+    {"Hats filter", P_DLOW, K_TEXT, GT_STRIP_HELP, 0, "Filter"},
+    {"Noise filter", P_NLOW, K_NOISE, GT_STRIP_HELP, 0, "Filter"},
 };
 /* what a PBF4 key mutes: a part, the drums (the kick and the hats), or nothing (ui.mutes' bits, EN_M_*) */
 #define GM_N 8
@@ -2005,6 +2016,8 @@ static int en16_knob(int i, int *k, int *k2, char *name, uint16_t *col, const ch
             name[j] = t->name[j], j++;
         name[j] = 0;
         *k = t->k, *col = t->col, *help = t->help;
+        if (t->k2)
+            *k2 = t->k2;
         return 1;
     }
     {
@@ -2128,6 +2141,8 @@ static int grid_cc(uint32_t ch, uint32_t cc, uint32_t v)   /* 1: the Grid's */
                 cc_knob(t->k, v, t->name, t->col, t->help, 1);
                 gr_fb[i] = (int16_t)knob_get(t->k);   /* (its own move: not sent back) */
             }
+            if (t->k2)
+                cc_knob(t->k2, v, t->name, t->col, t->help, 0);
             grid_follow(0, i);
             return 1;
         }
@@ -4726,7 +4741,7 @@ static void draw_gridpage(uint32_t now)
             cv_text(x + 4, y + 1, &FONT_XS, t, dim);
             if (row < 2) {
                 const gtarget_t *g = &GT[gr.pb_tgt[i]];
-                grid_name(x + 4, y + 15, g->name, k < 0 ? dim : ink, 38);
+                grid_name(x + 4, y + 15, g->cell ? g->cell : g->name, k < 0 ? dim : ink, 38);
                 if (row == 0) {
                     grid_icon(x + 46, y + 9, k, lit ? K_BG : g->col, lit ? K_PAD : bg);
                 } else {                         /* (a fader: its place, a bar) */
@@ -4764,7 +4779,7 @@ static void draw_gridpage(uint32_t now)
             itoa_u((uint32_t)i + 1u, t);
             cv_text(x + 3, y + 0, &FONT_XS, t, dim);
             grid_icon(x + 46, y + 9, k, lit ? K_BG : g->col, lit ? K_PAD : bg);
-            grid_name(x + 3, y + 15, g->name, k < 0 ? dim : ink, 40);
+            grid_name(x + 3, y + 15, g->cell ? g->cell : g->name, k < 0 ? dim : ink, 40);
         }
     }
 }
