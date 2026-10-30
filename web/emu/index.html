@@ -132,15 +132,20 @@ kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); b
     This page's voice is <a href="https://github.com/espeak-ng/espeak-ng">eSpeak NG</a> (GPL-3.0), running in the page.</p>
 </section>
 <section class="reader midi" aria-labelledby="h-midi">
-  <h2 id="h-midi">MIDI in</h2>
-  <p class="said"><span class="lbl">Last message:</span> <span id="midi-last">none yet</span></p>
+  <h2 id="h-midi">MIDI in and out</h2>
+  <p class="said"><span class="lbl">Last in:</span> <span id="midi-last">none yet</span></p>
+  <p class="said"><span class="lbl">Last out:</span> <span id="midi-sent">none yet</span></p>
   <div class="row">
     <button id="midi-on" type="button">Connect MIDI</button>
     <label>From <select id="midi-from" disabled><option value="">every input</option></select></label>
-    <span id="midi-status" role="status"></span>
+    <label>To <select id="midi-to" disabled><option value="">nowhere</option></select></label>
+    <label><input type="checkbox" id="midi-engine"> also DUB-1's notes and clock</label>
   </div>
+  <p><span id="midi-status" role="status"></span></p>
   <p class="note">A controller on this computer plays the FM-1 here as it would over USB: notes, CCs, clock and start / stop.
-    Chrome and Edge (Web MIDI); the browser asks first.</p>
+    What DUB-1 sends back goes <b>To</b> the output you choose: the Grid's feedback (each control's value, a key lit while
+    its channel plays, a push lit while it throws), and, ticked, its notes and clock too. Chrome and Edge (Web MIDI); the
+    browser asks first.</p>
 </section>
 <!-- for the computer's screen reader: what the screen says, read as it changes -->
 <div id="live-a" class="sr" aria-live="assertive" aria-atomic="true"></div>
@@ -715,7 +720,12 @@ function saveStore(store) {
 const HEX = (b) => b.toString(16).toUpperCase().padStart(2, "0");
 let midiAccess = null;
 function midiInputs() { return midiAccess ? [...midiAccess.inputs.values()] : []; }
+function midiOutputs() { return midiAccess ? [...midiAccess.outputs.values()] : []; }
 function midiList() {
+  const to = $("midi-to"), wasTo = to.value, outs = midiOutputs();
+  to.replaceChildren(new Option("nowhere", ""), ...outs.map((o) => new Option(o.name || o.id, o.id)));
+  to.value = outs.some((o) => o.id === wasTo) ? wasTo : "";
+  to.disabled = !outs.length;
   const sel = $("midi-from"), was = sel.value, ins = midiInputs();
   sel.replaceChildren(new Option("every input", ""), ...ins.map((i) => new Option(i.name || i.id, i.id)));
   sel.value = ins.some((i) => i.id === was) ? was : "";
@@ -736,6 +746,21 @@ function midiMessage(e) {
   const two = (st & 0xF0) !== 0xC0 && (st & 0xF0) !== 0xD0;
   send({ type: "midi", st, d1: d[1] ?? 0, d2: two ? (d[2] ?? 0) : 0 });
   $("midi-last").textContent = `${[st, d[1] ?? 0].concat(two ? [d[2] ?? 0] : []).map(HEX).join(" ")}  (channel ${(st & 15) + 1}, from ${e.target.name})`;
+}
+// the firmware's MIDI out (web_mout_*, a frame's worth): the Grid's feedback (cable 1), and the engine's notes and clock
+// (cable 0) when ticked, to the chosen output
+function midiOut(pkts) {
+  const port = midiAccess && $("midi-to").value && midiAccess.outputs.get($("midi-to").value);
+  if (!port) return;
+  const engine = $("midi-engine").checked;
+  let last = null;
+  for (const p of pkts) {
+    const st = (p >>> 8) & 0xFF, d1 = (p >>> 16) & 0x7F, d2 = (p >>> 24) & 0x7F, fb = (p & 0x10) !== 0;
+    if (!fb && !engine) continue;
+    const ty = st & 0xF0, msg = st >= 0xF8 ? [st] : ty === 0xC0 || ty === 0xD0 ? [st, d1] : [st, d1, d2];
+    try { port.send(msg); last = msg; } catch {}
+  }
+  if (last) $("midi-sent").textContent = `${last.map(HEX).join(" ")}  (to ${port.name})`;
 }
 $("midi-on").addEventListener("click", async () => {
   if (!navigator.requestMIDIAccess) {
@@ -776,6 +801,7 @@ async function switchOn() {
           drawLights(m.buttons, m.keys);
           window.ambLast = m;
           if (m.said) heard(m.said);
+          if (m.mout) midiOut(m.mout);
           if (m.load !== undefined) cpu.textContent = `DUB-1 uses ${m.load}% of this computer's time`;
           if (m.store) saveStore(m.store);
         }

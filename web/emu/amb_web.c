@@ -73,6 +73,19 @@ __attribute__((used, visibility("default"))) void web_enc(int role, int32_t n)
         enc_acc[role] += n;
 }
 __attribute__((used, visibility("default"))) void web_master(uint32_t v) { master = v > 4096u ? 4096u : v; }
+/* MIDI out (the page's Web MIDI): what the firmware sends, USB-MIDI packets as the FM-1's USB would carry them, the
+ * UI's own (the Grid's feedback, plat_midi_send) marked by cable 1 (bit 4), the engine's (its notes, its clock) cable
+ * 0; the page takes them about 30 times a second (web_mout_*) */
+#define MOUT 512u
+static uint32_t mout[MOUT], mout_n;
+static void web_midi_sent(uint32_t pkt, int fb)
+{
+    if (mout_n < MOUT)
+        mout[mout_n++] = fb ? pkt | 0x10u : pkt;
+}
+__attribute__((used, visibility("default"))) uint32_t *web_mout_buf(void) { return mout; }
+__attribute__((used, visibility("default"))) uint32_t web_mout_len(void) { return mout_n; }
+__attribute__((used, visibility("default"))) void web_mout_clear(void) { mout_n = 0; }
 /* MIDI in (the page's Web MIDI): one message, as the FM-1's USB gets it (a USB-MIDI packet, cable 0), into the queue
  * plat_midi_in drains, as the host's "midi" command */
 __attribute__((used, visibility("default"))) void web_midi(uint32_t st, uint32_t d1, uint32_t d2)

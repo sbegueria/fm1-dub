@@ -15,7 +15,8 @@
 
 /* ---- usb.c's, as usb_host.c uses them ---- */
 enum { S_FADDR = 0, S_POWER = 1, S_INTRUSB = 6, S_INTRTX1E = 7, S_INTRRX1E = 9, S_INTRUSBE = 11, S_INDEX = 14,
-       S_CSR0 = 17, S_RXMAXP = 19, S_RXCSR1 = 20, S_RXCSR2 = 21, S_COUNT0 = 22, S_RXCOUNT1 = 22, S_RXCOUNT2 = 23 };
+       S_CSR0 = 17, S_TXMAXP = 16, S_TXCSR1 = 17, S_TXCSR2 = 18, S_RXMAXP = 19, S_RXCSR1 = 20, S_RXCSR2 = 21, S_COUNT0 = 22,
+       S_RXCOUNT1 = 22, S_RXCOUNT2 = 23 };
 #define MQ 64u
 static uint32_t midi_in_q[MQ];
 static volatile uint32_t mi_w, mi_r;
@@ -29,6 +30,7 @@ typedef struct {
     const uint8_t *dev, *cfg;
     uint16_t cfglen;
     uint8_t ep_in;               /* where its MIDI comes from (0: none) */
+    uint8_t ep_out;              /* and where it takes MIDI (0: none) */
     int stall_n;                 /* data stages to stall before it answers */
     int mute;                    /* never answers */
 } device_t;
@@ -37,7 +39,7 @@ static struct {
     const device_t *d;
     int attached, session, configured, cfgval, stall_n;
     uint8_t addr, pend_addr, pend_cfg, setup[8];
-    uint8_t faddr, index, power, csr0, rxcsr1, rxtype, rxinterval, intrusb;
+    uint8_t faddr, index, power, csr0, rxcsr1, rxtype, rxinterval, intrusb, txcsr1, txtype;
     uint16_t count0, rxcount;
     int rx_req;
     uint8_t *ep0p, *rxp;
@@ -47,6 +49,10 @@ static struct {
     int resets, setups, bad;
     uint8_t q[256];              /* the device's MIDI to send: 4-byte USB-MIDI packets */
     int qn;
+    uint8_t *txp;                /* the host's OUT buffer, and what the device took from it */
+    uint32_t txcnt;
+    uint8_t out[512];
+    int outn, outs;
 } m;
 
 static void model_plug(const device_t *d)
@@ -76,6 +82,8 @@ static void fm1_usb_host_attach(void *ep0) { m.ep0p = ep0; }
 static void fm1_usb_ep0_send(void *p, uint32_t n) { m.ep0p = p, m.ep0cnt = n; }
 static void fm1_usb_rx_sync(void) {}
 static void fm1_usb_ep_rxbuf(uint32_t ep, void *p) { (void)ep, m.rxp = p; }
+static void fm1_usb_ep_txbuf(uint32_t ep, void *p) { (void)ep, m.txp = p; }
+static void fm1_usb_ep_send(uint32_t ep, void *p, uint32_t n) { (void)ep, m.txp = p, m.txcnt = n; }
 static void fm1_usb_ep_enable(uint32_t eps) { (void)eps; }
 static void fm1_usb_low_speed(uint32_t on) { (void)on; }
 static uint32_t fm1_usb_se0(void) { return !m.attached; }
@@ -178,10 +186,26 @@ static void sie_wr(uint32_t r, uint32_t v)
         break;
     case S_INDEX: m.index = (uint8_t)v; break;
     case 15: m.session = v & 1; break;           /* DEVCTL */
-    case S_CSR0:
-        if (m.index == 0)
+    case S_CSR0:                                 /* (S_TXCSR1 on an endpoint's index) */
+        if (m.index == 0) {
             csr0_write((uint8_t)v);
+        } else if (m.index == 1 && v == 0x01) {   /* TxPktRdy: the device takes the packet (its OUT endpoint, configured) */
+            if (m.attached && m.configured && m.faddr == m.addr && m.d->ep_out && (m.txtype & 15) == m.d->ep_out &&
+                m.txcnt <= 64 && m.outn + (int)m.txcnt <= (int)sizeof m.out) {
+                memcpy(m.out + m.outn, m.txp, m.txcnt);
+                m.outn += (int)m.txcnt;
+                m.outs++;
+                m.txcsr1 = 0;
+            } else {
+                m.txcsr1 = 0x04;                 /* (Error: nobody took it) */
+            }
+        } else if (m.index == 1 && (v == 0x48 || v == 0x08 || v == 0)) {
+            m.txcsr1 = 0;
+        } else if (m.index == 1) {
+            m.bad++;
+        }
         break;
+    case 24: m.txtype = (uint8_t)v; break;
     case S_RXCSR1:
         if (m.index != 1)
             break;
@@ -204,7 +228,7 @@ static uint32_t sie_rd(uint32_t r)
     case 15: return m.session ? 0x05u | (m.attached ? 0x40u : 0) : 0;   /* Session, HostMode, FSDev */
     case S_POWER: return m.power;
     case S_INTRUSB: { uint32_t x = m.intrusb; m.intrusb = 0; return x; }
-    case S_CSR0: return m.index == 0 ? m.csr0 : 0;
+    case S_CSR0: return m.index == 0 ? m.csr0 : m.index == 1 ? m.txcsr1 : 0;
     case 22: return m.index == 0 ? m.count0 & 0xFFu : m.rxcount & 0xFFu;
     case 23: return m.rxcount >> 8;
     case S_RXCSR1: rx_tick(); return m.rxcsr1;
@@ -268,12 +292,12 @@ static uint32_t q_take(void) { return mi_r < mi_w ? midi_in_q[mi_r++ % MQ] : 0; 
 
 int main(void)
 {
-    static const device_t grid = {"grid", GRID_DEV, grid_cfg, sizeof GRID_CFG, 3, 0, 0};
-    static const device_t hub = {"hub", HUB_DEV, KBD_CFG, sizeof KBD_CFG, 0, 0, 0};
-    static const device_t kbd = {"keyboard", KBD_DEV, KBD_CFG, sizeof KBD_CFG, 0, 0, 0};
-    static const device_t stall = {"stall", GRID_DEV, grid_cfg, sizeof GRID_CFG, 3, 2, 0};
-    static const device_t mute = {"mute", GRID_DEV, grid_cfg, sizeof GRID_CFG, 3, 0, 1};
-    static const device_t intr = {"interrupt", SMALL_DEV, intr_cfg, sizeof INTR_CFG, 1, 0, 0};
+    static const device_t grid = {"grid", GRID_DEV, grid_cfg, sizeof GRID_CFG, 3, 3, 0, 0};
+    static const device_t hub = {"hub", HUB_DEV, KBD_CFG, sizeof KBD_CFG, 0, 0, 0, 0};
+    static const device_t kbd = {"keyboard", KBD_DEV, KBD_CFG, sizeof KBD_CFG, 0, 0, 0, 0};
+    static const device_t stall = {"stall", GRID_DEV, grid_cfg, sizeof GRID_CFG, 3, 3, 2, 0};
+    static const device_t mute = {"mute", GRID_DEV, grid_cfg, sizeof GRID_CFG, 3, 3, 0, 1};
+    static const device_t intr = {"interrupt", SMALL_DEV, intr_cfg, sizeof INTR_CFG, 1, 0, 0, 0};
     memcpy(grid_cfg, GRID_CFG, sizeof GRID_CFG);
     grid_cfg[2] = (uint8_t)sizeof GRID_CFG;
     memcpy(intr_cfg, INTR_CFG, sizeof INTR_CFG);
@@ -315,6 +339,19 @@ int main(void)
         CHECK(ok && mi_r == mi_w, "grid: a 40-event burst lost or reordered");
     }
     CHECK(m.bad == 0, "grid: %d writes the SIE would not take", m.bad);
+    {   /* MIDI out to it (plat_midi_send's: the Grid's feedback): its OUT endpoint found (before its IN), 20 packets in
+         * two transfers, in order */
+        int i, ok = 1;
+        CHECK(usbh.ep_out == 3 && usbh.ep_otype == 2, "grid: out endpoint %d type %d, not 3 bulk", usbh.ep_out, usbh.ep_otype);
+        for (i = 0; i < 20; i++)
+            usbh_out(0x0Bu | 0xB0u << 8 | 36u << 16 | (uint32_t)i << 24);
+        run_ms(10);
+        CHECK(m.outn == 80 && m.outs == 2 && m.txtype == 0x23, "grid: out %d bytes in %d transfers, TXTYPE %#x", m.outn, m.outs, m.txtype);
+        for (i = 0; i < 20; i++)
+            ok &= m.out[4 * i] == 0x0B && m.out[4 * i + 1] == 0xB0 && m.out[4 * i + 2] == 36 && m.out[4 * i + 3] == i;
+        CHECK(ok, "grid: the packets out changed or out of order");
+        CHECK(m.bad == 0 && usbh.errors == 0, "grid: out: %d bad writes, %u errors", m.bad, (unsigned)usbh.errors);
+    }
 
     /* unplugged, and plugged in again: enumerated again */
     model_unplug();
@@ -361,6 +398,9 @@ int main(void)
     model_send(0x0B, 0xB0, 74, 10);
     run_ms(5);
     CHECK(q_take() == 0x0A4AB00Bu, "interrupt: no CC");
+    usbh_out(0x0Bu | 0xB0u << 8);                /* (no OUT endpoint: nothing goes, nothing breaks) */
+    run_ms(5);
+    CHECK(m.outn == 0 && usbh.ep_out == 0 && usbh.st == H_RUN, "interrupt: out %d bytes, out endpoint %d", m.outn, usbh.ep_out);
 
     printf(fails ? "usbh: FAILED\n" : "usbh: ok\n");
     return fails != 0;

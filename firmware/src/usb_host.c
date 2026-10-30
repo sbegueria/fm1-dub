@@ -9,7 +9,7 @@
  * blocking: each step is a state that looks once a poll. The FM-1's USB-C may not give the controller power
  * (5 V out): a controller that needs it then wants a powered OTG cable (power in, data through), not a hub.
  * What comes in goes to usb.c's MIDI in queue: the UI cannot tell it from the device's or the TRS jack's. */
-enum { S_DEVCTL = 15, S_RXTYPE = 26, S_RXINTERVAL = 27 };
+enum { S_DEVCTL = 15, S_TXTYPE = 24, S_TXINTERVAL = 25, S_RXTYPE = 26, S_RXINTERVAL = 27 };
 enum { H_OFF, H_POWER, H_ATTACH, H_RESET, H_RESET_END, H_ENUM, H_RUN, H_NOMIDI, H_FAIL };
 enum { C_SETUP, C_IN, C_OUT_STATUS, C_IN_STATUS };
 #define H_ADDR 1u                                    /* the device's address once set */
@@ -17,6 +17,12 @@ enum { C_SETUP, C_IN, C_OUT_STATUS, C_IN_STATUS };
 
 static uint8_t h_ep0[64 + 4] __attribute__((aligned(4)));
 static uint8_t h_rx[64 + 4] __attribute__((aligned(4)));
+static uint8_t h_tx[64] __attribute__((aligned(4)));
+/* MIDI out to the device (plat_midi_send's: the UI's own, a controller's feedback; the main loop fills it with the
+ * interrupts off, usbh_poll drains it) */
+#define HOQ 64u
+static uint32_t h_oq[HOQ];
+static volatile uint32_t ho_w, ho_r;
 static uint8_t h_desc[256] __attribute__((aligned(4)));
 
 static struct {
@@ -27,6 +33,9 @@ static struct {
     uint8_t lowspeed, tries;
     uint8_t cfg;                 /* bConfigurationValue */
     uint8_t ep_in, ep_type, ep_ival;   /* the MIDI streaming IN endpoint: number, bulk 2 / interrupt 3, interval */
+    uint8_t ep_out, ep_otype, ep_oival;   /* and its OUT endpoint (0: none) */
+    uint8_t tx_busy;                     /* a packet out, its TxPktRdy not yet back */
+    uint32_t tx_t;                       /* ms: when it went */
     uint8_t hub;                 /* the device was a hub (not supported) */
     uint32_t t;                  /* ms: the state's start, or the wait's end (h_wait) */
     uint32_t se0;                /* polls the bus has been SE0 (D+ and D- low: nothing there) */
@@ -35,7 +44,7 @@ static struct {
     uint8_t *buf;
     uint16_t len, got;
     uint32_t ct;
-    volatile uint32_t connects, rx_pkts, errors;
+    volatile uint32_t connects, rx_pkts, tx_pkts, errors;
 } usbh;
 
 static void h_wait(uint32_t ms) { usbh.t = fm1_ms + ms; }
@@ -109,25 +118,34 @@ static int ctl_step(void)                            /* 0: under way, 1: done, -
     }
 }
 
-/* the configuration: its first MIDI streaming interface (audio class 1, subclass 3) and that interface's
- * first IN endpoint, bulk or interrupt */
+/* the configuration: its first MIDI streaming interface (audio class 1, subclass 3) with an IN endpoint, bulk or
+ * interrupt, and that interface's OUT endpoint if it has one (a Grid's comes first) */
 static int parse_cfg(const uint8_t *d, uint32_t n)
 {
     uint32_t i = 0;
     int midi = 0;
     usbh.cfg = n > 5u ? d[5] : 1;
+    usbh.ep_in = usbh.ep_out = 0;
     while (i + 2u <= n && d[i] >= 2u && i + d[i] <= n) {
-        if (d[i + 1] == 4u && d[i] >= 9u)
+        if (d[i + 1] == 4u && d[i] >= 9u) {
+            if (usbh.ep_in)
+                break;                           /* (the MIDI interface's endpoints all seen) */
             midi = d[i + 5] == 1u && d[i + 6] == 3u;
-        else if (d[i + 1] == 5u && d[i] >= 7u && midi && (d[i + 2] & 0x80u) && (d[i + 3] & 3u) >= 2u) {
-            usbh.ep_in = d[i + 2] & 15u;
-            usbh.ep_type = d[i + 3] & 3u;
-            usbh.ep_ival = d[i + 6];
-            return 1;
+            usbh.ep_out = 0;
+        } else if (d[i + 1] == 5u && d[i] >= 7u && midi && (d[i + 3] & 3u) >= 2u) {
+            if ((d[i + 2] & 0x80u) && !usbh.ep_in) {
+                usbh.ep_in = d[i + 2] & 15u;
+                usbh.ep_type = d[i + 3] & 3u;
+                usbh.ep_ival = d[i + 6];
+            } else if (!(d[i + 2] & 0x80u) && !usbh.ep_out) {
+                usbh.ep_out = d[i + 2] & 15u;
+                usbh.ep_otype = d[i + 3] & 3u;
+                usbh.ep_oival = d[i + 6];
+            }
         }
         i += d[i];
     }
-    return 0;
+    return usbh.ep_in != 0;
 }
 
 /* ------------------------------------------------------- the IN pipe --- */
@@ -147,6 +165,15 @@ static void rx_config(void)
     sie_wr(S_RXCSR1, 0x90);                          /* ClrDataTog | FlushFIFO */
     sie_wr(S_RXCSR2, 0);
     sie_wr(S_RXINTERVAL, usbh.ep_type == 3u ? usbh.ep_ival : 0);   /* (bulk: no NAK limit) */
+    if (usbh.ep_out) {                           /* the OUT pipe on host endpoint 1's TX side (usb_h_ep_config's) */
+        fm1_usb_ep_txbuf(1, h_tx);
+        sie_wr(S_TXMAXP, 0xFF);
+        sie_wr(S_TXCSR1, 0x48);                  /* ClrDataTog | FlushFIFO */
+        sie_wr(S_TXCSR2, 0);
+        sie_wr(S_TXINTERVAL, usbh.ep_otype == 3u ? usbh.ep_oival : 0);
+    }
+    ho_r = ho_w;                                 /* (nothing stale for the new device) */
+    usbh.tx_busy = 0;
     fm1_usb_ep_enable(1u << 1);
     rx_arm();
 }
@@ -182,6 +209,61 @@ static void rx_service(void)
         sie_wr(S_RXCSR1, 0);
         rx_arm();
     }
+}
+
+/* ------------------------------------------------------ the OUT pipe --- */
+static void usbh_out(uint32_t pkt)               /* (the main loop, the interrupts off: plat_midi_send) */
+{
+    if (!usbh.on || usbh.st != H_RUN || !usbh.ep_out || ho_w - ho_r >= HOQ)
+        return;
+    h_oq[ho_w % HOQ] = pkt;
+    RING_PUBLISH();
+    ho_w++;
+}
+
+static void tx_service(void)                     /* the queue out, a packet of up to 16 at a time (usb_h_ep_write's) */
+{
+    uint32_t csr, n = 0;
+    if (!usbh.ep_out)
+        return;
+    sie_wr(S_INDEX, 1);
+    if (usbh.tx_busy) {
+        csr = sie_rd(S_TXCSR1);
+        if (csr & 0x80u) {                       /* NAK timeout: it goes on trying */
+            sie_wr(S_TXCSR1, csr & ~0x80u);
+            csr &= ~0x80u;
+        }
+        if ((csr & 0x24u) || ((csr & 0x01u) && fm1_ms - usbh.tx_t > 100u)) {   /* a stall, an error, or no answer:
+                                                  * the packet dropped */
+            sie_wr(S_TXCSR1, 0x08);              /* FlushFIFO */
+            usbh.errors++;
+            usbh.tx_busy = 0;
+            return;
+        }
+        if (csr & 0x01u)
+            return;                              /* (still going) */
+        usbh.tx_busy = 0;
+    }
+    while (ho_r != ho_w && n < 64u) {
+        uint32_t pkt;
+        RING_PUBLISH();
+        pkt = h_oq[ho_r % HOQ];
+        h_tx[n] = (uint8_t)pkt;
+        h_tx[n + 1] = (uint8_t)(pkt >> 8);
+        h_tx[n + 2] = (uint8_t)(pkt >> 16);
+        h_tx[n + 3] = (uint8_t)(pkt >> 24);
+        n += 4u;
+        RING_PUBLISH();
+        ho_r++;
+    }
+    if (!n)
+        return;
+    fm1_usb_ep_send(1, h_tx, n);
+    sie_wr(S_TXTYPE, (uint32_t)usbh.ep_otype << 4 | usbh.ep_out);
+    sie_wr(S_TXCSR1, 0x01);                      /* TxPktRdy */
+    usbh.tx_busy = 1;
+    usbh.tx_t = fm1_ms;
+    usbh.tx_pkts++;
 }
 
 /* ------------------------------------------------------- enumeration --- */
@@ -339,6 +421,8 @@ static void usbh_poll(void)                          /* TIMER5 ISR, 2 kHz (in us
         break;
     case H_RUN:
         rx_service();
+        if (usbh.st == H_RUN)
+            tx_service();
         break;
     case H_FAIL:                                     /* five tries failed: a pause, then from the start */
         if (!h_waiting()) {

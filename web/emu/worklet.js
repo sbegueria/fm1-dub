@@ -92,6 +92,11 @@ class Amb extends AudioWorkletProcessor {
       msg.fb = new Uint16Array(this.mem.buffer, ex.web_fb(), 240 * 240).slice();
       transfer.push(msg.fb.buffer);
     }
+    const mout = ex.web_mout_len ? ex.web_mout_len() : 0;   // MIDI out: the firmware's packets, for the page's Web MIDI
+    if (mout) {
+      msg.mout = new Uint32Array(this.mem.buffer, ex.web_mout_buf(), mout).slice();
+      ex.web_mout_clear();
+    }
     const said = ex.web_said_len();
     if (said) {
       msg.said = new Uint8Array(this.mem.buffer, ex.web_said_buf(), said).slice();

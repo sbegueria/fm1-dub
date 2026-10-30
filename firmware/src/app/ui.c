@@ -500,6 +500,14 @@ static int8_t gr_flash = -1;                     /* the control that just sent (
 static uint8_t gr_flash_pg;
 static uint32_t gr_flash_t;
 static uint16_t gr_thrown;                       /* EN16 pushes held as throws (a bit each) */
+/* the feedback (grid_feedback): what each control was last sent as, so only a change goes and a control's own move
+ * doesn't come back: the PBF4's pots and faders (0-7, their knobs' values), its keys (8-11: 1 heard), the EN16's
+ * encoders (12-27) and pushes (28-43: 1 thrown) */
+#define GFB_N (8 + 4 + GRID_NEN + GRID_NEN)
+#define GFB_NONE (-32768)
+static int16_t gr_fb[GFB_N];
+static uint8_t gr_fb_again = 1;                  /* all of it again (the Grid on, its map changed) */
+static uint8_t gr_fb_at;                         /* where the next round starts */
 static int16_t gr_thr_was[GRID_NEN];             /* and what each threw from */
 #define grid_page() (ui.view == V_GEN16 ? 1 : 0)   /* (0 the PBF4's page, 1 the EN16's: ui is declared below) */
 static int grid_tracks(void) { return gr.layout == 1; }
@@ -820,6 +828,7 @@ static void grid_set(int k, int v)
     }
     *grid_slot(k) = (uint8_t)v;
     gr_dirty = 1;
+    gr_fb_again = 1;
     ui.dirty = 1;                                /* (the floppy, and the autosave) */
 }
 static const char *knob_lbl(int v, int i)        /* a page's knob's name (the Grid pages': as the control is) */
@@ -2092,6 +2101,7 @@ static void grid_learned(const char *what, uint32_t num, uint32_t ch)   /* Learn
     gr.ch = (uint8_t)ch;
     gr_learn = 0;
     gr_dirty = 1;
+    gr_fb_again = 1;
     ui.dirty = 1;
     say("LEARNED", t);
     card_show("LEARNED", t, K_ACC, 0);
@@ -2114,8 +2124,10 @@ static int grid_cc(uint32_t ch, uint32_t cc, uint32_t v)   /* 1: the Grid's */
     for (i = 0; i < 8; i++)
         if (gr.pb_cc[i] == cc) {
             const gtarget_t *t = &GT[gr.pb_tgt[i]];
-            if (t->k != K_NONE)
+            if (t->k != K_NONE) {
                 cc_knob(t->k, v, t->name, t->col, t->help, 1);
+                gr_fb[i] = (int16_t)knob_get(t->k);   /* (its own move: not sent back) */
+            }
             grid_follow(0, i);
             return 1;
         }
@@ -2129,6 +2141,7 @@ static int grid_cc(uint32_t ch, uint32_t cc, uint32_t v)   /* 1: the Grid's */
                 cc_knob(k, v, nm, col, help, 1);
                 if (k2 >= 0)
                     cc_knob(k2, v, nm, col, help, 0);
+                gr_fb[12 + i] = (int16_t)knob_get(k);
             }
             grid_follow(1, i);
             return 1;
@@ -2517,6 +2530,7 @@ static void input(void)
             big_show(P_NCHAR, "Noise", K_NOISE);  /* (1.4.0, the user's: ALGORITHM big in the centre too) */
         } else if (ui.view == V_GEN16) {          /* the EN16's layout: Free, or Tracks */
             gr.layout = (uint8_t)!gr.layout;
+            gr_fb_again = 1;
             gr_sel[1] = 0;
             gr_learn = 0;
             gr_dirty = 1;
@@ -4755,6 +4769,50 @@ static void draw_gridpage(uint32_t now)
     }
 }
 
+/* the Grid's feedback (plat_midi_send: over USB, and to the Grid itself in USB host mode): each control's value as
+ * DUB-1 has it now, back on its own number, so its lights (and Grid Editor's receive, its value sync) follow DUB-1,
+ * whoever moved it; a PBF4 key lit while its channel is heard (as PERFORM's white keys); an EN16 push lit while its
+ * throw is held. Only a change, a few a frame */
+static void grid_send(uint32_t st, uint32_t d1, uint32_t d2) { plat_midi_send(st >> 4 | st << 8 | d1 << 16 | d2 << 24); }
+static void grid_feedback(void)
+{
+    int n, s, sent = 0;
+    if (!gr.on) {
+        gr_fb_again = 1;
+        return;
+    }
+    if (gr_fb_again) {
+        for (s = 0; s < GFB_N; s++)
+            gr_fb[s] = GFB_NONE;
+        gr_fb_again = 0;
+    }
+    for (n = 0; n < GFB_N && sent < 8; n++) {
+        int v, k, lo, hi;
+        s = (gr_fb_at + n) % GFB_N;
+        if (s < 8 || (s >= 12 && s < 12 + GRID_NEN)) {   /* a pot, a fader, an encoder: its knob's place, 0..127 */
+            k = s < 8 ? grid_cell_knob(0, s) : grid_cell_knob(1, s - 12);
+            if (k < 0 || (v = knob_get(k)) == gr_fb[s])
+                continue;
+            knob_range(k, &lo, &hi);
+            grid_send(0xB0u | gr.ch, s < 8 ? gr.pb_cc[s] : gr.en_cc[s - 12],
+                      hi > lo ? (uint32_t)(((v - lo) * 127 + (hi - lo) / 2) / (hi - lo)) : 0u);
+        } else if (s < 12) {                     /* a key: lit while its channel is heard */
+            const uint32_t bits = GM_BITS[gr.pb_mute[s - 8]];
+            if ((v = bits && (ui.mutes & bits) != bits) == gr_fb[s])
+                continue;
+            grid_send(0x90u | gr.ch, gr.pb_note[s - 8], v ? 127u : 0u);
+        } else {                                 /* an EN16 push: lit while its throw is held */
+            const int i = s - 12 - GRID_NEN;
+            if ((v = gr_thrown >> i & 1u) == gr_fb[s])
+                continue;
+            grid_send(0x90u | gr.ch, gr.en_note[i], v ? 127u : 0u);
+        }
+        gr_fb[s] = (int16_t)v;
+        sent++;
+    }
+    gr_fb_at = (uint8_t)((gr_fb_at + n) % GFB_N);
+}
+
 /* the level ring (OCT- / OCT+ on a layer's page): over the middle, the layer's level as a big knob in its colour, the
  * number inside, its name under; the arc glides to the level, a step a brief brightening; muted, grey; it fades out
  * OCT_SHOW after the last press */
@@ -6491,6 +6549,7 @@ void ui_frame(void)
     prog_take();
     groove_tick();
     input();
+    grid_feedback();                             /* (the Grid's lights: what changed, back to it) */
     set_tick();
     tape_clock(plat_ms());
     autosave();

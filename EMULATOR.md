@@ -194,9 +194,13 @@ node tests/host/emu_test.mjs build/emu/amb.wasm   # its test
 sibling checkout of fm1-reader (`../fm1-reader`) for the screen reader's voice; without it, it
 prints a note and the emulator still works.
 
-**MIDI in.** Under the FM-1, *Connect MIDI* lets the page read this computer's MIDI inputs (Web MIDI: Chrome
-and Edge; the browser asks first). A controller then plays the emulated FM-1 as it would over USB: channel messages
-(notes, CCs) and the clock, start, continue and stop. *From* picks one input, or every one. The page passes each
-message to the firmware's MIDI queue (`web_midi` in `web/emu/amb_web.c`, as the host simulator's `midi` command).
+**MIDI in and out.** Under the FM-1, *Connect MIDI* lets the page use this computer's MIDI ports (Web MIDI:
+Chrome and Edge; the browser asks first). A controller then plays the emulated FM-1 as it would over USB: channel
+messages (notes, CCs) and the clock, start, continue and stop. *From* picks one input, or every one. The page passes
+each message to the firmware's MIDI queue (`web_midi` in `web/emu/amb_web.c`, as the host simulator's `midi`
+command). What the firmware sends back goes *To* the chosen output: the UI's own messages (the Intech Grid's
+feedback, `plat_midi_send`) always, the engine's notes and clock (`plat_midi_out`) when *also DUB-1's notes and
+clock* is ticked; the worklet collects them (`web_mout_*`) about 30 times a second. In the host simulator the
+feedback is in `midi_out.txt` marked `fb`, and `expect fbcount` / `expect fblast` check it.
 
 `web/app/build.sh` builds the engine alone into the phone/desktop web app, the same way.

@@ -149,15 +149,34 @@ int plat_midi_in(uint32_t *pkt)
     *pkt = min_q[mi_r++ % MQ];
     return 1;
 }
+#ifdef EN_WEB
+static void web_midi_sent(uint32_t pkt, int fb);   /* (amb_web.c: to the page, on to this computer's MIDI out) */
+#endif
 void plat_midi_out(uint32_t pkt)
 {
     midi_out_count++;
+#ifdef EN_WEB
+    web_midi_sent(pkt, 0);
+#endif
     if (((pkt >> 8) & 0xFF) == 0xF8) {
         clock_out_count++;
         return;
     }
     if (midi_log)
         fprintf(midi_log, "%u ms: %02X %02X %02X\n", now_ms, (pkt >> 8) & 0xFF, (pkt >> 16) & 0xFF, (pkt >> 24) & 0xFF);
+}
+/* the UI's own (the Grid's feedback): logged with an "fb" mark; counted, the last kept (expect fbcount, fblast);
+ * the browser emulator's page sends it to this computer's MIDI out */
+static uint32_t fb_count, fb_last;
+void plat_midi_send(uint32_t pkt)
+{
+    fb_count++;
+    fb_last = ((pkt >> 8) & 0xFFu) << 16 | ((pkt >> 16) & 0xFFu) << 8 | (pkt >> 24 & 0xFFu);   /* (0xB02464: B0 24 64) */
+    if (midi_log)
+        fprintf(midi_log, "%u ms: %02X %02X %02X fb\n", now_ms, (pkt >> 8) & 0xFF, (pkt >> 16) & 0xFF, (pkt >> 24) & 0xFF);
+#ifdef EN_WEB
+    web_midi_sent(pkt, 1);
+#endif
 }
 /* the engine's MIDI out, as the device's glue sends it (USB-MIDI packet, cable 0) */
 void en_midi_out(uint32_t st, uint32_t d1, uint32_t d2) { plat_midi_out(st >> 4 | st << 8 | d1 << 16 | d2 << 24); }
@@ -879,6 +898,10 @@ static int expect(const char *what, const char *val)
         got = en_ext;
     else if (!strcmp(what, "midi_out"))
         got = (int)midi_out_count;
+    else if (!strcmp(what, "fbcount"))           /* the Grid's feedback (plat_midi_send): how many, the last as 0xB02464 */
+        got = (int)fb_count;
+    else if (!strcmp(what, "fblast"))
+        got = (int)fb_last;
     else if (!strcmp(what, "pad_level"))
         got = (int)(en_pad_level * 100.0f);
     else if (!strcmp(what, "bass_level"))

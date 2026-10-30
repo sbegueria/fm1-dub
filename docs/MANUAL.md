@@ -1613,6 +1613,15 @@ as it sits, a cell a control, the one you chose outlined, the one that just sent
 The map is global, kept with SAVE. Mutes are the Arrangement page's, as white keys 1-6 make them:
 not saved.
 
+**DUB-1 answers back.** While the Grid is on, DUB-1 sends each control's value, as DUB-1 has it, back
+on the control's own number, whoever moved it (a knob on the FM-1, a piece changed, the fixed CC
+map): the Grid's lights, and its values if Grid Editor syncs them, follow DUB-1. A PBF4 key is lit
+while its channel plays and dark while it's muted; an EN16 push is lit while its throw is held.
+Only what changed goes, and a control's own move doesn't come back. It goes out over USB to a
+computer, and, in USB host mode, to the Grid itself (DUB-1's own notes and clock don't: they'd
+light the pushes). For the lights to follow, each element's MIDI block in Grid Editor needs
+**receive** (LED sync) ticked.
+
 ### Screen reader
 
 DUB-1 can tell a screen reader what its screen shows. Connect the FM-1 by USB, open the

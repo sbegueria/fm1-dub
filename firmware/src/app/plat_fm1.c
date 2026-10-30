@@ -81,6 +81,15 @@ int plat_midi_in(uint32_t *pkt)
     return 1;
 }
 void plat_midi_out(uint32_t pkt) { midi_out_event(pkt); }
+void plat_midi_send(uint32_t pkt)                /* (the main loop's: the audio ISR fills the same ring, so it waits) */
+{
+    fm1_irq_off();
+    midi_out_event(pkt);
+#if EN_USBH
+    usbh_out(pkt);
+#endif
+    fm1_irq_on();
+}
 /* the engine's MIDI out (from the render): a USB-MIDI packet, cable 0, CIN = the status's high nibble */
 void en_midi_out(uint32_t st, uint32_t d1, uint32_t d2) { plat_midi_out(st >> 4 | st << 8 | d1 << 16 | d2 << 24); }
 

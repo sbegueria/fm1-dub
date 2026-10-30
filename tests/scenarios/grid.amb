@@ -18,6 +18,25 @@ shot songmode.png
 tap HOME
 wait 100
 expect view 0
+# the feedback (plat_midi_send): all of it as the Grid comes on (8 pots and faders, 4 keys, 16 encoders, 16 pushes)
+wait 300
+expect fbcount 44
+# a control's own move doesn't come back; a change from elsewhere (CC 20, the fixed map's chord level) does, on F1's CC
+midi B0 24 00
+wait 50
+expect fbcount 44
+midi B0 14 7F
+wait 50
+expect fbcount 45
+expect fblast 0xB0247F
+# a key's light: off while its channel is muted, on again
+midi 90 28 7F
+wait 50
+expect fblast 0x902800
+midi 90 28 7F
+wait 50
+expect fblast 0x90287F
+expect fbcount 47
 # the PBF4: fader F1 (CC 36) the chord's level, pot P1 (CC 32) the DJ filter
 midi B0 24 00
 wait 20
