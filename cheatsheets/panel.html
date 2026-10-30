@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DUB-1 The panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=block" rel="stylesheet">
+<link rel="stylesheet" href="sheet.css">
+</head>
+<body>
+<!-- Cheat sheet 1 of the series (build/design/CHEATSHEETS.md). Every fact checked against the firmware at c1fdc41
+     (firmware/src/app/ui.c: button(), input(), edit_released(), oct_*(), turn(), accel(), leds(), draw_knobs();
+     VIEW_NAME, VIEW_KNOB, KNOB_LABEL; main_fm1.c and panel.c for the update mode and the calibration).
+     The drawing follows web/emu/index.html's panel (the same places, compressed).
+     Re-checked against the firmware at 671d9be for the 1.4.0 release (step 6: build/design/REPORT-docs-sheets.txt). -->
+<div class="sheet">
+<header><span class="badge">DUB-1</span><h1>The panel</h1>
+<span class="sub">Every button and knob, and where each page is, as of 1.4.0 (build 671d9be). FM-1 firmware.</span></header>
+
+<figure>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 366" role="img" aria-label="The FM-1 panel, each control labelled">
+<rect x="2" y="2" width="996" height="362" rx="24" fill="#f1f4f4" stroke="#c9d2d2" stroke-width="1.5"/>
+<circle cx="92" cy="50" r="24" fill="#e3e8e8"/>
+<circle cx="92" cy="50" r="20" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.5"/>
+<line x1="92" y1="34" x2="92" y2="41" stroke="#1c2526" stroke-width="2.5" stroke-linecap="round"/>
+<text x="92" y="22" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1c2526" class="" letter-spacing=".04em">MASTER</text>
+<text x="92" y="88" text-anchor="middle" font-size="14" font-weight="600" fill="#1f7f75" class="" letter-spacing=".04em">volume</text>
+<circle cx="208" cy="50" r="24" fill="#e3e8e8"/>
+<circle cx="208" cy="50" r="20" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.5"/>
+<line x1="208" y1="34" x2="208" y2="41" stroke="#1c2526" stroke-width="2.5" stroke-linecap="round"/>
+<text x="208" y="22" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1c2526" class="" letter-spacing=".04em">SELECT</text>
+<text x="208" y="88" text-anchor="middle" font-size="14" font-weight="600" fill="#1f7f75" class="" letter-spacing=".04em">DJ filter</text>
+<text x="208" y="102" text-anchor="middle" font-size="13" font-weight="600" fill="#7d8787" class="" letter-spacing=".04em">HOME held: tempo</text>
+<circle cx="92" cy="154" r="24" fill="#e3e8e8"/>
+<circle cx="92" cy="154" r="20" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.5"/>
+<line x1="92" y1="138" x2="92" y2="145" stroke="#1c2526" stroke-width="2.5" stroke-linecap="round"/>
+<text x="92" y="126" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1c2526" class="" letter-spacing=".04em">PRESETS</text>
+<text x="92" y="192" text-anchor="middle" font-size="14" font-weight="600" fill="#1f7f75" class="" letter-spacing=".04em">the piece</text>
+<circle cx="208" cy="154" r="24" fill="#e3e8e8"/>
+<circle cx="208" cy="154" r="20" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.5"/>
+<line x1="208" y1="138" x2="208" y2="145" stroke="#1c2526" stroke-width="2.5" stroke-linecap="round"/>
+<text x="208" y="126" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1c2526" class="" letter-spacing=".04em">ALGORITHM</text>
+<text x="208" y="192" text-anchor="middle" font-size="14" font-weight="600" fill="#1f7f75" class="" letter-spacing=".04em">voice · screen</text>
+<rect x="34" y="204" width="232" height="44" rx="12" fill="#e3e8e8"/>
+<rect x="46" y="209" width="96" height="34" rx="8" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.5"/>
+<text x="94.0" y="231.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1c2526" class="" letter-spacing=".04em">OCT-</text>
+<rect x="158" y="209" width="96" height="34" rx="8" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.5"/>
+<text x="206.0" y="231.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1c2526" class="" letter-spacing=".04em">OCT+</text>
+<text x="150" y="264" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1f7f75" class="" letter-spacing=".04em">a layer's level -5 / +5 · both: mute</text>
+<rect x="306" y="16" width="222" height="250" rx="18" fill="#2a3233"/>
+<rect x="318" y="28" width="198" height="226" rx="4" fill="#10141a"/>
+<rect x="318" y="28" width="198" height="22" fill="#1d252e"/>
+<text x="417" y="43" text-anchor="middle" font-size="11.5" fill="#92a0b0" class="mono">the header: where it is</text>
+<text x="417" y="124" text-anchor="middle" font-size="13" fill="#5cc4cc" class="mono">the page's picture</text>
+<text x="417" y="142" text-anchor="middle" font-size="11" fill="#92a0b0" class="mono">a knob turning: its ring</text>
+<line x1="324" y1="196" x2="510" y2="196" stroke="#404c5e" stroke-width="1"/>
+<text x="326" y="192" font-size="10.5" fill="#5cc4cc" class="mono">FORM 1/3</text>
+<circle cx="343" cy="226" r="13" fill="none" stroke="#40a8a0" stroke-width="4"/>
+<circle cx="392" cy="226" r="13" fill="none" stroke="#40a8a0" stroke-width="4"/>
+<circle cx="441" cy="226" r="13" fill="none" stroke="#40a8a0" stroke-width="4"/>
+<circle cx="490" cy="226" r="13" fill="none" stroke="#40a8a0" stroke-width="4"/>
+<circle cx="596" cy="46" r="22" fill="#e3e8e8"/>
+<circle cx="596" cy="46" r="18" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.5"/>
+<line x1="596" y1="32" x2="596" y2="39" stroke="#1c2526" stroke-width="2.5" stroke-linecap="round"/>
+<text x="596" y="20" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1c2526" class="" letter-spacing=".04em">KNOB 1</text>
+<circle cx="710" cy="46" r="22" fill="#e3e8e8"/>
+<circle cx="710" cy="46" r="18" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.5"/>
+<line x1="710" y1="32" x2="710" y2="39" stroke="#1c2526" stroke-width="2.5" stroke-linecap="round"/>
+<text x="710" y="20" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1c2526" class="" letter-spacing=".04em">KNOB 2</text>
+<circle cx="824" cy="46" r="22" fill="#e3e8e8"/>
+<circle cx="824" cy="46" r="18" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.5"/>
+<line x1="824" y1="32" x2="824" y2="39" stroke="#1c2526" stroke-width="2.5" stroke-linecap="round"/>
+<text x="824" y="20" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1c2526" class="" letter-spacing=".04em">KNOB 3</text>
+<circle cx="938" cy="46" r="22" fill="#e3e8e8"/>
+<circle cx="938" cy="46" r="18" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.5"/>
+<line x1="938" y1="32" x2="938" y2="39" stroke="#1c2526" stroke-width="2.5" stroke-linecap="round"/>
+<text x="938" y="20" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1c2526" class="" letter-spacing=".04em">KNOB 4</text>
+<text x="767.0" y="84" text-anchor="middle" font-size="14" font-weight="600" fill="#1f7f75" class="" letter-spacing=".04em">the page's four values</text>
+<rect x="554" y="96" width="426" height="170" rx="14" fill="#e3e8e8"/>
+<rect x="566" y="104" width="60" height="40" rx="8" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.5"/>
+<text x="596.0" y="129.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1c2526" class="" letter-spacing=".04em">FX</text>
+<text x="596.0" y="159" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1f7f75" class="" letter-spacing=".04em">Dub</text>
+<rect x="635" y="104" width="60" height="40" rx="8" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.5"/>
+<text x="665.0" y="129.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1c2526" class="" letter-spacing=".04em">SEL</text>
+<text x="665.0" y="159" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1f7f75" class="" letter-spacing=".04em">Arrangement</text>
+<text x="665.0" y="172" text-anchor="middle" font-size="12.5" font-weight="600" fill="#7d8787" class="" letter-spacing=".04em">held: Lock</text>
+<rect x="704" y="104" width="60" height="40" rx="8" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.5"/>
+<text x="734.0" y="129.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1c2526" class="" letter-spacing=".04em">ENV</text>
+<text x="734.0" y="159" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1f7f75" class="" letter-spacing=".04em">Chord</text>
+<rect x="773" y="104" width="60" height="40" rx="8" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.5"/>
+<text x="803.0" y="129.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1c2526" class="" letter-spacing=".04em">LFO</text>
+<text x="803.0" y="159" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1f7f75" class="" letter-spacing=".04em">Bass</text>
+<rect x="842" y="104" width="60" height="40" rx="8" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.5"/>
+<text x="872.0" y="129.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1c2526" class="" letter-spacing=".04em">EDIT</text>
+<text x="872.0" y="159" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1f7f75" class="" letter-spacing=".04em">Chords</text>
+<text x="872.0" y="172" text-anchor="middle" font-size="12.5" font-weight="600" fill="#7d8787" class="" letter-spacing=".04em">held: next</text>
+<rect x="911" y="104" width="60" height="40" rx="8" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.5"/>
+<text x="941.0" y="129.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1c2526" class="" letter-spacing=".04em">GLO</text>
+<text x="941.0" y="159" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1f7f75" class="" letter-spacing=".04em">Setup</text>
+<text x="941.0" y="172" text-anchor="middle" font-size="12.5" font-weight="600" fill="#7d8787" class="" letter-spacing=".04em">held: save</text>
+<rect x="566" y="182" width="60" height="40" rx="8" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.5"/>
+<text x="596.0" y="207.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1c2526" class="" letter-spacing=".04em">HOME</text>
+<text x="596.0" y="237" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1f7f75" class="" letter-spacing=".04em">Form</text>
+<rect x="635" y="182" width="60" height="40" rx="8" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.5"/>
+<text x="665.0" y="207.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1c2526" class="" letter-spacing=".04em">SAVE</text>
+<text x="665.0" y="237" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1f7f75" class="" letter-spacing=".04em">Noise</text>
+<rect x="704" y="182" width="60" height="40" rx="8" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.5"/>
+<text x="734.0" y="207.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1c2526" class="" letter-spacing=".04em">ARP</text>
+<text x="734.0" y="237" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1f7f75" class="" letter-spacing=".04em">Pings</text>
+<rect x="773" y="182" width="60" height="40" rx="8" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.5"/>
+<text x="803.0" y="207.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1c2526" class="" letter-spacing=".04em">SEQ</text>
+<text x="803.0" y="237" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1f7f75" class="" letter-spacing=".04em">Drums</text>
+<rect x="842" y="182" width="60" height="40" rx="8" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.5"/>
+<text x="872.0" y="207.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1c2526" class="" letter-spacing=".04em">PLAY</text>
+<text x="872.0" y="237" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1f7f75" class="" letter-spacing=".04em">play · rest</text>
+<rect x="911" y="182" width="60" height="40" rx="8" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.5"/>
+<text x="941.0" y="207.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#1c2526" class="" letter-spacing=".04em">REC</text>
+<text x="941.0" y="237" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1f7f75" class="" letter-spacing=".04em">dub hold</text>
+<text x="941.0" y="250" text-anchor="middle" font-size="12.5" font-weight="600" fill="#7d8787" class="" letter-spacing=".04em">held: grid</text>
+<rect x="22" y="288" width="956" height="72" rx="12" fill="#e3e8e8"/>
+<rect x="35.9" y="320" width="47.0" height="34" rx="9" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.3"/>
+<text x="59.4" y="342" text-anchor="middle" font-size="12" fill="#7d8787" class="mono">F3</text>
+<rect x="94.6" y="320" width="47.0" height="34" rx="9" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.3"/>
+<text x="118.1" y="342" text-anchor="middle" font-size="12" fill="#7d8787" class="mono">G3</text>
+<rect x="153.4" y="320" width="47.0" height="34" rx="9" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.3"/>
+<text x="176.9" y="342" text-anchor="middle" font-size="12" fill="#7d8787" class="mono">A3</text>
+<rect x="212.1" y="320" width="47.0" height="34" rx="9" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.3"/>
+<text x="235.6" y="342" text-anchor="middle" font-size="12" fill="#7d8787" class="mono">B3</text>
+<rect x="270.9" y="320" width="47.0" height="34" rx="9" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.3"/>
+<text x="294.4" y="342" text-anchor="middle" font-size="12" fill="#7d8787" class="mono">C4</text>
+<rect x="329.6" y="320" width="47.0" height="34" rx="9" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.3"/>
+<text x="353.1" y="342" text-anchor="middle" font-size="12" fill="#7d8787" class="mono">D4</text>
+<rect x="388.4" y="320" width="47.0" height="34" rx="9" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.3"/>
+<text x="411.9" y="342" text-anchor="middle" font-size="12" fill="#7d8787" class="mono">E4</text>
+<rect x="447.1" y="320" width="47.0" height="34" rx="9" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.3"/>
+<text x="470.6" y="342" text-anchor="middle" font-size="12" fill="#7d8787" class="mono">F4</text>
+<rect x="505.9" y="320" width="47.0" height="34" rx="9" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.3"/>
+<text x="529.4" y="342" text-anchor="middle" font-size="12" fill="#7d8787" class="mono">G4</text>
+<rect x="564.6" y="320" width="47.0" height="34" rx="9" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.3"/>
+<text x="588.1" y="342" text-anchor="middle" font-size="12" fill="#7d8787" class="mono">A4</text>
+<rect x="623.4" y="320" width="47.0" height="34" rx="9" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.3"/>
+<text x="646.9" y="342" text-anchor="middle" font-size="12" fill="#7d8787" class="mono">B4</text>
+<rect x="682.1" y="320" width="47.0" height="34" rx="9" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.3"/>
+<text x="705.6" y="342" text-anchor="middle" font-size="12" fill="#7d8787" class="mono">C5</text>
+<rect x="740.9" y="320" width="47.0" height="34" rx="9" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.3"/>
+<text x="764.4" y="342" text-anchor="middle" font-size="12" fill="#7d8787" class="mono">D5</text>
+<rect x="799.6" y="320" width="47.0" height="34" rx="9" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.3"/>
+<text x="823.1" y="342" text-anchor="middle" font-size="12" fill="#7d8787" class="mono">E5</text>
+<rect x="858.4" y="320" width="47.0" height="34" rx="9" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.3"/>
+<text x="881.9" y="342" text-anchor="middle" font-size="12" fill="#7d8787" class="mono">F5</text>
+<rect x="917.1" y="320" width="47.0" height="34" rx="9" fill="#ffffff" stroke="#9aa5a5" stroke-width="1.3"/>
+<text x="940.6" y="342" text-anchor="middle" font-size="12" fill="#7d8787" class="mono">G5</text>
+<rect x="65.2" y="296" width="47.0" height="19" rx="7" fill="#4a5354" stroke="#3a4243" stroke-width="1"/>
+<rect x="124.0" y="296" width="47.0" height="19" rx="7" fill="#4a5354" stroke="#3a4243" stroke-width="1"/>
+<rect x="182.8" y="296" width="47.0" height="19" rx="7" fill="#4a5354" stroke="#3a4243" stroke-width="1"/>
+<rect x="300.2" y="296" width="47.0" height="19" rx="7" fill="#4a5354" stroke="#3a4243" stroke-width="1"/>
+<rect x="359.0" y="296" width="47.0" height="19" rx="7" fill="#4a5354" stroke="#3a4243" stroke-width="1"/>
+<rect x="476.5" y="296" width="47.0" height="19" rx="7" fill="#4a5354" stroke="#3a4243" stroke-width="1"/>
+<rect x="535.2" y="296" width="47.0" height="19" rx="7" fill="#4a5354" stroke="#3a4243" stroke-width="1"/>
+<rect x="594.0" y="296" width="47.0" height="19" rx="7" fill="#4a5354" stroke="#3a4243" stroke-width="1"/>
+<rect x="711.5" y="296" width="47.0" height="19" rx="7" fill="#4a5354" stroke="#3a4243" stroke-width="1"/>
+<rect x="770.2" y="296" width="47.0" height="19" rx="7" fill="#4a5354" stroke="#3a4243" stroke-width="1"/>
+<rect x="887.8" y="296" width="47.0" height="19" rx="7" fill="#4a5354" stroke="#3a4243" stroke-width="1"/>
+<text x="30" y="282" text-anchor="start" font-size="14" font-weight="700" fill="#1c2526" class="" letter-spacing=".04em">KEYS F3-G5</text>
+<text x="122" y="282" text-anchor="start" font-size="14" font-weight="600" fill="#1f7f75" class="" letter-spacing=".04em">the scale: each adds its note or takes it out · on the Arrangement page, the desk (sheet 2) · REC held, the effects grid</text>
+</svg>
+</figure>
+
+<div class="card full pages">
+<h2>1 · Where each page is <span class="where">a tap, again, again</span></h2>
+<div class="intro">Each press the next page, then the first again; the button lit, blinking past its first page (Song, Song mode: steady). The page's name and place (2/4): above the knobs.</div>
+<div class="grid2">
+<div class="row"><div class="n">HOME</div><div class="d"><b>Form</b><span class="arrow">›</span>Song<span class="arrow">›</span>Key <span class="k">(tempo, root, mode, swing)</span></div></div>
+<div class="row"><div class="n">SAVE</div><div class="d"><b>Noise</b><span class="arrow">›</span>Noise voice<span class="arrow">›</span>Noise LFO</div></div>
+<div class="row"><div class="n">ENV</div><div class="d"><b>Chord</b><span class="arrow">›</span>Chord voice<span class="arrow">›</span>Chord filter<span class="arrow">›</span>Chord FM<span class="arrow">›</span>Chord LFO</div></div>
+<div class="row"><div class="n">FX</div><div class="d"><b>Dub</b><span class="arrow">›</span>Echo</div></div>
+<div class="row"><div class="n">ARP</div><div class="d"><b>Pings</b><span class="arrow">›</span>Pings voice<span class="arrow">›</span>Pings FM</div></div>
+<div class="row"><div class="n">GLO</div><div class="d"><b>Setup</b><span class="arrow">›</span>Song mode <span class="k">(Endless, Song, Set; a set's Transition: LP, Segue, Mix; Values)</span></div></div>
+<div class="row"><div class="n">LFO</div><div class="d"><b>Bass</b><span class="arrow">›</span>Bass voice<span class="arrow">›</span>Bass FM</div></div>
+<div class="row"><div class="n">EDIT</div><div class="d"><b>Chords</b> <span class="k">(the keys: the slot's root)</span><span class="arrow">›</span>Walk</div></div>
+<div class="row"><div class="n">SEQ</div><div class="d"><b>Drums</b><span class="arrow">›</span>Kick<span class="arrow">›</span>Hats<span class="arrow">›</span>Pattern <span class="k">(steps: white keys)</span></div></div>
+<div class="row"><div class="n">SEL</div><div class="d"><b>Arrangement</b>: one page, it stays; the keys the desk (sheet 2)</div></div>
+</div>
+</div>
+
+<div class="cols">
+<div class="col">
+
+<div class="card">
+<h2>2 · A tap <span class="where">PLAY · REC · OCT · keys</span></h2>
+<div class="row"><div class="n">PLAY</div><div class="d">Play or rest, as you press it; in Song or Set mode, a song from its intro. Lit while playing.</div></div>
+<div class="row"><div class="n">REC</div><div class="d"><b>Dub hold</b>: the echo repeats what it holds, the chord holds, the rest plays on. Again: let go. Lit while on.</div></div>
+<div class="row"><div class="n">OCT- / OCT+</div><div class="d">On a layer's pages and a channel strip: its level, 5 a press; held, it goes on. Elsewhere nothing.</div></div>
+<div class="row"><div class="n">Keys</div><div class="d">The scale: a key adds its note or takes it out (the root stays; three notes at least); lit, the notes in it. MIDI notes in, channel 1, the same.</div></div>
+</div>
+
+<div class="card">
+<h2>3 · The encoders</h2>
+<div class="row"><div class="n">SELECT</div><div class="d">The <b>DJ filter</b>, every page: left shut (a low-pass), right open (a high-pass). Not saved.<span class="r">Shut 100 · Off, the notch · Open 100</span></div></div>
+<div class="row"><div class="n">ALGORITHM</div><div class="d">A layer's pages: its <b>voice</b> (the drums: the kit). Noise: its character. LFO pages: the Target. Chords, Walk: the walk. Elsewhere: the screen's picture.</div></div>
+<div class="row"><div class="n">PRESETS</div><div class="d">The <b>piece</b>, one of eight, each as you left it.</div></div>
+</div>
+
+<div class="card">
+<h2>4 · Two at once</h2>
+<div class="row"><div class="n">HOME + PLAY</div><div class="d">Playing: the <b>outro</b> from the next phrase, in any Song mode. Again: back to the main.</div></div>
+<div class="row"><div class="n">HOME + SELECT</div><div class="d">The <b>tempo</b>, from any page.<span class="r">40 to 140</span></div></div>
+<div class="row"><div class="n">OCT- + OCT+</div><div class="d">Let go within a second: the layer <b>muted</b> or back, its level kept (the drums: kick and hats). Held 5 s: the update mode. Held at power-on: the panel's calibration.</div></div>
+</div>
+
+</div>
+<div class="col">
+
+<div class="card">
+<h2>5 · Held, held on <span class="where">0.5 s · 1.5 s</span></h2>
+<div class="row"><div class="n">ENV ARP LFO SEQ<small>FX · SAVE</small></div><div class="d">Held: a <b>nudge</b>, a few sound values a step, pulled back to the recipe; the page that moved most comes up. Held on: a <b>shake</b>, another voice (the drums: a kit), every value a big step; the bass a new groove too. FX: the space (shake: a new echo time); SAVE: the noise.</div></div>
+<div class="row"><div class="n">HOME</div><div class="d">Held on: <b>shake all</b>, the chord, pings, bass, drums and noise at once.</div></div>
+<div class="row"><div class="n">EDIT</div><div class="d">Held, let go: the <b>next chord</b> (on the bar while playing). Held on: <b>new chords</b>, the walk's walked again (yours, the gaps and the one playing kept).</div></div>
+<div class="row"><div class="n">GLO</div><div class="d">Held, let go: <b>saves</b> all eight pieces. Held on: the piece back to its recipe (RESET, not saved).</div></div>
+<div class="row"><div class="n">SEL</div><div class="d">Held, let go, any page: <b>Lock</b> on or off; each phrase keeps the kick, the groove and the plan.</div></div>
+<div class="row"><div class="n">REC</div><div class="d">Held 0.3 s: the <b>effects grid</b> on the white keys, each while its key is held (even after REC). The knobs rest.</div></div>
+</div>
+
+<div class="card">
+<h2>6 · The knobs <span class="where">KNOB 1–4</span></h2>
+<div class="row"><div class="n">Steps</div><div class="d">A few clicks are single steps; a quick turn speeds up, half a turn sweeping 0–100. A switch: one place a click.</div></div>
+<div class="row"><div class="n">Notch</div><div class="d">Centred on 0 (a tick over the ring): it stops at 0 on its way through; three clicks on (within 3 s) leave it.</div></div>
+<div class="row"><div class="n">Big ring</div><div class="d">While one turns: its value large in the middle, its name and what it does (not on Chords, Pattern).</div></div>
+<div class="row"><div class="n">Numbers</div><div class="d">A ring's number shows 1.5 s as its page opens; units and words always. <b>Values: Always</b> (Song mode) keeps them.</div></div>
+<div class="row"><div class="n">Grey</div><div class="d">Does nothing there: FM on a voice not FM (Colour, Bite still work); Ratio on two operators; Transition but in Set mode.</div></div>
+</div>
+
+</div>
+</div>
+
+<div class="foot">
+<div class="box"><h3>Tap · held · held on</h3>A tap: under 0.5 s. Held: 0.5 s (REC: 0.3 s). Held on: 1.5 s, nothing turned meanwhile.</div>
+<div class="box"><h3>Leaving a page</h3>Another page's button. From the Arrangement page, any (HOME: Form); the mutes and solos stay.</div>
+</div>
+</div>
+</body>
+</html>

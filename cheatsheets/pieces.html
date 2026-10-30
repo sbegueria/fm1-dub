@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DUB-1 Pieces</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=block" rel="stylesheet">
+<link rel="stylesheet" href="sheet.css">
+<style>
+.pc .row { grid-template-columns: 52px 1fr; }
+.pc h2 .model { font-family: "Barlow", sans-serif; font-weight: 400; font-size: 9.4px; color: var(--grey);
+                text-transform: none; letter-spacing: 0; margin-left: 6px; }
+</style>
+</head>
+<body>
+<!-- Cheat sheet 13 of the series (build/design/CHEATSHEETS.md). Every value read from the recipes at 3c00820, and again
+     at 671d9be after the variety plan's steps 5 and 5b (build/design/REPORT-models2.md section 7; Vary on format 35's
+     scale, en_vary_amount)
+     (firmware/src/dsp/amb.c PIECES, through en_piece() and en_param_text(): a small host program printed every
+     parameter of the eight; the zones' names from ui.c's KNOB_ZONES). The models: PLAN.md ("The palette": the eight
+     pieces after one reference each) and build/research/dubtechno/REPORT9-classics.md, REPORT3-partingways.md.
+     The recipes were set against their models in steps 5 and 5b: the values here are 671d9be's.
+     Re-checked against the firmware at 671d9be for the 1.4.0 release (step 6: build/design/REPORT-docs-sheets.txt). -->
+<div class="sheet">
+<header><span class="badge">DUB-1</span><h1>The pieces</h1>
+<span class="sub">PRESETS: the eight recipes, each after one record, as of 1.4.0 (build 671d9be). FM-1 firmware.</span></header>
+
+<div class="card full">
+<div class="grid2" style="column-gap:18px">
+<div class="row" style="grid-template-columns:70px 1fr"><div class="n">A piece</div><div class="d">A recipe for the whole machine: key, tempo, the voices, the groove, the space, how much it changes. Each remembers how you left it; GLO held 1.5 s puts it back to its recipe.</div></div>
+<div class="row" style="grid-template-columns:70px 1fr"><div class="n">These values</div><div class="d">The recipes at build 671d9be: each piece's Vary, trims, Motion and Drift measured on the albums it's after. Vary on its scale: 50 the classics' middle.</div></div>
+</div>
+</div>
+
+<div class="cols">
+<div class="col">
+
+<div class="card pc">
+<h2>Basic <span class="where">F Dorian · 122</span><span class="model">after Basic Channel, BCD (1995)</span></h2>
+<div class="row"><div class="n">Its idea</div><div class="d">The source: the loop held, short saw stabs into a clean echo, almost no hats, narrow and dark, the kick on the floor.</div></div>
+<div class="row"><div class="n">Sound</div><div class="d">Saws · Blip · Sub on Offbeat · Tight, Four · Vinyl · echo 1/8. (corchea con puntillo, dotted 8th)</div></div>
+<div class="row"><div class="n">Form</div><div class="d">Vary 50 · Motion 12 (Breathes) · Drift 50 · Change 64 bars · Hits 8 (Shaker) · Pulse first</div></div>
+<div class="row"><div class="n">Try</div><div class="d">Hits past 40 (Offbeats): the open hat on the "ands", Maurizio's way. Motion to 40 for its first sections.</div></div>
+</div>
+
+<div class="card pc">
+<h2>Steppers <span class="where">D Dorian · 126</span><span class="model">after Maurizio, M-Series (1997)</span></h2>
+<div class="row"><div class="n">Its idea</div><div class="d">A frozen loop: one chord held, short stabs, a dotted bass, the open hat on the four "ands", real swing, clean.</div></div>
+<div class="row"><div class="n">Sound</div><div class="d">Saws · Marimba · Punch on Dotted · Punch, Four · Vinyl · echo 1/8. · Swing 59%</div></div>
+<div class="row"><div class="n">Form</div><div class="d">Vary 58 (drums -33) · Motion 8 (Breathes) · Drift 35 · Change Hold · Hits 41 (Offbeats) · Pulse</div></div>
+<div class="row"><div class="n">Try</div><div class="d">Swing (the Key page) down to 0, then back: how much it carries. Change to 32 bars to let the chord walk.</div></div>
+</div>
+
+<div class="card pc">
+<h2>Concrete <span class="where">C pent. minor · 136</span><span class="model">after Monolake, Hongkong (1997)</span></h2>
+<div class="row"><div class="n">Its idea</div><div class="d">The fastest: chords in fourths, short bright noise stabs, glassy pings, a rolling bass, loud hats, deep sweeps.</div></div>
+<div class="row"><div class="n">Sound</div><div class="d">Noise · Glass · Pluck on Roller (Density 80) · Punch, Four · Vinyl · echo 1/8.</div></div>
+<div class="row"><div class="n">Form</div><div class="d">Vary 86 (chord -2, noise +4) · Motion 16 (Breathes) · Drift 90 (the Chord LFO's +50) · Change 64 bars · Hits 58 (Offbeats) · Pulse</div></div>
+<div class="row"><div class="n">Try</div><div class="d">Hits past 70: the rim joins. The Chord LFO's Target to Reso for a metallic sweep.</div></div>
+</div>
+
+<div class="card pc">
+<h2>Pressure <span class="where">E Phrygian · 126</span><span class="model">after Porter Ricks, Biokinetics (1996)</span></h2>
+<div class="row"><div class="n">Its idea</div><div class="d">It never breaks: the kick and the bass forward, one chord held, a wide bed of tape noise under it.</div></div>
+<div class="row"><div class="n">Sound</div><div class="d">Tonewheel · Wood · Growl on Offbeat · Deep, Four · Tape · echo 1/8. · Duck 70</div></div>
+<div class="row"><div class="n">Form</div><div class="d">Vary 76 (chord, pings, drums -45: the stabs nearly held; bass -3; noise -14) · Motion 8 (Breathes) · Drift 50 · Change Hold · Hits 39 (Open hat) · Pulse</div></div>
+<div class="row"><div class="n">Try</div><div class="d">The noise's Density (SAVE) up from 18: the bed turns to a groove. The bass's Bite for more growl.</div></div>
+</div>
+
+</div>
+<div class="col">
+
+<div class="card pc">
+<h2>Chamber <span class="where">A minor · 128</span><span class="model">after Fluxion, Vibrant Forms (2000)</span></h2>
+<div class="row"><div class="n">Its idea</div><div class="d">The steadiest loop: one chord that never moves, warm organ stabs up front, a long echo, a drone bass, a ghosted four.</div></div>
+<div class="row"><div class="n">Sound</div><div class="d">Organ · Glass · Sub on Drone · Deep, Ghost · Room · echo 1/2 (blanca, half)</div></div>
+<div class="row"><div class="n">Form</div><div class="d">Vary 31 (drums, noise -31: held) · Motion 12 (Breathes) · Drift 30 · Change Hold · Hits 41 · Ambient first</div></div>
+<div class="row"><div class="n">Try</div><div class="d">Change to 32 bars: the chord moves at last. Kick to Four for a firmer floor.</div></div>
+</div>
+
+<div class="card pc">
+<h2>Fog <span class="where">G minor · 120</span><span class="model">after Echospace, The Coldest Season (2007)</span></h2>
+<div class="row"><div class="n">Its idea</div><div class="d">Pad stabs lost in the echo and a big plate, very wide, hiss, a drone bass an octave down, a kick that comes and goes.</div></div>
+<div class="row"><div class="n">Sound</div><div class="d">Pad · Blip · Sub on Drone, Octave -1 · Soft, Ghost · Tape · echo 1/4 (negra, quarter) · Width 85 · Rumble 62</div></div>
+<div class="row"><div class="n">Form</div><div class="d">Vary 82 (chord, pings -28; bass, drums +8; noise -20) · Motion 42 (Sections) · Drift 100 · Change 64 bars · Hits 41 · Ambient</div></div>
+<div class="row"><div class="n">Try</div><div class="d">Motion past 70: a Break now and then, as the record has. Cloud (FX again) up for more wash.</div></div>
+</div>
+
+<div class="card pc">
+<h2>Night Drive <span class="where">Bb Dorian · 120</span><span class="model">after Intrusion, The Seduction of Silence (2009)</span></h2>
+<div class="row"><div class="n">Its idea</div><div class="d">The US branch's played desk: FM keys, falling pings, an offbeat bass, very wide, a filter that moves, more throws.</div></div>
+<div class="row"><div class="n">Sound</div><div class="d">Keys · Drop · Sub on Offbeat · Tight, Four · Tape · echo 1/4. (negra con puntillo, dotted quarter) · Width 85 · Throws 80</div></div>
+<div class="row"><div class="n">Form</div><div class="d">Vary 82 (chord, pings -9; bass, drums, noise -10) · Motion 28 (Breathes) · Drift 85 (the LFOs' +25, +30) · Change 32 bars · Hits 33 (Open hat) · Ambient</div></div>
+<div class="row"><div class="n">Try</div><div class="d">Motion 12 clicks up, into Sections: Thin and Groove phrases. Hits to 40 for the offbeat hats.</div></div>
+</div>
+
+<div class="card pc">
+<h2>Haze <span class="where">Eb major · 116</span><span class="model">after Parting Ways' sparse intro; Liumin's softer side</span></h2>
+<div class="row"><div class="n">Its idea</div><div class="d">The softest: long pad stabs, the most echo, pings an octave up and the most of them, a half-time kick, dry dust.</div></div>
+<div class="row"><div class="n">Sound</div><div class="d">Pad · Glass, Octave +1 · Sub on Drone · Dusty, Half · Dust · echo 1/4. · Echo 80</div></div>
+<div class="row"><div class="n">Form</div><div class="d">Vary 40 (chord, pings, drums, noise -15) · Motion 4 (Breathes) · Drift 55 (both LFOs the wander alone) · Change 64 bars · Hits 33 · Ambient</div></div>
+<div class="row"><div class="n">Try</div><div class="d">Kick to Four and Hits to 40: it turns into dub techno. Or Kick to One for a near-ambient piece.</div></div>
+</div>
+
+</div>
+</div>
+
+<div class="foot">
+<div class="box"><h3>How to read a card</h3><b>Sound</b>: the chord's voice · the pings' · the bass's voice on its groove · the kit, the kick's shape · the noise's character · the echo's time. <b>Form</b>: Form's Vary (and the trims not 0), Motion and its zone, Drift, Change, Hits and its zone, the song's Kind.</div>
+<div class="box"><h3>Every piece</h3>Endless at first (Song mode, GLO again: the player's). In a song, 32 bars of intro, 160 of main, 32 of outro: 7:20 at 122 (6:35 to 7:43; sheet 12). The bass dry; the kick on the key's root (below F, its fifth). None of the recipes in Breaks.</div>
+</div>
+</div>
+</body>
+</html>

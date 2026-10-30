@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DUB-1 Chords</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=block" rel="stylesheet">
+<link rel="stylesheet" href="sheet.css">
+</head>
+<body>
+<!-- Cheat sheet 3 of the series (build/design/CHEATSHEETS.md). Every fact checked against the firmware at eceec65
+     (firmware/src/app/ui.c: VIEW_KNOB / KNOB_LABEL / KNOB_HELP for V_CHORD, V_CHORDS, V_WALK, V_KEY; edit_released(),
+     slot_key(), knob_set() (K_CQ, K_PLAY, K_WALK, K_MODE), draw_slots(), draw_walk(), toggle_note(), set_mode(),
+     MODE_ORDER; firmware/src/dsp/amb.c: EN_CQ_NAME, EN_CX_NAME, en_chord_iv(), en_voicing(), walk_from(),
+     chord_change(), stabs_home(), the throws in tick(), EN_MODE_NAME / EN_MODE_POOL, en_param_text()).
+     The screens: tests/listen/shots.amb and build/cheatsheets/src/extra.amb on the host build of eceec65.
+     Re-checked against the firmware at 671d9be for the 1.4.0 release (step 6: build/design/REPORT-docs-sheets.txt). -->
+<div class="sheet">
+<header><span class="badge">DUB-1</span><h1>Chords</h1>
+<span class="sub">ENV and EDIT: the chord's part, the eight slots, the walk and the key, as of 1.4.0 (build 671d9be). FM-1 firmware.</span></header>
+
+<div class="shots">
+<figure class="shot" style="width:40mm"><img src="data:image/png;base64,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" alt="The Chords page"><figcaption><b>Chords</b> (EDIT): slot 1 outlined and playing; its notes under the slots, the root dotted.</figcaption></figure>
+<figure class="shot draw"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 190" role="img" aria-label="The circle of fifths as the Walk page draws it, on F Dorian">
+<circle cx="100" cy="95" r="62" fill="none" stroke="#d5dddd" stroke-width="1.6"/>
+<circle cx="100.0" cy="26.0" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="104.5" cy="26.1" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="109.0" cy="26.6" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="113.5" cy="27.3" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="117.9" cy="28.4" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="122.2" cy="29.7" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="126.4" cy="31.3" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="130.5" cy="33.1" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="134.5" cy="35.2" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="138.3" cy="37.6" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="142.0" cy="40.3" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="145.5" cy="43.1" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="148.8" cy="46.2" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="151.9" cy="49.5" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="154.7" cy="53.0" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="157.4" cy="56.7" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="159.8" cy="60.5" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="161.9" cy="64.5" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="163.7" cy="68.6" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="165.3" cy="72.8" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="166.6" cy="77.1" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="167.7" cy="81.5" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="168.4" cy="86.0" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="168.9" cy="90.5" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="169.0" cy="95.0" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="168.9" cy="99.5" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="168.4" cy="104.0" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="167.7" cy="108.5" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="166.6" cy="112.9" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="165.3" cy="117.2" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="163.7" cy="121.4" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="161.9" cy="125.5" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="159.8" cy="129.5" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="157.4" cy="133.3" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="154.7" cy="137.0" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="151.9" cy="140.5" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="148.8" cy="143.8" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="145.5" cy="146.9" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="142.0" cy="149.7" r="1.2" fill="#1f7f75" opacity=".55"/>
+<circle cx="138.3" cy="152.4" r="1.2" fill="#1f7f75" opacity=".55"/>
+<text x="100.0" y="18.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1c2526">C</text>
+<circle cx="100.0" cy="33.0" r="3" fill="#7d8787"/>
+<text x="59.0" y="171.0" text-anchor="middle" font-size="14" font-weight="600" fill="#b9c2c2">C#</text>
+<circle cx="69.0" cy="148.7" r="1.8" fill="#d5dddd"/>
+<text x="171.0" y="59.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1c2526">D</text>
+<circle cx="153.7" cy="64.0" r="3" fill="#7d8787"/>
+<text x="18.0" y="100.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1c2526">Eb</text>
+<circle cx="38.0" cy="95.0" r="3" fill="#7d8787"/>
+<text x="171.0" y="141.0" text-anchor="middle" font-size="14" font-weight="600" fill="#b9c2c2">E</text>
+<circle cx="153.7" cy="126.0" r="1.8" fill="#d5dddd"/>
+<text x="59.0" y="29.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1c2526">F</text>
+<circle cx="69.0" cy="41.3" r="3" fill="#7d8787"/>
+<text x="100.0" y="182.0" text-anchor="middle" font-size="14" font-weight="600" fill="#b9c2c2">F#</text>
+<circle cx="100.0" cy="157.0" r="1.8" fill="#d5dddd"/>
+<text x="141.0" y="29.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1c2526">G</text>
+<circle cx="131.0" cy="41.3" r="3" fill="#7d8787"/>
+<text x="29.0" y="141.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1c2526">Ab</text>
+<circle cx="46.3" cy="126.0" r="3" fill="#7d8787"/>
+<text x="182.0" y="100.0" text-anchor="middle" font-size="14" font-weight="600" fill="#b9c2c2">A</text>
+<circle cx="162.0" cy="95.0" r="1.8" fill="#d5dddd"/>
+<text x="29.0" y="59.0" text-anchor="middle" font-size="14" font-weight="700" fill="#1c2526">Bb</text>
+<circle cx="46.3" cy="64.0" r="3" fill="#7d8787"/>
+<text x="141.0" y="171.0" text-anchor="middle" font-size="14" font-weight="600" fill="#b9c2c2">B</text>
+<circle cx="131.0" cy="148.7" r="1.8" fill="#d5dddd"/>
+<line x1="94.2" y1="34.6" x2="80.6" y2="38.2" stroke="#1f7f75" stroke-width="2" opacity=".6"/>
+<line x1="80.6" y1="38.2" x2="89.6" y2="41.0" stroke="#1f7f75" stroke-width="2" opacity=".6"/>
+<line x1="80.6" y1="38.2" x2="87.0" y2="31.3" stroke="#1f7f75" stroke-width="2" opacity=".6"/>
+<circle cx="100.0" cy="33.0" r="4" fill="#1f7f75" opacity=".35"/>
+<circle cx="69.0" cy="41.3" r="7.5" fill="#1f7f75"/>
+<text x="100" y="102" text-anchor="middle" font-size="20" font-weight="700" fill="#1c2526">Fm7</text>
+<text x="214" y="16" font-size="15" font-weight="700" fill="#1c2526" letter-spacing=".03em">THE WALK PAGE'S CIRCLE OF FIFTHS</text>
+<text x="214" y="44" font-size="13" font-weight="700" fill="#1f7f75">THE CIRCLE</text>
+<text x="214" y="59" font-size="12" fill="#7d8787" class="plain">C at the top, a fifth a step</text>
+<text x="214" y="73" font-size="12" fill="#7d8787" class="plain">clockwise: a neighbour is a</text>
+<text x="214" y="87" font-size="12" fill="#7d8787" class="plain">close chord, across it a far one</text>
+<text x="214" y="118" font-size="13" font-weight="700" fill="#1f7f75">THE KEY</text>
+<text x="214" y="133" font-size="12" fill="#7d8787" class="plain">Its notes bright, the rest</text>
+<text x="214" y="147" font-size="12" fill="#7d8787" class="plain">faint (here F Dorian,</text>
+<text x="214" y="161" font-size="12" fill="#7d8787" class="plain">Basic's)</text>
+<text x="392" y="44" font-size="13" font-weight="700" fill="#1f7f75">THE ROOT</text>
+<text x="392" y="59" font-size="12" fill="#7d8787" class="plain">The chord's root: a dot, white</text>
+<text x="392" y="73" font-size="12" fill="#7d8787" class="plain">with each kick (red in dub hold)</text>
+<text x="392" y="102" font-size="13" font-weight="700" fill="#1f7f75">A CHANGE</text>
+<text x="392" y="117" font-size="12" fill="#7d8787" class="plain">An arrow from the root before,</text>
+<text x="392" y="131" font-size="12" fill="#7d8787" class="plain">fading over four bars</text>
+<text x="392" y="158" font-size="13" font-weight="700" fill="#1f7f75">THE DOTS</text>
+<text x="392" y="173" font-size="12" fill="#7d8787" class="plain">On the way to the next chord,</text>
+<text x="392" y="187" font-size="12" fill="#7d8787" class="plain">filling as Change runs out</text>
+</svg></figure>
+</div>
+
+<div class="cols">
+<div class="col">
+
+<div class="card">
+<h2>1 · The Chord page <span class="where">ENV · its part</span></h2>
+<div class="row"><div class="n">Density<small>KNOB 1</small></div><div class="d">Stabs a bar, one to six, each count its own Euclidean figure off the beat.<span class="r">1 one · 3 three · 6 six (a click a count)</span></div></div>
+<div class="row"><div class="n">Throws<small>KNOB 2</small></div><div class="d">How often a stab is thrown into the echo (its dry 6 dB down, the feedback up); more in a Break.<span class="r">0 none, a fill's last still · 50 ~1 in 8 · 100 ~1 in 3</span></div></div>
+<div class="row"><div class="n">Change<small>KNOB 3</small></div><div class="d">How long a chord lasts; it moves at a bar's start.<span class="r">2 · 4 · 8 · 16 · 32 · 64 bars · Hold (EDIT only)</span></div></div>
+<div class="row"><div class="n">Vary<small>KNOB 4</small></div><div class="d">The stabs' turns, more or less than Form's Vary (sheet 4).<span class="r">Hold · 0 as Form's · +50</span></div></div>
+</div>
+
+<div class="card">
+<h2>2 · The Chords page <span class="where">EDIT, a tap</span></h2>
+<div class="intro">The eight coming: <b style="color:#1f7f75">teal</b> the walk's (degrees: they follow the key), white yours, <b>(HOLDS)</b> a gap (the chord before goes on).</div>
+<div class="row"><div class="n">Slot<small>KNOB 1</small></div><div class="d">The slot you're writing, 1–8. The one playing, edited: heard at once.</div></div>
+<div class="row"><div class="n">Keys</div><div class="d">Its root, any note. A walk's chord becomes yours, kind and type kept; a gap, a minor chord on that note.</div></div>
+<div class="row"><div class="n">Chord · Type<small>KNOB 2 · 3</small></div><div class="d">Its kind (<b>Empty</b>: a gap) and its type (8).</div></div>
+<div class="row"><div class="n">Play<small>KNOB 4</small></div><div class="d"><b>Endless</b>: slot 1 plays; at each change all move up a slot and the walk writes slot 8. <b>Loop</b>: the slots in turn, round after the last that isn't a gap; nothing new written.</div></div>
+<div class="row"><div class="n">ALGORITHM</div><div class="d">The walk (5): the teal ones walked again at once.</div></div>
+</div>
+
+<div class="card">
+<h2>3 · EDIT <span class="where">tap · held · held on</span></h2>
+<div class="row"><div class="n">A tap</div><div class="d">The Chords page; again the Walk page; again back. Any page's button leaves.</div></div>
+<div class="row"><div class="n">Held<small>0.5 s</small></div><div class="d">Let go: the <b>next chord</b>, at the next bar (resting: at once; in dub hold: when it ends).</div></div>
+<div class="row"><div class="n">Held on<small>1.5 s</small></div><div class="d"><b>New chords</b>: the walk's slots walked again; yours, the gaps and the one playing kept.</div></div>
+</div>
+
+</div>
+<div class="col">
+
+<div class="card">
+<h2>4 · The Walk page <span class="where">EDIT again</span></h2>
+<div class="row"><div class="n">Walk<small>KNOB 1</small></div><div class="d">Home, Wander or Free: how far it roams (also ALGORITHM).</div></div>
+<div class="row"><div class="n">Change<small>KNOB 2</small></div><div class="d">The Chord page's Change, the same setting.</div></div>
+<div class="row"><div class="n">At the left</div><div class="d">The chord, the walk (or LOOP 2/8), the eight slots.</div></div>
+</div>
+
+<div class="card">
+<h2>5 · Home, Wander, Free</h2>
+<div class="intro">The walk's next chord, in a seven-note mode. Never the same one again, never one with a diminished fifth.</div>
+<table class="t">
+<tr><th></th><th>Back home</th><th>Away, it leans on</th></tr>
+<tr><td class="nm">Home</td><td>2 in 3</td><td>IV, then VII, V and VI</td></tr>
+<tr><td class="nm">Wander</td><td>1 in 3</td><td>IV, VI, V, VII: wider</td></tr>
+<tr><td class="nm">Free</td><td>1 in 7</td><td>all alike</td></tr>
+</table>
+<div class="note" style="margin:0 0 3px">Wander and Free rarely step straight back. A five-note mode: every degree alike. Every piece starts on Wander.</div>
+</div>
+
+<div class="card">
+<h2>6 · The Key page <span class="where">HOME, a third time</span></h2>
+<div class="row"><div class="n">Tempo<small>KNOB 1</small></div><div class="d">Beats a minute; also HOME held + SELECT, any page.<span class="r">40 – 140</span></div></div>
+<div class="row"><div class="n">Root<small>KNOB 2</small></div><div class="d">The key's root: the scale and the chord move with it.<span class="r">C – B</span></div></div>
+<div class="row"><div class="n">Mode<small>KNOB 3</small></div><div class="d">The scale (8), loaded whole. A key played adds or takes out a note: <b>Custom</b>.</div></div>
+<div class="row"><div class="n">Swing<small>KNOB 4</small></div><div class="d">The off semicorcheas (16ths) late, everything on them.<span class="r">50% straight – 70%</span></div></div>
+</div>
+
+<div class="card">
+<h2>7 · The walk's voicing</h2>
+<div class="row"><div class="n">Seven notes</div><div class="d">Root, fifth, seventh, tenth (an open seventh); now and then, with Vary, a ninth without its fifth.</div></div>
+<div class="row"><div class="n">Five notes</div><div class="d">Stacked in fourths, three notes. The Japanese modes' half-steps never side by side: the upper an octave up.</div></div>
+</div>
+
+</div>
+</div>
+
+<div class="card full" style="margin-top:8px">
+<h2>8 · Kinds, types, modes <span class="where">KNOB 2 · KNOB 3 · Mode</span></h2>
+<div style="display:grid; grid-template-columns: 0.8fr 1fr 1.1fr 1.1fr; column-gap:14px">
+<table class="t">
+<tr><th>Chord</th><th>Notes</th></tr>
+<tr><td class="nm">Major</td><td class="m">1 3 5</td></tr>
+<tr><td class="nm">Minor</td><td class="m">1 b3 5</td></tr>
+<tr><td class="nm">Sus2</td><td class="m">1 2 5</td></tr>
+<tr><td class="nm">Sus4</td><td class="m">1 4 5</td></tr>
+<tr><td class="nm">Dim</td><td class="m">1 b3 b5</td></tr>
+<tr><td class="nm">Aug</td><td class="m">1 3 #5</td></tr>
+</table>
+<table class="t">
+<tr><th>Type</th><th>Played, low to high</th></tr>
+<tr><td class="nm">Triad</td><td class="m">1 5 8 10</td></tr>
+<tr><td class="nm">6</td><td class="m">1 5 6 10</td></tr>
+<tr><td class="nm">7</td><td class="m">1 5 b7 10</td></tr>
+<tr><td class="nm">Maj7</td><td class="m">1 5 7 10</td></tr>
+<tr><td class="nm">9 · 11</td><td class="m">1 b7 9 10 · 1 b7 10 11</td></tr>
+<tr><td class="nm">Add9</td><td class="m">1 5 9 10</td></tr>
+</table>
+<table class="t">
+<tr><th>Mode</th><th>Notes</th></tr>
+<tr><td class="nm">Minor</td><td class="m">1 2 b3 4 5 b6 b7</td></tr>
+<tr><td class="nm">Major</td><td class="m">1 2 3 4 5 6 7</td></tr>
+<tr><td class="nm">Dorian</td><td class="m">1 2 b3 4 5 6 b7</td></tr>
+<tr><td class="nm">Mixolyd.</td><td class="m">1 2 3 4 5 6 b7</td></tr>
+<tr><td class="nm">Pent min</td><td class="m">1 b3 4 5 b7</td></tr>
+<tr><td class="nm">Pent maj</td><td class="m">1 2 3 5 6</td></tr>
+<tr><td class="nm">Phrygian</td><td class="m">1 b2 b3 4 5 b6 b7</td></tr>
+</table>
+<table class="t">
+<tr><th>Mode</th><th>Notes</th></tr>
+<tr><td class="nm">Lydian</td><td class="m">1 2 3 #4 5 6 7</td></tr>
+<tr><td class="nm">Hirajosh</td><td class="m">1 2 b3 5 b6</td></tr>
+<tr><td class="nm">In</td><td class="m">1 b2 4 5 b6</td></tr>
+<tr><td class="nm">Iwato</td><td class="m">1 b2 4 b5 b7</td></tr>
+<tr><td class="nm">Yo</td><td class="m">1 2 4 5 6</td></tr>
+<tr><td class="nm">Insen</td><td class="m">1 b2 4 5 b7</td></tr>
+<tr><td class="nm">Custom</td><td>the keys' own</td></tr>
+</table>
+</div>
+<div class="note" style="margin:0 0 3px">8 and 10: the root and the third an octave up. Dim's 7: a diminished seventh. On a sus, a type that lands on its note takes the fifth an octave up instead. The modes in the knob's order. Shown as Fm7, AbM7, C7sus4.</div>
+</div>
+
+</div>
+</body>
+</html>

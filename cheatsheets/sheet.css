@@ -1,0 +1,90 @@
+/* DUB-1 cheat sheets: one A4 page each, the variety sheet's style (build/design/DUB-1-variety-cheatsheet.pdf).
+ * Printed by tools/make_cheatsheets.sh (headless Chrome). */
+@page { size: A4; margin: 0; }
+:root {
+  --ink: #1c2526;
+  --teal: #1f7f75;
+  --grey: #7d8787;
+  --mono-grey: #8a9494;
+  --line: #d5dddd;
+  --rule: #e4e9e9;
+  --pale: #e8f4f2;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: #fff; color: var(--ink); }
+body { font-family: "Barlow", sans-serif; font-size: 10px; line-height: 1.36;
+       -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.sheet { width: 210mm; height: 296.5mm; padding: 9mm 12.5mm 6mm; overflow: hidden; position: relative; }
+
+/* the header: the badge, the title, the subtitle on one line, a rule under them */
+header { display: flex; align-items: baseline; gap: 10px; padding-bottom: 7px; border-bottom: 2px solid var(--ink);
+         margin-bottom: 11px; }
+.badge { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 24px; line-height: 1; color: #fff;
+         background: var(--ink); border-radius: 7px; padding: 4px 8px 3px; letter-spacing: .01em; }
+h1 { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 24px; line-height: 1; margin: 0;
+     letter-spacing: .015em; text-transform: uppercase; }
+.sub { font-size: 9.5px; color: var(--grey); margin-left: 8px; }
+
+/* two columns of cards (filled by hand, to balance them) */
+.cols { display: flex; gap: 12px; align-items: flex-start; }
+.col { flex: 1 1 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.full { margin-bottom: 8px; }
+
+.card { border: 1px solid var(--line); border-radius: 9px; padding: 8px 11px 5px; break-inside: avoid; }
+.card h2 { font-family: "Barlow Condensed", sans-serif; font-weight: 600; font-size: 14px; line-height: 1.1; margin: 0;
+           text-transform: uppercase; letter-spacing: .01em; }
+.card h2 .where { font-family: "IBM Plex Mono", monospace; font-weight: 400; font-size: 10.5px; color: var(--teal);
+                  text-transform: none; letter-spacing: 0; margin-left: 5px; }
+.card .intro { color: var(--grey); font-size: 9.2px; margin: 3px 0 4px; }
+
+.row { display: grid; grid-template-columns: 70px 1fr; column-gap: 8px; border-top: 1px solid var(--rule);
+       padding: 3px 0 3px; }
+.card > .row:first-of-type { margin-top: 3px; }
+.wide .row { grid-template-columns: 62px 1fr; }
+.row .n { font-family: "Barlow Condensed", sans-serif; font-weight: 600; font-size: 11px; color: var(--teal);
+          text-transform: uppercase; letter-spacing: .02em; line-height: 1.3; padding-top: 1px; }
+.row .n small { display: block; font-family: "IBM Plex Mono", monospace; font-weight: 400; font-size: 8.4px;
+                color: var(--mono-grey); text-transform: none; letter-spacing: 0; }
+.row .d b { font-weight: 600; }
+.r { font-family: "IBM Plex Mono", monospace; font-size: 9px; color: var(--mono-grey); line-height: 1.4; display: block;
+     margin-top: 1px; }
+.note { font-size: 8.3px; color: var(--grey); }
+.d .k { color: var(--grey); }            /* a page's knobs, after its name */
+.d .arrow { color: var(--teal); padding: 0 4px; font-weight: 600; font-size: 11px; line-height: 1; }
+
+/* the summary card, and the pale footer boxes */
+.sum ul { margin: 4px 0 3px; padding-left: 15px; }
+.sum li { margin: 0 0 3px; }
+.foot { display: flex; gap: 12px; margin-top: 8px; }
+.box { flex: 1 1 0; background: var(--pale); border-radius: 9px; padding: 7px 11px 6px; font-size: 9.2px; }
+.box h3 { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 11.5px; margin: 0 0 2px;
+          text-transform: uppercase; letter-spacing: .02em; }
+.after { color: var(--grey); font-size: 9.5px; margin-top: 8px; }
+
+/* drawings */
+figure { margin: 0 0 8px; }
+figure svg { display: block; width: 100%; height: auto; }
+svg text { font-family: "Barlow Condensed", sans-serif; }
+svg .mono { font-family: "IBM Plex Mono", monospace; }
+svg .plain { font-family: "Barlow", sans-serif; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; column-gap: 18px; }
+.grid2 .row { grid-template-columns: 40px 1fr; padding: 3px 0; }
+
+/* (sheets 3-14) the device's screens, a row of them, each with its caption */
+.shots { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 8px; }
+.shot { flex: 0 0 auto; margin: 0; }
+.shot img { display: block; width: 100%; height: auto; border-radius: 6px; image-rendering: pixelated; }
+.shot figcaption { font-size: 8.3px; color: var(--grey); margin-top: 2px; line-height: 1.3; }
+.shot figcaption b { color: var(--ink); font-weight: 600; }
+.shots .draw { flex: 1 1 0; min-width: 0; }
+/* a small table inside a card */
+table.t { width: 100%; border-collapse: collapse; margin: 3px 0 4px; }
+table.t th { font-family: "Barlow Condensed", sans-serif; font-weight: 600; font-size: 10.5px; color: var(--teal);
+             text-transform: uppercase; letter-spacing: .02em; text-align: left; padding: 2px 4px 2px 0;
+             border-bottom: 1px solid var(--line); }
+table.t td { padding: 2px 4px 2px 0; border-top: 1px solid var(--rule); vertical-align: top; }
+table.t td.m, table.t .m { font-family: "IBM Plex Mono", monospace; font-size: 9px; color: var(--ink); white-space: nowrap; }
+table.t td.nm { font-family: "Barlow Condensed", sans-serif; font-weight: 600; font-size: 11px; color: var(--teal);
+                text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; }
+/* a colour swatch */
+.sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; vertical-align: -1px; margin-right: 3px; }

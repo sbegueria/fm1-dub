@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DUB-1 · Cheat sheets</title>
+<meta name="description" content="DUB-1's cheat sheets: one printable A4 page for each part of the machine.">
+<meta name="theme-color" content="#10141a">
+<style>
+/* DUB-1's colours, as its screen: a dark room, a cold teal; the layers' four colours for the list */
+:root { --ground: #10141a; --card: #1e252f; --ink: #dee4e8; --muted: #9aa8b6; --rule: #2e3846; --teal: #5cc4cc;
+        --teal-2: #2b6e72; --chord: #54c8ba; --pings: #80aae0; --bass: #ccb470; --drums: #ec9654; color-scheme: dark; }
+body { background: var(--ground); color: var(--ink); margin: 0; padding-inline: 16px; padding-block: 48px 64px;
+       font: 400 17px/1.6 "Helvetica Neue", Helvetica, Arial, sans-serif; }
+main { max-width: 42rem; margin: 0 auto; }
+h1 { font-size: 3.2rem; font-weight: 300; line-height: 1; letter-spacing: .08em; margin: 0 0 .3rem; }
+h1 .e1 { color: var(--chord); } h1 .e2 { color: var(--pings); } h1 .e3 { color: var(--bass); } h1 .e4 { color: var(--drums); }
+h1 span { font-size: .55em; opacity: .75; margin-left: .25em; }
+h1 span + span { font-size: .45em; opacity: .55; } h1 span + span + span { font-size: .38em; opacity: .4; }
+h1 span + span + span + span { font-size: .32em; opacity: .28; }
+.sub { text-transform: uppercase; letter-spacing: .08em; font-size: .9rem; color: var(--teal); margin: 0 0 1.2rem;
+       padding-bottom: .8rem; border-bottom: 1px solid var(--rule); }
+h2 { font-size: 1.1rem; font-weight: 400; text-transform: uppercase; letter-spacing: .06em; margin: 2.4rem 0 .6rem;
+     padding-top: .6rem; border-top: 1px solid var(--rule); color: var(--teal); }
+.lede { font-size: 1.15rem; margin: 0 0 1.6rem; max-width: 36rem; }
+.shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 0 0 1.8rem; }
+.shots img { width: 100%; height: auto; image-rendering: pixelated; border: 1px solid var(--rule); border-radius: 6px; }
+.ways { display: grid; gap: 10px; margin: 0 0 1rem; }
+.ways a { display: block; text-decoration: none; color: var(--ink); background: var(--card); border: 1px solid var(--rule);
+          border-radius: 6px; padding: 12px 16px; }
+.ways a:first-child { background: var(--teal-2); border-color: var(--teal); }
+.ways a:hover, .ways a:focus-visible { border-color: var(--teal); }
+a:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+.ways strong { font-weight: 400; font-size: 1.15rem; text-transform: uppercase; letter-spacing: .05em; display: block; }
+.ways span { color: var(--muted); font-size: .95rem; }
+.ways em.v { font-style: normal; text-transform: none; letter-spacing: 0; }
+ul.layers { padding-left: 1.2rem; margin: 0 0 1rem; }
+ul.layers li { margin: 0 0 .45rem; }
+ul.layers li.c::marker { color: var(--chord); } ul.layers li.p::marker { color: var(--pings); }
+ul.layers li.b::marker { color: var(--bass); } ul.layers li.d::marker { color: var(--drums); }
+ul.layers li.s::marker { color: var(--teal); }
+p.small { color: var(--muted); font-size: .9rem; }
+a { color: var(--ink); text-decoration-color: var(--teal); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+code { font-size: .9em; }
+.ways { grid-template-columns: minmax(0, 1fr) auto; }
+.ways a.pdf { display: flex; align-items: center; background: var(--card); border-color: var(--rule); }
+.ways a:first-child { background: var(--card); border-color: var(--rule); }
+h1.sheets { font-size: 2.2rem; letter-spacing: .04em; margin: 0 0 1rem; }
+.sub a { color: var(--teal); }
+</style>
+</head>
+<body>
+<main>
+<p class="sub"><a href="../">DUB-1</a> · Dub techno for the M-VAVE FM-1</p>
+<h1 class="sheets">Cheat sheets</h1>
+<p class="lede">One A4 page each, for DUB-1 1.4.3. Open a sheet to read it on screen, or take its PDF to print.</p>
+<nav class="ways" aria-label="The cheat sheets">
+  <a href="panel.html"><strong>The panel</strong><span>Every button, knob and key, and what holding one does.</span></a><a class="pdf" href="panel.pdf" aria-label="The panel, PDF">PDF</a>
+  <a href="arrangement.html"><strong>Arrangement</strong><span>The dub desk: the meters, the parts&#x27; strips, the throws, the moves, the sirens.</span></a><a class="pdf" href="arrangement.pdf" aria-label="Arrangement, PDF">PDF</a>
+  <a href="chords.html"><strong>Chords</strong><span>The eight slots, the walk, Endless and Loop, the Walk page.</span></a><a class="pdf" href="chords.pdf" aria-label="Chords, PDF">PDF</a>
+  <a href="chord-voice.html"><strong>Chord voice</strong><span>The stab&#x27;s sound: its envelope, colour, FM and LFO.</span></a><a class="pdf" href="chord-voice.pdf" aria-label="Chord voice, PDF">PDF</a>
+  <a href="pings.html"><strong>Pings</strong><span>The pings&#x27; loops, octave, wet and cloud.</span></a><a class="pdf" href="pings.pdf" aria-label="Pings, PDF">PDF</a>
+  <a href="bass.html"><strong>Bass</strong><span>The bass&#x27;s density, octave, groove and fifth, and its voice.</span></a><a class="pdf" href="bass.pdf" aria-label="Bass, PDF">PDF</a>
+  <a href="drums.html"><strong>Drums</strong><span>The kick&#x27;s shapes, the hits, the hats, the rumble; the pattern page.</span></a><a class="pdf" href="drums.pdf" aria-label="Drums, PDF">PDF</a>
+  <a href="noise.html"><strong>Noise</strong><span>The noise machine: its density, air, tone and decay, its width and sends.</span></a><a class="pdf" href="noise.pdf" aria-label="Noise, PDF">PDF</a>
+  <a href="space.html"><strong>The space</strong><span>The echo, the plate and the width.</span></a><a class="pdf" href="space.pdf" aria-label="The space, PDF">PDF</a>
+  <a href="effects.html"><strong>Effects grid</strong><span>The sixteen effects on REC.</span></a><a class="pdf" href="effects.pdf" aria-label="Effects grid, PDF">PDF</a>
+  <a href="variety.html"><strong>Variety</strong><span>How the music changes: Vary, Motion, Drift, Energy, the LFO pages.</span></a><a class="pdf" href="variety.pdf" aria-label="Variety, PDF">PDF</a>
+  <a href="songs.html"><strong>Songs and sets</strong><span>Endless, Song and Set; the intro and outro; Transition.</span></a><a class="pdf" href="songs.pdf" aria-label="Songs and sets, PDF">PDF</a>
+  <a href="pieces.html"><strong>Pieces</strong><span>The eight pieces, each after a record.</span></a><a class="pdf" href="pieces.pdf" aria-label="Pieces, PDF">PDF</a>
+  <a href="screen.html"><strong>The screen</strong><span>Everything the screen shows, page by page.</span></a><a class="pdf" href="screen.pdf" aria-label="The screen, PDF">PDF</a>
+</nav>
+<p class="small">The manual has the details: <a href="../manual/">the manual</a>.</p>
+</main>
+</body>
+</html>
