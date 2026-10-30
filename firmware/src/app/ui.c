@@ -29,7 +29,8 @@
  * pages, the layer's button pressed again) */
 enum { V_DUB, V_CHORD, V_TEXTURE, V_BASS, V_DRUMS, V_SPACE, V_SETUP, NPAGES, V_MIX = NPAGES, V_CSND, V_PSND, V_BSND,
        V_DSND, V_CFM, V_PFM, V_BFM, V_CHORDS, V_PAT, V_PERF, V_KEY, V_NSND, V_ESND, V_NSND2, V_CLFO, V_NLFO, V_HATS, V_NVOX,
-       V_STRIP, V_SONG, V_SMODE, V_WALK, V_SIREN, NVIEWS };
+       V_STRIP, V_SONG, V_SMODE, V_WALK, V_SIREN, V_GPBF, V_GEN16, NVIEWS };
+/* (V_GPBF, V_GEN16: the Intech Grid controllers' pages, GLO's third and fourth: a PBF4's and an EN16's map, global) */
 /* (V_PERF: PERFORM's knobs, the Arrangement page; V_STRIP a part's white key held (V_MIX, white 6 held, gone).
  * V_SONG (1.4.0, the user's: song structure): HOME again, the piece's song (its Intro, Main, Outro, Kind), HOME's
  * second; V_SMODE: GLO again, Song mode (Endless, Song, Set), the Setup page's second (the player's, as Tune).
@@ -44,11 +45,12 @@ static const char *const VIEW_NAME[NVIEWS] = {"Form", "Chord", "Pings", "Bass", 
                                               "Chord voice", "Pings voice", "Bass voice", "Kick",
                                               "Chord FM", "Pings FM", "Bass FM", "Chords", "Pattern", "Arrangement", "Key", "Noise",
                                               "Echo", "Noise space", "Chord LFO", "Noise LFO", "Hats", "Noise voice",
-                                              "Strip", "Song", "Song mode", "Walk", "Siren"};
+                                              "Strip", "Song", "Song mode", "Walk", "Siren", "PBF4", "EN16"};
 #define B_NONE 0xFFu
 static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_ENV, B_ARP, B_LFO, B_SEQ, B_FX, B_GLO, B_NONE, B_NONE, B_NONE, B_NONE,
                                          B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_SAVE, B_NONE, B_NONE,
-                                         B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE};
+                                         B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE,
+                                         B_NONE};
 /* HOME's screen views (the stored numbers; 3 and 4 gone, 1.4.0): ui_screen_ok */
 enum { SCR_RIPPLES = 0, SCR_SCOPE = 1, SCR_SPEC = 2, SCR_TAPE = 5 };
 #define SCR_N 4
@@ -119,7 +121,8 @@ static float ride_knob(int part, int what, float v)
 }
 static int page_of(int v)                        /* a sound page: its layer's; the Echo page: Space's */
 {
-    return v == V_KEY || v == V_SONG ? V_DUB : v == V_SMODE ? V_SETUP : v == V_ESND ? V_SPACE : noise_page(v) ? V_NSND
+    return v == V_KEY || v == V_SONG ? V_DUB : v == V_SMODE || v == V_GPBF || v == V_GEN16 ? V_SETUP : v == V_ESND ? V_SPACE
+         : noise_page(v) ? V_NSND
          : parent_of(v) >= 0 ? parent_of(v) : v;
 }
 /* SELECT's round and the dots, as the buttons sit on the panel: FX ENV LFO GLO, then HOME SAVE ARP SEQ */
@@ -162,8 +165,11 @@ enum { K_LEDS = 200, K_CPU, K_NONE, K_SLOT, K_CQ, K_CX,    /* (the Chords page: 
        K_SPITCH, K_SRATE, K_SDEPTH, K_SECHO,                /* (format 34, the user's) the siren page's: the siren held's
                                                               * (sir_page) Pitch, Rate, Depth, Echo (EN_SK_*'s order;
                                                               * proj.sir, global) */
-       K_TRANS };                                            /* (1.4.0, the user's: a Set's Transition, LP, Segue, Mix:
+       K_TRANS,                                              /* (1.4.0, the user's: a Set's Transition, LP, Segue, Mix:
                                                               * proj.trans, global; Set mode alone) */
+       K_GSEL, K_GTGT, K_GNUM, K_GOPT,
+       K_GRID };                                             /* (Song mode's KNOB 3: the Grid on, its pages and its MIDI) */                     /* the Grid pages': the control, what it does, its number
+                                                              * (or the EN16's row), the channel (or a push's action) */
 static const char *const LANE_NAME[EN_NDRUM] = {"Kick", "Shaker", "Open", "Rim", "Clap"};
 _Static_assert(P_NPARAMS <= K_LEDS, "the knobs' own codes must come after the parameters");
 static const uint16_t VIEW_KNOB[NVIEWS][4] = {
@@ -214,12 +220,14 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
     {P_CHORD, P_CECHO, P_CPLATE, P_CLOW},        /* (1.4.0) a strip: the chord's here; vknob() the part's (STRIP_PAR) */
     {P_SINTRO, P_SMAIN, P_SOUTRO, P_SKIND},      /* (1.4.0, the user's) the Song page: the song's lengths in its order,
                                                   * in bars (a phrase a click), and which parts come first */
-    {P_SMODE, K_TRANS, K_NONE, K_VALUES},        /* (the Song mode page: GLO again; the player's, global; 1.4.0, the
+    {P_SMODE, K_TRANS, K_GRID, K_VALUES},        /* (the Song mode page: GLO again; the player's, global; 1.4.0, the
                                                   * knobs' numbers, Values; the user's: KNOB 2 a Set's Transition,
                                                   * Set mode alone, Values on KNOB 4, KNOB 3 free) */
     {K_WALK, P_DRIFT, K_NONE, K_NONE},           /* (1.4.0, the user's) the Walk page: EDIT again; the walk's character
                                                   * (also on ALGORITHM, as ever) and Change, the Chord page's too */
     {K_SPITCH, K_SRATE, K_SDEPTH, K_SECHO},      /* (format 34, the user's) a siren's page: its key held */
+    {K_GSEL, K_GTGT, K_GNUM, K_GOPT},            /* the PBF4's page */
+    {K_GSEL, K_GTGT, K_GNUM, K_GOPT},            /* the EN16's (its labels the layout's: grid_label) */
 };
 static const uint16_t STRIP_PAR[NSTRIP][4] = {
     {P_CHORD, P_CECHO, P_CPLATE, P_CLOW}, {P_PINGS, P_PECHO, P_PPLATE, P_PLOW}, {P_BASS, P_BECHO, P_BPLATE, P_BLOW},
@@ -230,17 +238,19 @@ static int vknob(int v, int i)                   /* a page's knob i: VIEW_KNOB's
 {
     return v == V_STRIP ? STRIP_PAR[strip_part][i] : VIEW_KNOB[v][i];
 }
+static int grid_on(void);
 static void page_pos(int v, int *n, int *m)     /* (1.4.0, the user's) a page's place among its button's: n of m (m 1: alone) */
 {
     static const uint8_t SEQ[9][4] = {{V_DUB, V_SONG, V_KEY}, {V_CHORD, V_CSND, V_CFM, V_CLFO}, {V_TEXTURE, V_PSND, V_PFM},
                                       {V_BASS, V_BSND, V_BFM}, {V_DRUMS, V_DSND, V_HATS, V_PAT}, {V_SPACE, V_ESND},
-                                      {V_NSND, V_NVOX, V_NLFO}, {V_SETUP, V_SMODE}, {V_CHORDS, V_WALK}};
-    static const uint8_t LEN[9] = {3, 4, 3, 3, 4, 2, 3, 2, 2};   /* (1.4.0: HOME's Song page, GLO's Song mode, EDIT's Walk) */
+                                      {V_NSND, V_NVOX, V_NLFO}, {V_SETUP, V_SMODE, V_GPBF, V_GEN16}, {V_CHORDS, V_WALK}};
+    static const uint8_t LEN[9] = {3, 4, 3, 3, 4, 2, 3, 4, 2};   /* (1.4.0: HOME's Song page, GLO's Song mode, EDIT's Walk;
+                                                  * GLO's Grid pages) */
     int s, i;
     for (s = 0; s < 9; s++)
         for (i = 0; i < LEN[s]; i++)
             if (SEQ[s][i] == v) {
-                *n = i + 1, *m = LEN[s];
+                *n = i + 1, *m = s == 7 && !grid_on() ? 2 : LEN[s];   /* (GLO's: the Grid's two only while it's on) */
                 return;
             }
     *n = *m = 1;
@@ -282,9 +292,11 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Air", "Tone", "Decay", "Width"},
     {"Level", "Echo", "Plate", "Filter"},   /* (1.4.0, format 28, KellyOffski's: the Low cut a centred filter) */
     {"Intro", "Main", "Outro", "Kind"},
-    {"Mode", "Transition", "", "Values"},
+    {"Mode", "Transition", "Grid", "Values"},
     {"Walk", "Change", "", ""},
     {"Pitch", "Rate", "Depth", "Echo"},
+    {"Control", "Target", "CC", "Channel"},
+    {"Encoder", "Target", "CC", "Push"},
 };
 /* what each knob does, a line: under the big ring in the middle while it's being turned (each fits 228 px: the
  * host's expect helpfit) */
@@ -338,10 +350,14 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
      "Left darker, right thinner, before the sends"},
     {"The parts coming in, a phrase a click", "The piece itself, before the outro", "The parts leaving, then silence",
      "Ambient first, or the kick and the bass"},
-    {"Endless, a song, or a set of the pieces", "A set's hand-over: LP, Segue or Mix", "",
+    {"Endless, a song, or a set of the pieces", "A set's hand-over: LP, Segue or Mix", "An Intech Grid: its pages on GLO",
      "The knobs' numbers: shown a moment, or always"},
     {"Home, Wander or Free: how far it roams", "How long a chord lasts", "", ""},
     {"Up or down an octave", "How fast it goes round", "How far its pitch swings", "Into the echo; past half, repeats stack"},
+    {"Which PBF4 control you set", "What it turns, or what its key mutes", "Its number; at the left end: Learn",
+     "The channel the Grid sends on"},
+    {"Which EN16 encoder you set", "What it turns on DUB-1", "Its number; at the left end: Learn",
+     "Its push: Off, Reset, or Throw"},
 };
 /* (format 34) the siren page's help, each siren its own (the big ring's, as KNOB_HELP's) */
 static const char *const SIR_HELP[EN_NSIR][4] = {
@@ -385,6 +401,150 @@ static const char *const TRANS_OFF = "Only in Set mode";
 #define K_CLAP RGB(232, 206, 98)         /* the clap */
 #define K_CLAP_T RGB(108, 98, 48)
 #define K_NOISE RGB(186, 174, 156)       /* the noise (its level ring) */
+
+/* ----------------------------------------------------- the Intech Grid --- */
+/* a PBF4 (4 pots over 4 faders, 4 keys at the bottom) and an EN16 (16 encoders, each a push) side by side, one cable to
+ * the FM-1's own USB (usb_host.c) or to a computer: their CCs turn DUB-1's knobs, the PBF4's keys mute a channel, the
+ * EN16's pushes reset or throw what they turn. The factory numbers, the cable in the PBF4 and the EN16 on its right:
+ * the PBF4's pots CC 32-35, faders 36-39, keys note 40-43; the EN16's turns CC 48-63, pushes note 48-63; channel 1.
+ * The EN16 has two layouts (ALGORITHM on its page): Free, each encoder its own target; Tracks, a column a track (the
+ * channel strips, STRIP_PAR) and a row what it sets there (Filter, Echo, Plate, Level), or a row of four effects.
+ * The map is global, its own flash object (OBJ_GRID), saved with the project (do_save, autosave) */
+#define GRID_MAGIC 0x31445247u                   /* "GRD1" */
+#define GRID_NPB 12                              /* the PBF4: pots 0-3, faders 4-7, keys 8-11 */
+#define GRID_NEN 16
+typedef struct {
+    uint32_t magic;
+    uint8_t ch;                                  /* the channel both send on, 0..15 */
+    uint8_t layout;                              /* the EN16's: 0 Free, 1 Tracks */
+    uint8_t on;                                  /* (Song mode's KNOB 3) its pages on GLO, its MIDI taken; off at first:
+                                                  * the EN16's notes are a keyboard's too */
+    uint8_t rsv;
+    uint8_t pb_tgt[8], pb_cc[8];                 /* the pots' and the faders' targets (GT) and CCs */
+    uint8_t pb_mute[4], pb_note[4];              /* the keys': what each mutes (GM), its note */
+    uint8_t en_tgt[GRID_NEN], en_cc[GRID_NEN], en_act[GRID_NEN], en_note[GRID_NEN];   /* (en_act: GA) */
+    uint8_t tr_col[4], tr_row[4], tr_fx[4], tr_push[4];   /* Tracks: each column's track (GTR), each row's (GR), the
+                                                  * effects row's targets (GT), each row's push (GA) */
+} grid_t;
+static const grid_t GRID_DEFAULT = {
+    GRID_MAGIC, 0, 0, 0, 0,
+    {29, 30, 31, 32, 5, 6, 7, 8}, {32, 33, 34, 35, 36, 37, 38, 39},   /* a column a track, Chord, Pings, Bass, Drums: its
+                                                  * pot its filter (the channel strip's), its fader its level, */
+    {0, 1, 2, 6}, {40, 41, 42, 43},              /* its key its mute */
+    {17, 18, 19, 27, 16, 25, 20, 26, 12, 13, 14, 15, 28, 24, 22, 23},   /* the echo, the plate, the chord's voice, the mix */
+    {48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63},
+    {2, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},   /* the echo and the plate thrown, the rest reset */
+    {48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63},
+    {0, 1, 2, 6}, {0, 1, 2, 4}, {17, 18, 16, 25}, {1, 2, 2, 1}
+};
+static grid_t gr;
+/* what a pot, fader or encoder can turn: a knob of DUB-1's (a parameter, or a master action), and a second with it
+ * (k2, 0: none; the drums' filter, the kick's strip and the hats'); cell: its name in a page's cell (0: name) */
+typedef struct {
+    const char *name;
+    uint16_t k;
+    uint16_t col;
+    const char *help;
+    uint16_t k2;
+    const char *cell;
+} gtarget_t;
+#define GT_N 36
+#define GT_STRIP_HELP "Left darker, right thinner, before the sends"
+static const gtarget_t GT[GT_N] = {
+    {"Off", K_NONE, K_DIM, "Turns nothing"},
+    {"Filter", K_FILTER, K_ACC, "Shut: under water. Open: thin"},
+    {"Wet", K_DUB, K_ACC, "The whole music dry, or drowned"},
+    {"Energy", K_ENERGY, K_ACC, "The piece busier, or calmer"},
+    {"Duck", K_SPACE, K_ACC, "How far each beat pushes the rest down"},
+    {"Chord", P_CHORD, K_PAD, "The chord's level"},
+    {"Pings", P_PINGS, K_BELL, "The pings' level"},
+    {"Bass", P_BASS, K_BASS, "The bass's level"},
+    {"Drums", P_DRUMS, K_PULSE, "The drums' level"},
+    {"Kick", P_KLVL, K_PULSE, "The kick's level"},
+    {"Hats", P_HATSLVL, K_TEXT, "The hats' level against the kick"},
+    {"Noise", P_CRACKLE, K_NOISE, "The noise's level"},
+    {"Cutoff", P_CCUT, K_PAD, "Darker, or brighter, than the piece's own"},
+    {"Reso", P_CRES, K_PAD, "The filter's resonance"},
+    {"Attack", P_CATT, K_PAD, "The strike: a snap, to a swell"},
+    {"Decay", P_DECAY, K_PAD, "How long each stab rings"},
+    {"Reverb", P_REVERB, K_ACC, "How much goes into the plate"},
+    {"Echo", P_ECHO, K_ACC, "How much goes into the echo"},
+    {"Feedback", P_FEEDBACK, K_ACC, "How long the repeats go on"},
+    {"Echo time", P_ETIME, K_ACC, "The tape loop's length, in beats"},
+    {"Cloud", P_CLOUD, K_ACC, "The reverb through the grain cloud"},
+    {"Density", P_DENSITY, K_BELL, "How many notes each loop holds"},
+    {"Vary", P_VARY, K_ACC, "How much the loop changes"},
+    {"Hits", P_HITS, K_PULSE, "How busy the hats are"},
+    {"Swing", P_SWING, K_PULSE, "Off sixteenths late: the whole groove"},
+    {"Size", P_SIZE, K_ACC, "How long the plate rings"},
+    {"Blur", P_EBLUR, K_ACC, "Clean repeats, to a dissolving wash"},
+    {"Echo tone", P_ETONE, K_ACC, "The repeats darker, or brighter"},
+    {"Width", P_EWIDTH, K_ACC, "The whole mix mono, to wide"},
+    {"Chord filter", P_CLOW, K_PAD, GT_STRIP_HELP, 0, "Filter"},   /* (the channel strips' filters, a track's: V_STRIP's) */
+    {"Pings filter", P_PLOW, K_BELL, GT_STRIP_HELP, 0, "Filter"},
+    {"Bass filter", P_BLOW, K_BASS, GT_STRIP_HELP, 0, "Filter"},
+    {"Drums filter", P_KLOW, K_PULSE, GT_STRIP_HELP, P_DLOW, "Filter"},
+    {"Kick filter", P_KLOW, K_PULSE, GT_STRIP_HELP, 0, "Filter"},
+    {"Hats filter", P_DLOW, K_TEXT, GT_STRIP_HELP, 0, "Filter"},
+    {"Noise filter", P_NLOW, K_NOISE, GT_STRIP_HELP, 0, "Filter"},
+};
+/* what a PBF4 key mutes: a part, the drums (the kick and the hats), or nothing (ui.mutes' bits, EN_M_*) */
+#define GM_N 8
+static const char *const GM_NAME[GM_N] = {"Chord", "Pings", "Bass", "Kick", "Hats", "Noise", "Drums", "Off"};
+static const uint8_t GM_BITS[GM_N] = {EN_M_CHORD, EN_M_PINGS, EN_M_BASS, EN_M_KICK, EN_M_HATS, EN_M_NOISE,
+                                      EN_M_KICK | EN_M_HATS, 0};
+static const uint16_t GM_COL[GM_N] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_TEXT, K_NOISE, K_PULSE, K_DIM};
+/* what an EN16 push does: nothing; what it turns back to the piece's own; that all the way up while it's held */
+#define GA_N 3
+static const char *const GA_NAME[GA_N] = {"Off", "Reset", "Throw"};
+/* Tracks: a column's track (a channel strip, 0-5; the drums the kick's and the hats' both) and a row's setting */
+#define GTR_N 7
+static const char *const GTR_NAME[GTR_N] = {"Chord", "Pings", "Bass", "Kick", "Hats", "Noise", "Drums"};
+static const uint16_t GTR_COL[GTR_N] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_TEXT, K_NOISE, K_PULSE};
+enum { GR_FILTER, GR_ECHO, GR_PLATE, GR_LEVEL, GR_FX, GR_OFF, GR_N };
+static const char *const GR_NAME[GR_N] = {"Filter", "Echo", "Plate", "Level", "Effects", "Off"};
+static const uint8_t GR_STRIP[GR_FX] = {3, 1, 2, 0};   /* (a row's knob in STRIP_PAR: Filter, Echo, Plate, Level) */
+static uint8_t gr_sel[2];                        /* the control each page has chosen (KNOB 1) */
+static uint8_t gr_learn;                         /* KNOB 3 at its left end: the next CC or note binds to it */
+static uint8_t gr_dirty;                         /* the map changed since it was saved */
+static int8_t gr_flash = -1;                     /* the control that just sent (its cell lit a moment), its page */
+static uint8_t gr_flash_pg;
+static uint32_t gr_flash_t;
+static uint16_t gr_thrown;                       /* EN16 pushes held as throws (a bit each) */
+static int16_t gr_thr_was[GRID_NEN];             /* and what each threw from */
+#define grid_page() (ui.view == V_GEN16 ? 1 : 0)   /* (0 the PBF4's page, 1 the EN16's: ui is declared below) */
+static int grid_tracks(void) { return gr.layout == 1; }
+static int grid_on(void) { return gr.on; }
+static int grid_ok(const grid_t *g)              /* (a map read back: each value in its range) */
+{
+    int i, ok = g->magic == GRID_MAGIC && g->ch < 16u && g->layout < 2u && g->on < 2u;
+    for (i = 0; ok && i < 8; i++)
+        ok = g->pb_tgt[i] < GT_N && g->pb_cc[i] < 128u;
+    for (i = 0; ok && i < 4; i++)
+        ok = g->pb_mute[i] < GM_N && g->pb_note[i] < 128u && g->tr_col[i] < GTR_N && g->tr_row[i] < GR_N &&
+             g->tr_fx[i] < GT_N && g->tr_push[i] < GA_N;
+    for (i = 0; ok && i < GRID_NEN; i++)
+        ok = g->en_tgt[i] < GT_N && g->en_cc[i] < 128u && g->en_act[i] < GA_N && g->en_note[i] < 128u;
+    return ok;
+}
+static void grid_load(void)
+{
+    grid_t g;
+    if (plat_store_load(OBJ_GRID, &g, sizeof g) == (int)sizeof g && grid_ok(&g))
+        gr = g;
+    else
+        gr = GRID_DEFAULT;
+    gr_dirty = 0;
+}
+static int grid_save(void)                       /* 0: saved (or nothing to save) */
+{
+    if (!gr_dirty)
+        return 0;
+    if (plat_store_save(OBJ_GRID, &gr, sizeof gr))
+        return -1;
+    gr_dirty = 0;
+    return 0;
+}
 
 static struct {
     uint8_t view;
@@ -593,6 +753,107 @@ static void walk_written(int i, int *r, int *q, int *x)   /* a walk slot's chord
 {
     en_walk_chord(proj.pool, proj.par[P_ROOT], (proj.par[P_CR0 + i] - 1) % scale_steps(), r, q, x);
 }
+/* the Grid pages' knobs (KNOB 1 the control; 2-4 its target, number and channel or push, as the control is): on the
+ * PBF4's, 0-3 its pots, 4-7 its faders, 8-11 its keys; on the EN16's, its encoders, in Tracks a column of four a track */
+static int grid_num_is_cc(void) { return !(grid_page() && grid_tracks()); }   /* (KNOB 3: a CC or note, Learn at its
+                                                  * left; in Tracks, the row's setting) */
+static uint8_t *grid_slot(int k)                 /* the map's byte KNOB 2, 3 or 4 sets for the chosen control */
+{
+    const int s = gr_sel[grid_page()];
+    if (!grid_page())
+        return k == K_GTGT ? (s < 8 ? &gr.pb_tgt[s] : &gr.pb_mute[s - 8]) : k == K_GNUM ? (s < 8 ? &gr.pb_cc[s] : &gr.pb_note[s - 8])
+             : &gr.ch;
+    if (grid_tracks())
+        return k == K_GTGT ? (gr.tr_row[s >> 2] == GR_FX ? &gr.tr_fx[s & 3] : &gr.tr_col[s & 3]) : k == K_GNUM ? &gr.tr_row[s >> 2]
+             : &gr.tr_push[s >> 2];
+    return k == K_GTGT ? &gr.en_tgt[s] : k == K_GNUM ? &gr.en_cc[s] : &gr.en_act[s];
+}
+static void grid_range(int k, int *lo, int *hi)
+{
+    const int pg = grid_page(), s = gr_sel[pg];
+    *lo = 0;
+    if (k == K_GSEL)
+        *hi = pg ? GRID_NEN - 1 : GRID_NPB - 1;
+    else if (k == K_GTGT)
+        *hi = (!pg ? (s < 8 ? GT_N : GM_N) : grid_tracks() && gr.tr_row[s >> 2] != GR_FX ? GTR_N : GT_N) - 1;
+    else if (k == K_GNUM && grid_num_is_cc())   /* (0 Learn, then the numbers 0 .. 127 one up: not a centred knob) */
+        *hi = 128;
+    else
+        *hi = k == K_GNUM ? GR_N - 1 : pg ? GA_N - 1 : 15;
+}
+static int grid_get(int k)
+{
+    if (k == K_GSEL)
+        return gr_sel[grid_page()];
+    if (k == K_GNUM && grid_num_is_cc())
+        return gr_learn ? 0 : *grid_slot(k) + 1;
+    return *grid_slot(k);
+}
+static const char *grid_word(int k, int v)       /* the word a Grid knob shows (0: its number) */
+{
+    const int pg = grid_page(), s = gr_sel[pg];
+    if (k == K_GTGT)
+        return !pg ? (s < 8 ? GT[v].name : GM_NAME[v]) : grid_tracks() && gr.tr_row[s >> 2] != GR_FX ? GTR_NAME[v] : GT[v].name;
+    if (k == K_GNUM)
+        return !grid_num_is_cc() ? GR_NAME[v] : v == 0 ? "Learn" : 0;
+    return k == K_GOPT && pg ? GA_NAME[v] : 0;
+}
+static void grid_text(int k, char *b)
+{
+    const int v = grid_get(k);
+    const char *w;
+    if (k == K_GSEL) {                           /* ("P1", "F4", "B2"; the EN16's "1" .. "16") */
+        if (!grid_page())
+            b[0] = "PFB"[v / 4], b[1] = (char)('1' + v % 4), b[2] = 0;
+        else
+            itoa_u((uint32_t)v + 1u, b);
+        return;
+    }
+    if ((w = grid_word(k, v)) != 0) {
+        while ((*b++ = *w++))
+            ;
+        return;
+    }
+    itoa_u((uint32_t)(k == K_GNUM ? v - 1 : k == K_GOPT ? v + 1 : v), b);   /* (the number; the channel 1 .. 16) */
+}
+static void grid_set(int k, int v)
+{
+    if (k == K_GSEL) {
+        gr_sel[grid_page()] = (uint8_t)v;
+        gr_learn = 0;
+        return;
+    }
+    if (k == K_GNUM && grid_num_is_cc()) {
+        gr_learn = v == 0;
+        if (gr_learn)
+            return;
+        v--;
+    }
+    *grid_slot(k) = (uint8_t)v;
+    gr_dirty = 1;
+    ui.dirty = 1;                                /* (the floppy, and the autosave) */
+}
+static const char *knob_lbl(int v, int i)        /* a page's knob's name (the Grid pages': as the control is) */
+{
+    if (v == V_GPBF && gr_sel[0] >= 8)
+        return i == 1 ? "Mutes" : i == 2 ? "Note" : KNOB_LABEL[v][i];
+    if (v == V_GEN16 && grid_tracks()) {
+        static const char *const L[4] = {"Cell", "Track", "Row", "Push"};
+        return i == 1 && gr.tr_row[gr_sel[1] >> 2] == GR_FX ? "Target" : L[i];
+    }
+    return KNOB_LABEL[v][i];
+}
+static const char *knob_hlp(int v, int i)        /* and its help line */
+{
+    if (v == V_GPBF && gr_sel[0] >= 8 && (i == 1 || i == 2))
+        return i == 1 ? "Which channel this key mutes" : "Its note; at the left end: Learn";
+    if (v == V_GEN16 && grid_tracks()) {
+        static const char *const H[4] = {"Which encoder: a column a track", "Which track this column sets",
+                                         "What this row sets on each track", "This row's pushes: Off, Reset, Throw"};
+        return i == 1 && gr.tr_row[gr_sel[1] >> 2] == GR_FX ? "The effect this encoder turns" : H[i];
+    }
+    return KNOB_HELP[v][i];
+}
 static void knob_set(int k, int v);
 static void slot_write(int i)                    /* a walk slot about to be edited: written as it sounds */
 {
@@ -648,11 +909,17 @@ static int knob_get(int k)
         return en_sir_eff(sir_page, k - K_SPITCH, proj.sir[sir_page % EN_NSIR][k - K_SPITCH]);
     if (k == K_TRANS)
         return proj.trans < EN_NTRANS ? proj.trans : 0;
+    if (k >= K_GSEL && k <= K_GOPT)
+        return grid_get(k);
+    if (k == K_GRID)
+        return gr.on;
     return 0;
 }
 static void knob_range(int k, int *lo, int *hi)
 {
-    if (k >= K_SPITCH && k <= K_SECHO) {
+    if (k >= K_GSEL && k <= K_GOPT) {
+        grid_range(k, lo, hi);
+    } else if (k >= K_SPITCH && k <= K_SECHO) {
         en_sir_range(sir_page, k - K_SPITCH, lo, hi);
     } else if (k < P_NPARAMS) {
         *lo = en_param_info(k)->lo;
@@ -662,7 +929,7 @@ static void knob_range(int k, int *lo, int *hi)
         *hi = 50;
     } else {
         *lo = 0;
-        *hi = k == K_PLAY || k == K_VALUES ? 1 : k == K_TRANS ? EN_NTRANS - 1 : k == K_WALK ? EN_NWALK - 1 : k == K_KSHAPE ? 3 : k == K_MODE ? EN_NMODES - 1 : k == K_LEDS ? 2 : k == K_CPU ? 100 : k == K_SLOT ? EN_NPROG - 1 : k == K_CQ ? EN_NCQ - 1 : k == K_CX ? EN_NCX - 1
+        *hi = k == K_PLAY || k == K_VALUES || k == K_GRID ? 1 : k == K_TRANS ? EN_NTRANS - 1 : k == K_WALK ? EN_NWALK - 1 : k == K_KSHAPE ? 3 : k == K_MODE ? EN_NMODES - 1 : k == K_LEDS ? 2 : k == K_CPU ? 100 : k == K_SLOT ? EN_NPROG - 1 : k == K_CQ ? EN_NCQ - 1 : k == K_CX ? EN_NCX - 1
             : k == K_LANE ? EN_NDRUM - 1 : k == K_LCH ? 100 : 0;
     }
 }
@@ -673,7 +940,8 @@ static const char *knob_name(int k)
     return k == K_LEDS ? "Lights" : k == K_CPU ? "CPU" : k == K_SLOT ? "Slot" : k == K_CQ ? "Chord" : k == K_CX ? "Type"
          : k == K_LANE ? "Lane" : k == K_LCH ? "Chance" : k == K_FILTER ? "Filter" : k == K_DUB ? "Wet"
          : k == K_ENERGY ? "Energy" : k == K_SPACE ? "Duck" : k == K_MODE ? "Mode" : k == K_KSHAPE ? "Kick" : k == K_PLAY ? "Play" : k == K_WALK ? "Walk" : k == K_SAVE ? "Save" : k == K_VALUES ? "Values"
-         : k == K_SPITCH ? "Pitch" : k == K_SRATE ? "Rate" : k == K_SDEPTH ? "Depth" : k == K_SECHO ? "Echo" : k == K_TRANS ? "Transition" : "";
+         : k == K_SPITCH ? "Pitch" : k == K_SRATE ? "Rate" : k == K_SDEPTH ? "Depth" : k == K_SECHO ? "Echo" : k == K_TRANS ? "Transition"
+         : k == K_GRID ? "Grid" : "";
 }
 static void knob_text(int k, char *b)
 {
@@ -750,15 +1018,21 @@ static void knob_text(int k, char *b)
         const char *n = EN_TRANS_NAME[(unsigned)v < EN_NTRANS ? v : 0];
         while ((*b++ = *n++))
             ;
+    } else if (k >= K_GSEL && k <= K_GOPT) {
+        grid_text(k, b);
+    } else if (k == K_GRID) {
+        const char *n = v ? "On" : "Off";
+        while ((*b++ = *n++))
+            ;
     } else {
         b[0] = 0;
     }
 }
 
 static void set_mode(int m);
-static void do_save(void)                       /* GLO held, or Setup's KNOB 4 turned */
+static void do_save(void)                       /* GLO held, or Setup's KNOB 4 turned (and the Grid's map with it) */
 {
-    if (project_save() == 0) {
+    if (project_save() == 0 && grid_save() == 0) {
         ui.dirty = 0;
         say("SAVED", 0);
     } else {
@@ -799,6 +1073,14 @@ static void knob_set(int k, int v)
         }
         proj.sir[sir_page % EN_NSIR][sk] = (int8_t)n;
         en_sir_set(sir_page, sk, n);
+    } else if (k >= K_GSEL && k <= K_GOPT) {
+        grid_set(k, v);                          /* (the Grid's map: global, its own flash object) */
+        return;
+    } else if (k == K_GRID) {
+        gr.on = (uint8_t)v;
+        gr_dirty = 1;
+        ui.dirty = 1;
+        return;
     } else if (k == K_TRANS) {
         proj.trans = (uint8_t)v;                 /* (the engine told by set_tick) */
     } else if (k == K_SLOT) {
@@ -1472,8 +1754,10 @@ static void button(int b)
         set_view(ui.view == V_DUB ? V_SONG : V_KEY);
         return;
     }
-    if (b == B_GLO && ui.view == V_SETUP) {      /* (1.4.0) GLO again: Song mode; again: back */
-        set_view(V_SMODE);
+    if (b == B_GLO && (ui.view == V_SETUP || (ui.view == V_SMODE && gr.on) || ui.view == V_GPBF)) {   /* (1.4.0) GLO
+                                                  * again: Song mode; again, the Grid on, its PBF4 and EN16 pages;
+                                                  * again: back */
+        set_view(ui.view == V_SETUP ? V_SMODE : ui.view == V_SMODE ? V_GPBF : V_GEN16);
         return;
     }
     for (v = 0; v < NPAGES; v++)                 /* a page's button: its page */
@@ -1665,17 +1949,258 @@ static void oct_hold(void)                       /* one OCT held on: its steps *
     oct_step(b);
 }
 
-/* MIDI in (USB and the TRS jack): channel 1 notes add or remove their note from the scale; clock and
- * start / stop drive the grid */
+/* MIDI CC in, channel 1 (a controller's knobs and faders): a fixed map onto the panel's knobs, 0..127 over each
+ * one's whole range (64 a centred knob's 0); the big ring and the reader show it, as a turn would */
+static const struct { uint8_t cc; uint16_t k; } CC_MAP[] = {
+    {1, K_FILTER},                                         /* (the mod wheel: the DJ filter, SELECT's) */
+    {20, P_CHORD}, {21, P_PINGS}, {22, P_BASS}, {23, P_DRUMS},   /* the layers' levels */
+    {24, P_KLVL}, {25, P_HATSLVL}, {26, P_CRACKLE},        /* the Kick, Hats and Noise strips' levels */
+    {27, K_DUB}, {28, K_ENERGY}, {29, K_SPACE},            /* the master actions: Wet, Energy, Duck (for playing) */
+    {71, P_CRES}, {72, P_DECAY}, {73, P_CATT}, {74, P_CCUT},   /* the chord's voice (the GM sound controllers') */
+    {91, P_REVERB}, {92, P_ECHO}, {93, P_FEEDBACK}, {94, P_ETIME}, {95, P_CLOUD},   /* the space */
+    {102, P_DENSITY}, {103, P_VARY}, {104, P_HITS}, {105, P_SWING}, {106, P_SIZE},
+};
+/* a knob of DUB-1's to a CC's value, 0..127 over its whole range; shown (the big ring, the reader) as a turn would */
+static void cc_knob(int k, uint32_t v, const char *name, uint16_t col, const char *help, int show)
+{
+    int lo, hi;
+    char n[24], t[12];
+    knob_range(k, &lo, &hi);
+    knob_set(k, lo + (int)((v * (uint32_t)(hi - lo) + 63u) / 127u));
+    if (!show)
+        return;
+    knob_text(k, t);
+    caps(n, name, sizeof n);
+    say_name(n, t);
+    big_show_help(k, name, col, help);
+    ui.turn_t = plat_ms();
+}
+static void cc_in(uint32_t cc, uint32_t v)
+{
+    unsigned i;
+    for (i = 0; i < sizeof CC_MAP / sizeof CC_MAP[0] && CC_MAP[i].cc != cc; i++)
+        ;
+    if (i < sizeof CC_MAP / sizeof CC_MAP[0])
+        cc_knob(CC_MAP[i].k, v, knob_name(CC_MAP[i].k), K_ACC, 0, 1);
+}
+
+/* the Intech Grid's MIDI (its map: gr, above) */
+static void grid_follow(int pg, int c)           /* a control that sent: its cell lit a moment; on a Grid page, chosen */
+{
+    gr_flash = (int8_t)c, gr_flash_pg = (uint8_t)pg, gr_flash_t = plat_ms();
+    if (ui.view == V_GPBF || ui.view == V_GEN16) {
+        set_view(pg ? V_GEN16 : V_GPBF);
+        gr_sel[pg] = (uint8_t)c;
+    }
+}
+/* what EN16 encoder i turns: its knob (and a second, the drums' two strips), its name ("BASS FILTER"), colour, help;
+ * 0: nothing */
+static int en16_knob(int i, int *k, int *k2, char *name, uint16_t *col, const char **help)
+{
+    *k2 = -1;
+    if (!grid_tracks() || gr.tr_row[i >> 2] == GR_FX) {
+        const gtarget_t *t = &GT[grid_tracks() ? gr.tr_fx[i & 3] : gr.en_tgt[i]];
+        int j = 0;
+        if (t->k == K_NONE)
+            return 0;
+        while (t->name[j] && j < 23)
+            name[j] = t->name[j], j++;
+        name[j] = 0;
+        *k = t->k, *col = t->col, *help = t->help;
+        if (t->k2)
+            *k2 = t->k2;
+        return 1;
+    }
+    {
+        const int r = gr.tr_row[i >> 2], c = gr.tr_col[i & 3], part = c == 6 ? 3 : c;
+        int j = 0, q = 0;
+        if (r == GR_OFF)
+            return 0;
+        *k = STRIP_PAR[part][GR_STRIP[r]];
+        if (c == 6)
+            *k2 = STRIP_PAR[4][GR_STRIP[r]];     /* (the drums: the kick's strip and the hats') */
+        while (GTR_NAME[c][j] && j < 12)
+            name[j] = GTR_NAME[c][j], j++;
+        name[j++] = ' ';
+        while (GR_NAME[r][q] && j < 23)
+            name[j++] = GR_NAME[r][q++];
+        name[j] = 0;
+        *col = GTR_COL[c];
+        *help = KNOB_HELP[V_STRIP][GR_STRIP[r]];
+        return 1;
+    }
+}
+static int piece_value(int k)                    /* (a push's Reset) what the piece itself has: its recipe's; a master
+                                                  * action, 0 */
+{
+    int16_t rec[P_NPARAMS];
+    uint16_t pool;
+    if (k >= P_NPARAMS)
+        return 0;
+    en_piece(proj.piece, rec, &pool);
+    return rec[k];
+}
+static void grid_push(int i, int down)           /* an EN16 push: Reset what it turns, or Throw it while held */
+{
+    const int act = grid_tracks() ? gr.tr_push[i >> 2] : gr.en_act[i];
+    int k, k2, lo, hi;
+    char nm[24], cp[24];
+    uint16_t col;
+    const char *help;
+    if (!down) {                                 /* let go: a throw back to where it was */
+        if (gr_thrown >> i & 1u) {
+            gr_thrown &= (uint16_t)~(1u << i);
+            if (en16_knob(i, &k, &k2, nm, &col, &help)) {
+                knob_set(k, gr_thr_was[i]);
+                if (k2 >= 0)
+                    knob_set(k2, gr_thr_was[i]);
+            }
+        }
+        return;
+    }
+    if (act == 0 || !en16_knob(i, &k, &k2, nm, &col, &help))
+        return;
+    caps(cp, nm, sizeof cp);
+    if (act == 1) {                              /* Reset: the piece's own */
+        knob_set(k, piece_value(k));
+        if (k2 >= 0)
+            knob_set(k2, piece_value(k2));
+        say(cp, "RESET");
+        card_show(cp, "back to the piece's own", col, 0);
+        return;
+    }
+    gr_thr_was[i] = (int16_t)knob_get(k);        /* Throw: all the way up while it's held */
+    gr_thrown |= (uint16_t)(1u << i);
+    knob_range(k, &lo, &hi);
+    knob_set(k, hi);
+    if (k2 >= 0)
+        knob_set(k2, hi);
+    say("THROW", cp);
+    card_show("THROW", nm, col, 0);
+}
+static void grid_mute(int b)                     /* a PBF4 key: its channel muted, or back (ui.mutes: PERFORM's) */
+{
+    const int m = gr.pb_mute[b];
+    const uint32_t bits = GM_BITS[m];
+    char cp[12];
+    int muted;
+    if (!bits)
+        return;
+    muted = (ui.mutes & bits) == bits;
+    ui.mutes = muted ? ui.mutes & ~bits : ui.mutes | bits;
+    perf_mutes();
+    caps(cp, GM_NAME[m], sizeof cp);
+    say(cp, muted ? "ON" : "OFF");
+    card_show(cp, muted ? "on" : "muted", muted ? GM_COL[m] : K_DIM, 0);
+}
+static int grid_learning(void) { return gr_learn && grid_num_is_cc() && (ui.view == V_GPBF || ui.view == V_GEN16); }
+static void grid_learned(const char *what, uint32_t num, uint32_t ch)   /* Learn: the number bound, the channel taken */
+{
+    char t[16];
+    int j = 0;
+    while (what[j] && j < 6)
+        t[j] = what[j], j++;
+    t[j++] = ' ';
+    itoa_u(num, t + j);
+    gr.ch = (uint8_t)ch;
+    gr_learn = 0;
+    gr_dirty = 1;
+    ui.dirty = 1;
+    say("LEARNED", t);
+    card_show("LEARNED", t, K_ACC, 0);
+}
+static int grid_cc(uint32_t ch, uint32_t cc, uint32_t v)   /* 1: the Grid's */
+{
+    int i;
+    if (!gr.on)
+        return 0;
+    if (grid_learning()) {                       /* (the chosen control a pot, a fader or an encoder: a CC binds) */
+        const int pg = grid_page(), s = gr_sel[pg];
+        if (pg || s < 8) {
+            *(pg ? &gr.en_cc[s] : &gr.pb_cc[s]) = (uint8_t)cc;
+            grid_learned("CC", cc, ch);
+        }
+        return 1;
+    }
+    if (ch != gr.ch)
+        return 0;
+    for (i = 0; i < 8; i++)
+        if (gr.pb_cc[i] == cc) {
+            const gtarget_t *t = &GT[gr.pb_tgt[i]];
+            if (t->k != K_NONE)
+                cc_knob(t->k, v, t->name, t->col, t->help, 1);
+            if (t->k2)
+                cc_knob(t->k2, v, t->name, t->col, t->help, 0);
+            grid_follow(0, i);
+            return 1;
+        }
+    for (i = 0; i < GRID_NEN; i++)
+        if (gr.en_cc[i] == cc) {
+            int k, k2;
+            char nm[24];
+            uint16_t col;
+            const char *help;
+            if (en16_knob(i, &k, &k2, nm, &col, &help)) {
+                cc_knob(k, v, nm, col, help, 1);
+                if (k2 >= 0)
+                    cc_knob(k2, v, nm, col, help, 0);
+            }
+            grid_follow(1, i);
+            return 1;
+        }
+    return 0;
+}
+static int grid_note(uint32_t ch, uint32_t n, int down)   /* 1: the Grid's (a key's or a push's, pressed or let go) */
+{
+    int i;
+    if (!gr.on)
+        return 0;
+    if (down && grid_learning()) {               /* (a key or an encoder: a note binds; its push's, on the EN16) */
+        const int pg = grid_page(), s = gr_sel[pg];
+        if (pg || s >= 8) {
+            *(pg ? &gr.en_note[s] : &gr.pb_note[s - 8]) = (uint8_t)n;
+            grid_learned("NOTE", n, ch);
+        }
+        return 1;
+    }
+    if (ch != gr.ch)
+        return 0;
+    for (i = 0; i < 4; i++)
+        if (gr.pb_note[i] == n) {
+            if (down) {
+                grid_mute(i);
+                grid_follow(0, 8 + i);
+            }
+            return 1;
+        }
+    for (i = 0; i < GRID_NEN; i++)
+        if (gr.en_note[i] == n) {
+            grid_push(i, down);
+            if (down)
+                grid_follow(1, i);
+            return 1;
+        }
+    return 0;
+}
+
+/* MIDI in (USB and the TRS jack): the Grid's first (its channel, its map); then channel 1's notes add or remove their
+ * note from the scale, its CCs turn knobs (CC_MAP); clock and start / stop drive the grid */
 static void midi_in(void)
 {
     uint32_t pkt;
     while (plat_midi_in(&pkt)) {
-        uint32_t st = (pkt >> 8) & 0xFFu, n = (pkt >> 16) & 0x7Fu, v = pkt >> 24;
+        const uint32_t st = (pkt >> 8) & 0xFFu, n = (pkt >> 16) & 0x7Fu, v = (pkt >> 24) & 0x7Fu, ty = st & 0xF0u, ch = st & 0x0Fu;
         if (st == 0xF8u || st == 0xFAu || st == 0xFBu || st == 0xFCu)
             en_clock(st == 0xF8u ? EN_CLK_TICK : st == 0xFAu ? EN_CLK_START : st == 0xFBu ? EN_CLK_CONTINUE : EN_CLK_STOP);
-        else if (st == 0x90u && v)
-            toggle_note((int)(n % 12u));
+        else if (ty == 0x90u && v) {
+            if (!grid_note(ch, n, 1) && st == 0x90u)
+                toggle_note((int)(n % 12u));
+        } else if (ty == 0x80u || ty == 0x90u) {   /* (a Note Off, or On at 0: a push let go) */
+            grid_note(ch, n, 0);
+        } else if (ty == 0xB0u) {
+            if (!grid_cc(ch, n, v) && st == 0xB0u)
+                cc_in(n, v);
+        }
     }
 }
 
@@ -2005,6 +2530,14 @@ static void input(void)
             knob_set(P_NCHAR, c);
             say_name("NOISE", EN_NCHAR_NAME[c]);
             big_show(P_NCHAR, "Noise", K_NOISE);  /* (1.4.0, the user's: ALGORITHM big in the centre too) */
+        } else if (ui.view == V_GEN16) {          /* the EN16's layout: Free, or Tracks */
+            gr.layout = (uint8_t)!gr.layout;
+            gr_sel[1] = 0;
+            gr_learn = 0;
+            gr_dirty = 1;
+            ui.dirty = 1;
+            say_name("EN16", gr.layout ? "TRACKS" : "FREE");
+            card_show(gr.layout ? "TRACKS" : "FREE", gr.layout ? "a column a track" : "each its own target", K_ACC, 0);
         } else if (ui.view == V_CHORDS || ui.view == V_WALK) {   /* the walk's character: its chords walked again, at
                                                   * once (1.4.0: the Walk page's KNOB 1 too) */
             int w = (((proj.par[P_PMODE] & 3) + (int)(e % EN_NWALK)) % EN_NWALK + EN_NWALK) % EN_NWALK;
@@ -2073,7 +2606,7 @@ static void input(void)
             if (ui.view == V_STRIP)
                 ui.strip_used = 1;
             if (fm_knob_off(ui.view, (int)i) && vknob(ui.view, i) == K_TRANS) {
-                big_show_help(K_TRANS, KNOB_LABEL[ui.view][i], K_DIM, TRANS_OFF);   /* (the user's: Set mode alone;
+                big_show_help(K_TRANS, knob_lbl(ui.view, (int)i), K_DIM, TRANS_OFF);   /* (the user's: Set mode alone;
                                                   * the turn says so, the value kept) */
                 ui.touched = (int8_t)i;
                 ui.touch_until = plat_ms() + 1200u;
@@ -2093,7 +2626,7 @@ static void input(void)
                 if (ui.view != V_CHORDS && ui.view != V_PAT && k != K_SAVE && k != K_CPU && k != K_NONE)
                 {
                     char sn[24];                 /* (a strip's: its part's name first, "CHORD ECHO") */
-                    const char *nm = KNOB_LABEL[ui.view][i];
+                    const char *nm = knob_lbl(ui.view, (int)i);
                     if (ui.view == V_SIREN) {    /* (format 34: a siren's, its own help, in its red) */
                         big_show_help(k, nm, K_FROST, SIR_HELP[sir_page % EN_NSIR][i]);
                         goto shown;
@@ -2108,7 +2641,7 @@ static void input(void)
                         sn[a] = 0;
                         nm = sn;
                     }
-                    big_show_help(k, nm, l >= 0 ? LC[l] : K_ACC, k == K_TRANS ? TRANS_HELP[knob_get(k)] : KNOB_HELP[ui.view][i]);
+                    big_show_help(k, nm, l >= 0 ? LC[l] : K_ACC, k == K_TRANS ? TRANS_HELP[knob_get(k)] : knob_hlp(ui.view, (int)i));
                 }
             }
         shown:
@@ -4120,6 +4653,123 @@ static void draw_slots(void)
     }
 }
 
+/* the Grid's pages: the module as it sits, a cell a control (the PBF4's pots over its faders, its keys at the bottom;
+ * the EN16's four by four, in Tracks each column's track over it); the chosen one outlined, the one that just sent lit
+ * a moment, a key whose channel is muted red */
+#define GRID_FLASH 180u
+static int grid_cell_knob(int pg, int i)         /* the knob a cell's control turns (-1: none, or a key) */
+{
+    int k, k2;
+    char nm[24];
+    uint16_t col;
+    const char *help;
+    if (!pg)
+        return i < 8 && GT[gr.pb_tgt[i]].k != K_NONE ? GT[gr.pb_tgt[i]].k : -1;
+    return en16_knob(i, &k, &k2, nm, &col, &help) ? k : -1;
+}
+static float grid_frac(int k)                    /* (a knob's place, 0..1 of its range) */
+{
+    int lo, hi;
+    knob_range(k, &lo, &hi);
+    return hi > lo ? (float)(knob_get(k) - lo) / (float)(hi - lo) : 0.0f;
+}
+static void grid_icon(int32_t cx, int32_t cy, int k, uint16_t col, uint16_t bg)   /* a small ring: where its knob is */
+{
+    int lo = 0, hi = 0;
+    if (k >= 0)
+        knob_range(k, &lo, &hi);
+    arc_th(cx, cy, 6, 2.0f, k >= 0 ? grid_frac(k) : 0.0f, K_LINE, k >= 0 ? col : K_LINE, bg, lo < 0);
+}
+static void grid_name(int32_t x, int32_t y, const char *s, uint16_t c, int32_t w)   /* bold where it fits */
+{
+    const int b = text_w(&FONT_B, s) <= w;
+    cv_text(x, b ? y : y + 1, b ? &FONT_B : &FONT_XS, s, c);
+}
+static void draw_gridpage(uint32_t now)
+{
+    const int pg = ui.view == V_GEN16, tracks = pg && grid_tracks(), n = pg ? GRID_NEN : GRID_NPB;
+    int i;
+    char t[24];
+    if (tracks)
+        for (i = 0; i < 4; i++) {
+            const int c = gr.tr_col[i];
+            caps(t, GTR_NAME[c], sizeof t);
+            text_c(4 + i * 58 + 27, 4, &FONT_XS, t, GTR_COL[c]);
+            cv_rect(4 + i * 58, 19, 54, 2, GTR_COL[c]);
+        }
+    for (i = 0; i < n; i++) {
+        const int lit = gr_flash == i && gr_flash_pg == pg && now - gr_flash_t < GRID_FLASH, sel = gr_sel[pg] == i;
+        const int k = !pg && i >= 8 ? -1 : grid_cell_knob(pg, i), row = i >> 2;
+        const int32_t x = 4 + (i & 3) * 58;
+        int32_t y, h;
+        uint16_t bg = K_PANEL, ink = lit ? K_BG : K_TEXT, dim = lit ? K_BG : K_DIM;
+        int muted = 0, m = 0;
+        if (!pg) {
+            y = row == 0 ? 6 : row == 1 ? 46 : 100, h = row == 0 ? 36 : row == 1 ? 50 : 40;
+            if (row == 2) {
+                m = gr.pb_mute[i - 8];
+                muted = GM_BITS[m] && (ui.mutes & GM_BITS[m]) == GM_BITS[m];
+                if (muted)
+                    bg = mix(K_BG, K_FROST, 5);
+            }
+        } else if (tracks) {
+            y = 22 + row * 30, h = 28;
+            if (gr.tr_row[row] == GR_FX)
+                bg = mix(K_BG, K_PANEL, 12);
+        } else {
+            y = 6 + row * 34, h = 32;
+        }
+        if (sel)
+            cv_round(x - 2, y - 2, 58, h + 4, 6, K_ACC);
+        cv_round(x, y, 54, h, 5, lit ? K_PAD : bg);
+        if (!pg) {                               /* the PBF4: "P1" "F1" "B1" */
+            t[0] = "PFB"[row], t[1] = (char)('1' + (i & 3)), t[2] = 0;
+            cv_text(x + 4, y + 1, &FONT_XS, t, dim);
+            if (row < 2) {
+                const gtarget_t *g = &GT[gr.pb_tgt[i]];
+                grid_name(x + 4, y + 15, g->cell ? g->cell : g->name, k < 0 ? dim : ink, 38);
+                if (row == 0) {
+                    grid_icon(x + 46, y + 9, k, lit ? K_BG : g->col, lit ? K_PAD : bg);
+                } else {                         /* (a fader: its place, a bar) */
+                    const int32_t fh = k >= 0 ? (int32_t)(grid_frac(k) * 40.0f + 0.5f) : 0;
+                    cv_round(x + 44, y + 5, 5, 40, 2, K_LINE);
+                    if (fh > 0)
+                        cv_rect(x + 44, y + 45 - fh, 5, fh, lit ? K_BG : g->col);
+                    t[0] = 'C', t[1] = 'C', t[2] = ' ';
+                    itoa_u(gr.pb_cc[i], t + 3);
+                    cv_text(x + 4, y + 33, &FONT_XS, t, dim);
+                }
+            } else {                             /* a key: the channel it mutes, muted or its note */
+                caps(t, GM_NAME[m], sizeof t);
+                grid_name(x + 4, y + 12, t, !GM_BITS[m] || muted ? dim : lit ? K_BG : GM_COL[m], 46);
+                if (muted) {
+                    cv_text(x + 4, y + 25, &FONT_XS, "MUTED", K_FROST);
+                } else {
+                    caps(t, "Note ", sizeof t);
+                    itoa_u(gr.pb_note[i - 8], t + 5);
+                    cv_text(x + 4, y + 25, &FONT_XS, t, dim);
+                }
+            }
+        } else if (tracks) {                     /* Tracks: what the row sets, its value */
+            const int r = gr.tr_row[row];
+            const gtarget_t *g = &GT[gr.tr_fx[i & 3]];
+            caps(t, r == GR_FX ? g->name : GR_NAME[r], sizeof t);
+            cv_text(x + 3, y + 0, &FONT_XS, t, dim);
+            grid_icon(x + 46, y + 8, k, lit ? K_BG : r == GR_FX ? g->col : GTR_COL[gr.tr_col[i & 3]], lit ? K_PAD : bg);
+            if (k >= 0) {
+                knob_text(k, t);
+                grid_name(x + 3, y + 13, t, ink, 40);
+            }
+        } else {                                 /* Free: the encoder's number, its target */
+            const gtarget_t *g = &GT[gr.en_tgt[i]];
+            itoa_u((uint32_t)i + 1u, t);
+            cv_text(x + 3, y + 0, &FONT_XS, t, dim);
+            grid_icon(x + 46, y + 9, k, lit ? K_BG : g->col, lit ? K_PAD : bg);
+            grid_name(x + 3, y + 15, g->cell ? g->cell : g->name, k < 0 ? dim : ink, 40);
+        }
+    }
+}
+
 /* the level ring (OCT- / OCT+ on a layer's page): over the middle, the layer's level as a big knob in its colour, the
  * number inside, its name under; the arc glides to the level, a step a brief brightening; muted, grey; it fades out
  * OCT_SHOW after the last press */
@@ -4681,6 +5331,27 @@ static void draw_main(void)
         }
         return;
     }
+    if (ui.view == V_GPBF || ui.view == V_GEN16) {   /* the Grid's pages: the module, a cell a control */
+        const int pg = ui.view == V_GEN16;
+        h = hash(hash(0x47524944u, (uint32_t)pg | (uint32_t)gr_sel[pg] << 1 | ui.mutes << 6),
+                 (uint32_t)gr_flash_pg << 8 | (uint8_t)gr_flash | (uint32_t)card_on(now) << 16 | (uint32_t)big_on(now) << 17);
+                                                  /* (a card or a ring gone: drawn once more, without it) */
+        for (i = 0; i < sizeof gr; i++)
+            h = hash(h, ((const uint8_t *)&gr)[i]);
+        for (i = 0; i < (pg ? (uint32_t)GRID_NEN : 8u); i++) {
+            const int k = grid_cell_knob(pg, (int)i);
+            h = hash(h, k < 0 ? 0xFFFFu : (uint32_t)knob_get(k));
+        }
+        if (h != ui.sig[1] || big_on(now) || card_on(now) || now - gr_flash_t < GRID_FLASH + 60u) {
+            ui.sig[1] = h;
+            main_begin(K_BG);
+            draw_gridpage(now);
+            draw_big(now);
+            draw_card(now);
+            cv_blit(0, MAIN_Y);
+        }
+        return;
+    }
     if (ui.view == V_CHORDS) {                   /* the Chords page: the slots */
         h = hash(hash(0x43484F52u, ui.slot | (uint32_t)proj.par[P_PMODE] << 4), (uint32_t)en_prog_pos + 1u);
         for (i = 0; i < EN_NPROG; i++)
@@ -4985,6 +5656,8 @@ static int vary_trim(int k)                      /* (format 29: a layer's Vary t
 static int knob_kind(int k, int lo, int hi)
 {
     char a[16], z[16];
+    if (k >= K_GSEL && k <= K_GOPT)              /* (the Grid's: words, but a number and the channel rings) */
+        return (k == K_GNUM && grid_num_is_cc() && grid_get(k) > 0) || (k == K_GOPT && !grid_page()) ? KK_RING : KK_SEL;
     if (k == K_CPU || vary_trim(k))              /* (a layer's Vary trim: a centred ring, Hold its far left) */
         return KK_RING;
     if (hi - lo < 10)
@@ -5023,6 +5696,8 @@ static void draw_knobs(void)
         h = hash(h, strip_part);
     if (ui.view == V_SIREN)
         h = hash(h, sir_page);
+    if (ui.view == V_GPBF || ui.view == V_GEN16)
+        h = hash(h, gr.layout | (uint32_t)gr.ch << 1);
     int now_touch = plat_ms() < ui.touch_until;
     for (i = 0; i < 4; i++) {
         h = hash(h, (uint32_t)knob_get(vknob(ui.view, i)));
@@ -5050,6 +5725,12 @@ static void draw_knobs(void)
         int n, m;
         caps(pn, view_name(ui.view), sizeof pn);
         t[0] = 0;
+        if (ui.view == V_GPBF) {                 /* (the Grid's pages: the channel; the EN16's, its layout) */
+            t[0] = 'C', t[1] = 'H', t[2] = ' ';
+            itoa_u((uint32_t)gr.ch + 1u, t + 3);
+        } else if (ui.view == V_GEN16) {
+            caps(t, gr.layout ? "Tracks" : "Free", sizeof t);
+        }
         if (view_voice(ui.view) >= 0 || ui.view == V_CHORDS || noise_page(ui.view)) {   /* a layer's page: its voice; the
                                                   * Chords page: the walk's; Noise: its character */
             char vn[12];
@@ -5108,7 +5789,7 @@ static void draw_knobs(void)
         uint16_t bg = hot ? K_PANEL : K_BG, fill = off ? K_LINE : ui.view == V_STRIP ? STC[strip_part] : ui.view == V_SIREN ? K_FROST
                                                                                                    : hot ? K_ACC : K_PAD;
         if (k == K_NONE && KNOB_LABEL[ui.view][i][0]) {   /* (1.4.0: a knob to come: its name greyed, its ring empty) */
-            caps(t, KNOB_LABEL[ui.view][i], sizeof t);
+            caps(t, knob_lbl(ui.view, (int)i), sizeof t);
             if (i)
                 cv_rect(x, 16, 1, 50, K_LINE);
             knob_label(cx, t, K_LINE);
@@ -5123,7 +5804,7 @@ static void draw_knobs(void)
             cv_round(x + 3, 10, 54, 58, 6, K_PANEL);
         knob_range(k, &lo, &hi);
         v = off ? 0 : knob_get(k);
-        caps(t, KNOB_LABEL[ui.view][i], sizeof t);
+        caps(t, knob_lbl(ui.view, (int)i), sizeof t);
         knob_label(cx, t, off ? K_DIM : K_TEXT);   /* (1.4.0, the user's: the names brighter, a size up, 2 px lower) */
         if (off && k < P_NPARAMS)
             en_param_text(k, 0, t);
@@ -5270,7 +5951,7 @@ static void autosave(void)
     uint32_t now = plat_ms();
     if (!ui.dirty || en_playing || ui.btn || ui.keys || now - ui.act_t < AUTOSAVE_QUIET || en_pad_level > 0.01f)
         return;
-    if (project_save() == 0) {
+    if (project_save() == 0 && grid_save() == 0) {
         ui.dirty = 0;
         ui.saved_t = now;
     }
@@ -5331,7 +6012,7 @@ static void sp_knob(int view, int i)           /* "Stabs 30": the name the page 
 {
     const zone_t *z;
     const int k = vknob(view, i);
-    sp_cat(KNOB_LABEL[view][i]);
+    sp_cat(knob_lbl(view, i));
     sp_cat(" ");
     sp_value(k);
     if (k < P_NPARAMS && knob_zones(k, &z)) {
@@ -5747,6 +6428,7 @@ static void speak_dump(void)
 void ui_init(void)
 {
     memset(&ui, 0, sizeof ui);
+    grid_load();                                 /* (the Grid's map, its own flash object) */
     ui.cue_from = -1;
     ui.touched = -1;
     lcd_fill(0, 0, 240, 240, K_BG);

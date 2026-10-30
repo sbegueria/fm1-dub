@@ -1,0 +1,23 @@
+{
+  "v": 3,
+  "createdOnFiles": {"v": 1, "at": "2026-10-30T09:00:00Z"},
+  "title": "DUB-1 EF44 Controller Setup",
+  "launch": {"view": "canvas", "page": "grid"},
+  "pages": [{"id": "grid", "name": "PBF4 + EN16"}, {"id": "ef44", "name": "EF44 (earlier)"}],
+  "boards": {
+    "Grid.dc.html": {"x": 0, "y": 0, "w": 1400, "h": 860, "title": "DUB-1 with a PBF4 + EN16 (GLO 3/4 and 4/4): prototype", "is_interactive": true, "page": "grid"},
+    "GridScreen.dc.html": {"x": 0, "y": 1220, "w": 480, "h": 480, "title": "PBF4 page: Kick and Hats muted, F1 selected", "page": "grid"},
+    "EN16Page.dc.html": {"x": 560, "y": 1220, "w": 480, "h": 480, "title": "EN16 page, Free: encoder 1's push set to Throw", "page": "grid"},
+    "EN16Tracks.dc.html": {"x": 1120, "y": 1220, "w": 480, "h": 480, "title": "EN16 page, Tracks: a filter and sends per track, effects below", "page": "grid"},
+    "Main.dc.html": {"x": 0, "y": 0, "w": 1240, "h": 820, "title": "Controller page (GLO 3/3): prototype with a virtual EF44", "is_interactive": true, "page": "ef44"},
+    "Screen.dc.html": {"x": 0, "y": 1180, "w": 480, "h": 480, "title": "Overview: Kick muted, F1 selected", "page": "ef44"},
+    "Learn.dc.html": {"x": 560, "y": 1180, "w": 480, "h": 480, "title": "Learn: CC knob at its left end", "page": "ef44"},
+    "PushTarget.dc.html": {"x": 1120, "y": 1180, "w": 480, "h": 480, "title": "E3 push: choosing what it mutes", "page": "ef44"}
+  },
+  "order": ["Grid.dc.html", "GridScreen.dc.html", "EN16Page.dc.html", "EN16Tracks.dc.html", "Main.dc.html", "Screen.dc.html", "Learn.dc.html", "PushTarget.dc.html"],
+  "notes": {
+    "states": {"x": 0, "y": 900, "text": "Screen states", "kind": "title1", "maxW": 1600, "page": "ef44"},
+    "gridstates": {"x": 0, "y": 940, "text": "The two controller pages", "kind": "title1", "maxW": 1600, "page": "grid"}
+  },
+  "designSystems": []
+}

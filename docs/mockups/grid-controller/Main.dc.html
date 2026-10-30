@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Controller page prototype</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5CC4CC}a:hover{color:#8EDDE2}
+.ef-btn{font-family:inherit;cursor:pointer}
+.ef-btn:hover{filter:brightness(1.25)}
+.ef-fader{writing-mode:vertical-lr;direction:rtl;width:36px;height:210px;accent-color:#DEE4E8;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 1240px; height: 820px; box-sizing: border-box; padding: 40px 48px; background: #0B0E12; color: #DEE4E8; font-family: 'Barlow Semi Condensed', sans-serif; display: flex; gap: 64px; align-items: flex-start">
+
+<!-- DUB-1 -->
+<div style="display: flex; flex-direction: column; gap: 18px; width: 560px">
+<div style="display: flex; align-items: baseline; gap: 12px">
+<h1 style="margin: 0; font-size: 28px; font-weight: 700; letter-spacing: 0.5px">DUB-1</h1>
+<span style="font-size: 16px; font-weight: 600; color: #92A0B0">GLO › Setup › Song mode › <span style="color: #5CC4CC">Controller</span></span>
+</div>
+<div style="width: 528px; padding: 24px; border-radius: 18px; background: #050608; box-shadow: inset 0 0 0 1px #1E242C">
+<dc-import name="Screen" model="{{model}}" hint-size="480px,480px"></dc-import>
+</div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; width: 528px">
+<sc-for list="{{knobsUI}}" as="k" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 0; border-radius: 10px; background: #141920">
+<span style="font-size: 13px; font-weight: 600; color: #92A0B0">KNOB {{k.n}} · {{k.label}}</span>
+<div style="display: flex; gap: 8px">
+<button class="ef-btn" type="button" aria-label="{{k.decLabel}}" onClick="{{k.dec}}" style="width: 44px; height: 44px; border-radius: 22px; border: 1px solid #404C5E; background: #242C38; color: #DEE4E8; display: flex; align-items: center; justify-content: center">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 L5 8 L10 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+</button>
+<button class="ef-btn" type="button" aria-label="{{k.incLabel}}" onClick="{{k.inc}}" style="width: 44px; height: 44px; border-radius: 22px; border: 1px solid #404C5E; background: #242C38; color: #DEE4E8; display: flex; align-items: center; justify-content: center">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3 L11 8 L6 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+</button>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<!-- the EF44 -->
+<div style="display: flex; flex-direction: column; gap: 18px; width: 520px">
+<div style="display: flex; align-items: baseline; gap: 12px">
+<h2 style="margin: 0; font-size: 28px; font-weight: 700">Intech Studio EF44</h2>
+<span style="font-size: 16px; font-weight: 600; color: #92A0B0">on the FM-1's USB port</span>
+</div>
+<div style="width: 472px; padding: 24px; border-radius: 18px; background: #23282F; box-shadow: inset 0 0 0 1px #343B45; display: flex; flex-direction: column; gap: 22px">
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+<sc-for list="{{encs}}" as="e" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 10px">
+<div style="{{e.led}}"></div>
+<div style="width: 70px; height: 70px; border-radius: 35px; background: #12161B; box-shadow: inset 0 0 0 2px #3A424D, 0 2px 0 #0A0C0F; position: relative">
+<div style="{{e.pointer}}"></div>
+</div>
+<div style="display: flex; gap: 4px">
+<button class="ef-btn" type="button" aria-label="{{e.decLabel}}" onClick="{{e.dec}}" style="width: 32px; height: 44px; border-radius: 8px; border: 1px solid #3A424D; background: #181D23; color: #DEE4E8; font-size: 20px; font-weight: 700">−</button>
+<button class="ef-btn" type="button" aria-label="{{e.incLabel}}" onClick="{{e.inc}}" style="width: 32px; height: 44px; border-radius: 8px; border: 1px solid #3A424D; background: #181D23; color: #DEE4E8; font-size: 20px; font-weight: 700">+</button>
+</div>
+<button class="ef-btn" type="button" aria-label="{{e.pushLabel}}" onClick="{{e.push}}" style="{{e.pushStyle}}">PUSH</button>
+<span style="font-size: 14px; font-weight: 600; color: #92A0B0">{{e.label}}</span>
+</div>
+</sc-for>
+</div>
+<div style="height: 1px; background: #343B45"></div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+<sc-for list="{{faders}}" as="f" hint-placeholder-count="4">
+<label style="display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer">
+<div style="{{f.led}}"></div>
+<input class="ef-fader" type="range" min="0" max="127" value="{{f.value}}" onChange="{{f.onChange}}">
+<span style="font-size: 14px; font-weight: 600; color: #92A0B0">{{f.label}}</span>
+</label>
+</sc-for>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; background: #141920; font-size: 15px; font-weight: 600">
+<span style="color: #92A0B0">MIDI in</span>
+<span style="color: #DEE4E8; font-variant-numeric: tabular-nums">{{mon}}</span>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1240,"height":820}}'>
+const ACC = '#5CC4CC', DIM = '#92A0B0';
+const T = [
+  ['Off', 'off', DIM, 'Does nothing'], ['Filter', 'flt', ACC, 'Shut: under water. Open: thin'],
+  ['Wet', 'mac', ACC, 'More or less of the dub'], ['Energy', 'mac', ACC, 'The piece busier, or calmer'],
+  ['Duck', 'mac', ACC, 'How hard the kick pumps the rest'],
+  ['Chord', 'lvl', '#54C8BA', 'The chord’s level'], ['Pings', 'lvl', '#80AAE0', 'The pings’ level'],
+  ['Bass', 'lvl', '#CCB470', 'The bass’s level'], ['Drums', 'lvl', '#EC9654', 'The drums’ level'],
+  ['Kick', 'lvl', '#EC9654', 'The kick’s level'], ['Hats', 'lvl', '#DEE4E8', 'The hats’ level'],
+  ['Noise', 'lvl', '#BAAE9C', 'The noise’s level'],
+  ['Cutoff', 'ctr', '#54C8BA', 'The chord’s filter, round its own'], ['Reso', 'ctr', '#54C8BA', 'The chord filter’s resonance'],
+  ['Attack', 'pct', '#54C8BA', 'How slowly the chord comes in'], ['Decay', 'pct', '#54C8BA', 'How long the chord rings'],
+  ['Reverb', 'pct', ACC, 'How much of the plate'], ['Echo', 'pct', ACC, 'How much goes to the echo'],
+  ['Feedback', 'pct', ACC, 'How long the repeats go on'], ['Echo time', 'step', ACC, 'The echo’s time'],
+  ['Cloud', 'pct', ACC, 'The granular reverb'], ['Density', 'pct', '#80AAE0', 'How many notes the pings play'],
+  ['Vary', 'pct', ACC, 'How much the loop varies'], ['Hits', 'pct', '#EC9654', 'How busy the drums are'],
+  ['Swing', 'pct', '#EC9654', 'The groove’s swing'], ['Size', 'pct', ACC, 'The plate’s size']
+];
+const P = [['Chord', '#54C8BA', 1], ['Pings', '#80AAE0', 2], ['Bass', '#CCB470', 4], ['Kick', '#EC9654', 8],
+           ['Hats', '#DEE4E8', 16], ['Noise', '#BAAE9C', 32], ['Drums', '#EC9654', 24], ['Off', DIM, 0]];
+const STEPS = ['1/16', '1/8', '3/16', '1/4', '3/8', '1/2'];
+const INIT = { sel: 0, vals: [64, 64, 40, 50, 90, 45, 76, 83], tgt: [1, 2, 17, 16, 5, 6, 7, 8], cc: [32, 33, 34, 35, 36, 37, 38, 39],
+               push: [0, 2, 3, 4], note: [32, 33, 34, 35], mutes: 0, ch: 1, learn: false, big: null, card: null, flash: -1, hot: -1,
+               msg: { a: 'CONTROLLER', b: 'CONNECTED' }, mon: 'EF44 connected: waiting for a control' };
+
+function lbl(k) { return k < 4 ? 'E' + (k + 1) : k < 8 ? 'F' + (k - 3) : 'E' + (k - 7) + ' push'; }
+function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+function vt(t, v) {
+  const n = Math.round(v * 100 / 127) - 50;
+  switch (t[1]) {
+  case 'off': return 'Off';
+  case 'flt': return n === 0 ? 'Off' : (n < 0 ? 'Shut ' : 'Open ') + Math.abs(n) * 2;
+  case 'ctr': return n > 0 ? '+' + n : String(n);
+  case 'mac': return n > 0 ? '+' + n * 2 : String(n * 2);
+  case 'step': return STEPS[Math.round(v * 5 / 127)];
+  default: return String(Math.round(v * 100 / 127));
+  }
+}
+
+class Component extends DCLogic {
+  s() { return Object.assign({}, INIT, this.state || {}); }
+  later(key, ms, patch) {
+    this.timers = this.timers || {};
+    clearTimeout(this.timers[key]);
+    this.timers[key] = setTimeout(() => this.setState(patch), ms);
+  }
+  componentDidMount() { this.later('msg', 2600, { msg: null }); }
+  componentWillUnmount() { Object.values(this.timers || {}).forEach(clearTimeout); }
+
+  moved(k, v) {                                   /* an EF44 encoder or fader sent its CC */
+    const s = this.s(), vals = s.vals.slice();
+    vals[k] = v;
+    if (s.learn) {
+      this.setState({ vals: vals, sel: k, learn: false, big: null, hot: -1, msg: null,
+                      card: { head: 'LEARNED', line: lbl(k) + ' · CC ' + s.cc[k] + ' · ch ' + s.ch, color: ACC } });
+      this.later('card', 1100, { card: null });
+      return;
+    }
+    const t = T[s.tgt[k]];
+    this.setState({ vals: vals, sel: k, flash: k, hot: -1, card: null, msg: null,
+                    mon: 'ch ' + s.ch + ' · CC ' + s.cc[k] + ' · ' + v + '   → ' + t[0],
+                    big: { title: t[0], value: vt(t, v), frac: v / 127, centred: t[1] === 'flt' || t[1] === 'ctr' || t[1] === 'mac',
+                           color: t[2], help: t[3] } });
+    this.later('flash', 180, { flash: -1 });
+    this.later('big', 1300, { big: null });
+  }
+  pushed(i) {                                     /* an EF44 encoder's push: a Note On */
+    const s = this.s();
+    if (s.learn) {
+      this.setState({ sel: 8 + i, learn: false, big: null, hot: -1, msg: null,
+                      card: { head: 'LEARNED', line: lbl(8 + i) + ' · note ' + s.note[i], color: ACC } });
+      this.later('card', 1100, { card: null });
+      return;
+    }
+    const p = P[s.push[i]], muted = p[2] !== 0 && (s.mutes & p[2]) === p[2];
+    const mutes = p[2] === 0 ? s.mutes : muted ? s.mutes & ~p[2] : s.mutes | p[2];
+    this.setState({ mutes: mutes, sel: 8 + i, big: null, hot: -1, msg: null,
+                    mon: 'ch ' + s.ch + ' · Note ' + s.note[i] + ' · 127   → mute ' + p[0],
+                    card: p[2] === 0 ? { head: 'PUSH ' + (i + 1), line: 'set to nothing', color: DIM }
+                                     : { head: p[0].toUpperCase(), line: muted ? 'on' : 'muted', color: muted ? p[1] : DIM } });
+    this.later('card', 1000, { card: null });
+  }
+  turn(n, d) {                                    /* DUB-1's KNOB n+1 */
+    const s = this.s(), sel = s.sel, push = sel >= 8, j = push ? sel - 8 : sel;
+    const patch = { hot: n, card: null, msg: null };
+    let big;
+    if (n === 0) {
+      patch.sel = (sel + d + 12) % 12;
+      big = { title: 'Control', value: lbl(patch.sel), frac: patch.sel / 11, color: ACC, help: 'Which EF44 control you set' };
+    } else if (n === 1 && !push) {
+      const tgt = s.tgt.slice();
+      tgt[j] = (tgt[j] + d + T.length) % T.length;
+      patch.tgt = tgt;
+      big = { title: lbl(j) + ' turns', value: T[tgt[j]][0], frac: tgt[j] / (T.length - 1), color: T[tgt[j]][2], help: T[tgt[j]][3] };
+    } else if (n === 1) {
+      const pu = s.push.slice();
+      pu[j] = (pu[j] + d + P.length) % P.length;
+      patch.push = pu;
+      big = { title: 'Push ' + (j + 1) + ' mutes', value: P[pu[j]][0], frac: pu[j] / (P.length - 1), color: P[pu[j]][1],
+              help: 'Which part its push mutes' };
+    } else if (n === 2) {
+      const key = push ? 'note' : 'cc', arr = s[key].slice();
+      let learn = s.learn;
+      if (learn) {
+        if (d > 0) learn = false;
+      } else if (arr[j] === 0 && d < 0) {
+        learn = true;
+      } else {
+        arr[j] = clamp(arr[j] + d, 0, 127);
+      }
+      patch[key] = arr;
+      patch.learn = learn;
+      big = { title: push ? 'Note' : 'CC', value: learn ? 'Learn' : String(arr[j]), frac: learn ? 0 : arr[j] / 127, color: ACC,
+              help: learn ? 'Move an EF44 control to bind it' : 'Its number; at the left end: Learn' };
+    } else {
+      patch.ch = clamp(s.ch + d, 1, 16);
+      big = { title: 'Channel', value: String(patch.ch), frac: (patch.ch - 1) / 15, color: ACC, help: 'The channel the EF44 sends on' };
+    }
+    patch.big = big;
+    this.setState(patch);
+    this.later('big', 1300, { big: null, hot: -1 });
+  }
+
+  renderVals() {
+    const s = this.s(), push = s.sel >= 8;
+    const labels = ['CONTROL', push ? 'MUTES' : 'TARGET', push ? 'NOTE' : 'CC', 'CHANNEL'];
+    const knobsUI = labels.map((l, n) => ({
+      n: n + 1, label: l, decLabel: 'Turn knob ' + (n + 1) + ' (' + l + ') left', incLabel: 'Turn knob ' + (n + 1) + ' (' + l + ') right',
+      dec: () => this.turn(n, -1), inc: () => this.turn(n, 1)
+    }));
+    const led = (on, color) => 'width: 10px; height: 10px; border-radius: 5px; background: ' + color + '; opacity: ' +
+                               (0.18 + 0.82 * on).toFixed(2) + '; box-shadow: 0 0 ' + Math.round(10 * on) + 'px ' + color;
+    const encs = [0, 1, 2, 3].map((i) => {
+      const v = s.vals[i], p = P[s.push[i]], muted = p[2] !== 0 && (s.mutes & p[2]) === p[2];
+      return {
+        label: 'E' + (i + 1), led: led(v / 127, ACC),
+        pointer: 'position: absolute; left: 33px; top: 6px; width: 4px; height: 18px; border-radius: 2px; background: #DEE4E8; transform-origin: 2px 29px; transform: rotate(' +
+                 Math.round(-135 + 270 * v / 127) + 'deg)',
+        decLabel: 'Turn E' + (i + 1) + ' left', incLabel: 'Turn E' + (i + 1) + ' right', pushLabel: 'Push E' + (i + 1) + ' (mutes ' + p[0] + ')',
+        dec: () => this.moved(i, clamp(s.vals[i] - 6, 0, 127)), inc: () => this.moved(i, clamp(s.vals[i] + 6, 0, 127)),
+        push: () => this.pushed(i),
+        pushStyle: 'width: 68px; height: 44px; border-radius: 8px; font-size: 14px; font-weight: 700; border: 1px solid ' +
+                   (muted ? '#803834' : '#3A424D') + '; background: ' + (muted ? '#3A1E1C' : '#181D23') + '; color: ' + (muted ? '#F4D6D2' : '#DEE4E8')
+      };
+    });
+    const faders = [0, 1, 2, 3].map((i) => ({
+      label: 'F' + (i + 1), value: s.vals[4 + i], led: led(s.vals[4 + i] / 127, T[s.tgt[4 + i]][2]),
+      onChange: (e) => this.moved(4 + i, Number(e.target.value))
+    }));
+    return {
+      model: { sel: s.sel, vals: s.vals, tgt: s.tgt, cc: s.cc, push: s.push, note: s.note, mutes: s.mutes, ch: s.ch, learn: s.learn,
+               big: s.big, card: s.card, flash: s.flash, hot: s.hot, msg: s.msg },
+      knobsUI: knobsUI, encs: encs, faders: faders, mon: s.mon
+    };
+  }
+}
+</script>
+</body>
+</html>

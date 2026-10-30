@@ -1544,12 +1544,78 @@ same for every piece, and saved. GLO again goes back to Setup.
 MIDI comes in over USB and the TRS jack, and goes out over USB.
 
 - **In, channel 1:** a note adds or removes its note from the scale, like a key.
+- **In, channel 1, CC:** a controller's knobs and faders turn DUB-1's (the table below), the
+  whole 0–127 over the knob's range: a centred knob (the Filter, Resonance, Cutoff) is at its
+  middle at 64. The knob shows large, as when you turn it.
+- **A controller on the FM-1's own USB:** hold **HOME** while you switch the FM-1 on, until
+  USB HOST shows, and let go. For that session the FM-1 is the USB host: plug a class-compliant
+  USB-MIDI controller (an Intech Grid module, a keyboard) straight into its port, and the screen
+  says CONTROLLER CONNECTED. Its notes and CCs come in as above. One controller, no hub. The
+  FM-1's port may not power the controller: one that needs power wants a powered OTG cable. While
+  it is the host, no computer can reach the FM-1 by USB (no MIDI out over USB, no installs):
+  switch it off and on again, without HOME, to have it back.
 - **In, clock:** the grid follows MIDI clock (six clocks a sixteenth), and start, continue and stop
   start, continue and stop the music. The screen shows EXT for the tempo. When the clock stops
   coming, DUB-1 goes back to its own tempo.
 - **Out** (on by default): the chord on channel 1, the pings on 2, the bass on 3 and the drums on
   10 (kick 36, shaker 42, open hat 46), and, while it plays on its own tempo, clock with
   start / stop. Turning MIDI out off sends All Notes Off on channels 1, 2, 3 and 10.
+
+| CC | Knob | CC | Knob | CC | Knob |
+|---|---|---|---|---|---|
+| 1 | Filter (SELECT's) | 27 | Wet | 92 | Echo |
+| 20 | Chord level | 28 | Energy | 93 | Feedback |
+| 21 | Pings level | 29 | Duck | 94 | Echo time |
+| 22 | Bass level | 71 | Resonance (chord) | 95 | Cloud |
+| 23 | Drums level | 72 | Decay (chord) | 102 | Density |
+| 24 | Kick level | 73 | Attack (chord) | 103 | Vary |
+| 25 | Hats level | 74 | Cutoff (chord) | 104 | Hits |
+| 26 | Noise level (Crackle) | 91 | Reverb | 105 | Swing |
+| | | | | 106 | Size |
+
+Wet, Energy, Duck and the Filter are for playing, as on the panel: they are not saved. The others
+are the piece's, saved with SAVE.
+
+### An Intech Grid: PBF4 and EN16
+
+DUB-1 knows a pair of Intech Studio Grid modules side by side, a **PBF4** (four pots over four
+faders, four keys at the bottom) and an **EN16** (sixteen encoders, each a push), with one cable,
+in the PBF4, to the FM-1's USB (hold HOME at power-on, above) or to a computer. Nothing needs
+setting in Grid Editor: DUB-1 takes their factory numbers on channel 1.
+
+Turn it on first: GLO, GLO (Song mode), **KNOB 3, Grid: On**. Off, the Grid's numbers are anyone's:
+the EN16's pushes are notes 48 to 63, a keyboard's too, and off they change the scale as notes do.
+On, GLO has two pages more after Song mode: **PBF4 3/4** and **EN16 4/4**. Each shows the module
+as it sits, a cell a control, the one you chose outlined, the one that just sent lit a moment.
+
+| | Sends | Does (as it comes) |
+|---|---|---|
+| PBF4 pots P1-P4 | CC 32-35 | the track filter (the channel strip's) of the column's track: Chord, Pings, Bass, Drums |
+| PBF4 faders F1-F4 | CC 36-39 | the Chord's, Pings', Bass's and Drums' levels |
+| PBF4 keys B1-B4 | note 40-43 | mute the channel over them: Chord, Pings, Bass, Drums (again: back) |
+| EN16 encoders 1-16 | CC 48-63 | the echo, the plate, the chord's voice, the mix (the page shows which) |
+| EN16 pushes 1-16 | note 48-63 | Reset (back to the piece's own), or Throw (all the way up while held) |
+
+As it comes, the PBF4 is four tracks, a column each (Chord, Pings, Bass, Drums): its **pot** the
+track's filter (its channel strip's: left darker, right thinner), its **fader** the track's level,
+its **key** the track on or muted. The Drums column's pot and fader set the kick and the hats both.
+
+- **PBF4 page:** KNOB 1 the control (P1 to B4); KNOB 2 what it turns, or, a key, what it mutes;
+  KNOB 3 its number, its far left **Learn**: move the control and it binds (any channel: the
+  Grid's channel is then that one); KNOB 4 the channel the Grid sends on.
+- **EN16 page:** KNOB 1 the encoder; KNOB 2 what it turns; KNOB 3 its number (Learn at the left);
+  KNOB 4 its push: Off, Reset or Throw. **ALGORITHM** switches the layout:
+  - **Free:** each encoder its own target, as above.
+  - **Tracks:** a column a track (Chord, Pings, Bass, Drums as it comes; Kick, Hats or Noise too),
+    a row what it sets on each: its channel strip's **Filter** (left darker, right thinner), **Echo**
+    send, **Plate** send, or **Level**; or a row of four **Effects** (Echo, Feedback, Reverb, Size as
+    it comes). The Drums column sets the kick's strip and the hats' both. Here KNOB 1 is the cell,
+    KNOB 2 the column's track (or, the Effects row, the effect), KNOB 3 the row's setting and KNOB 4
+    the row's pushes: the Filter row's reset the filter, the sends' throw the track into the echo
+    or the plate while held.
+
+The map is global, kept with SAVE. Mutes are the Arrangement page's, as white keys 1-6 make them:
+not saved.
 
 ### Screen reader
 
@@ -1753,6 +1819,7 @@ The defaults are Basic's; each piece has its own.
 | Setup | Lights | Off, On, Keys | On |
 | Song mode | Mode | Endless, Song, Set (for every piece) | Endless |
 | Song mode | Transition | LP, Segue, Mix (Set mode alone; for every piece) | LP |
+| Song mode | Grid | Off, On (an Intech Grid: its pages and its MIDI; for every piece) | Off |
 | Song mode | Values | Peek, Always (for every piece) | Peek |
 | Siren (black 8–11 held) | Pitch, Rate, Depth, Echo | each siren its own (see [Controls](#3-controls)); for every piece | as before the knobs |
 | SELECT | Filter | −100 – 0 – +100 (Shut, Off, Open); for playing, not saved | Off |

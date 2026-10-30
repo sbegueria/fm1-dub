@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DUB-1 with PBF4 and EN16</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#5CC4CC}a:hover{color:#8EDDE2}
+.gx-btn{font-family:inherit;cursor:pointer}
+.gx-btn:hover{filter:brightness(1.25)}
+.gx-nudge{position:absolute;width:22px;height:40px;padding:0;border:0;border-radius:6px;background:transparent;color:#DEE4E8;opacity:.28;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.gx-nudge:hover,.gx-nudge:focus-visible{opacity:1;background:rgba(255,255,255,.06)}
+.gx-cap{position:absolute;width:44px;height:44px;padding:0;border:0;border-radius:50%;cursor:pointer}
+.gx-cap:focus-visible,.gx-key:focus-visible{outline:2px solid #5CC4CC;outline-offset:3px}
+.gx-key{position:absolute;width:64px;height:64px;padding:0;border:1px solid #0a0a0a;border-radius:5px;cursor:pointer;background:linear-gradient(#262626,#121212);box-shadow:inset 0 -4px 0 #080808,inset 0 1px 0 rgba(255,255,255,.06),0 2px 3px rgba(0,0,0,.6)}
+.gx-key:active{transform:translateY(1px);box-shadow:inset 0 -2px 0 #080808,0 1px 2px rgba(0,0,0,.6)}
+.gx-fader{position:absolute;margin:0;opacity:0;writing-mode:vertical-lr;direction:rtl;cursor:ns-resize}
+</style>
+</helmet>
+<div style="width: 1400px; height: 860px; box-sizing: border-box; padding: 40px 48px; background: #0B0E12; color: #DEE4E8; font-family: 'Barlow Semi Condensed', sans-serif; display: flex; gap: 56px; align-items: flex-start">
+
+<!-- DUB-1 -->
+<div style="display: flex; flex-direction: column; gap: 18px; width: 528px">
+<div style="display: flex; align-items: baseline; gap: 12px">
+<h1 style="margin: 0; font-size: 28px; font-weight: 700">DUB-1</h1>
+<span style="font-size: 16px; font-weight: 600; color: #92A0B0">GLO › Setup › Song mode › <span style="{{tabPbf}}">PBF4</span> › <span style="{{tabEn}}">{{enTab}}</span></span>
+</div>
+<div style="width: 528px; box-sizing: border-box; padding: 24px; border-radius: 18px; background: #050608; box-shadow: inset 0 0 0 1px #1E242C">
+<dc-import name="GridScreen" model="{{model}}" hint-size="480px,480px"></dc-import>
+</div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{knobsUI}}" as="k" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 0; border-radius: 10px; background: #141920">
+<span style="font-size: 13px; font-weight: 600; color: #92A0B0">KNOB {{k.n}} · {{k.label}}</span>
+<div style="display: flex; gap: 8px">
+<button class="gx-btn" type="button" aria-label="{{k.decLabel}}" onClick="{{k.dec}}" style="width: 44px; height: 44px; border-radius: 22px; border: 1px solid #404C5E; background: #242C38; color: #DEE4E8; display: flex; align-items: center; justify-content: center">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 L5 8 L10 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+</button>
+<button class="gx-btn" type="button" aria-label="{{k.incLabel}}" onClick="{{k.inc}}" style="width: 44px; height: 44px; border-radius: 22px; border: 1px solid #404C5E; background: #242C38; color: #DEE4E8; display: flex; align-items: center; justify-content: center">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3 L11 8 L6 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+</button>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; gap: 8px">
+<button class="gx-btn" type="button" onClick="{{glo}}" style="height: 44px; padding: 0 18px; border-radius: 10px; border: 1px solid #404C5E; background: #141920; color: #DEE4E8; font-size: 15px; font-weight: 700">GLO · next page</button>
+<button class="gx-btn" type="button" onClick="{{algo}}" style="height: 44px; padding: 0 18px; border-radius: 10px; border: 1px solid #404C5E; background: #141920; color: #DEE4E8; font-size: 15px; font-weight: 700">{{algoLabel}}</button>
+</div>
+</div>
+
+<!-- the two Grid modules, butted together, the cable in the PBF4 -->
+<div style="display: flex; flex-direction: column; gap: 14px; width: 721px">
+<div style="display: flex; align-items: baseline; gap: 12px">
+<h2 style="margin: 0; font-size: 28px; font-weight: 700">Intech Studio Grid</h2>
+<span style="font-size: 16px; font-weight: 600; color: #92A0B0">PBF4 + EN16, one cable to the FM-1's USB</span>
+</div>
+<div style="position: relative; width: 721px; height: 440px">
+<!-- cable -->
+<div style="position: absolute; left: 175px; top: 0; width: 10px; height: 58px; border-radius: 5px 5px 0 0; background: linear-gradient(90deg, #2a2a2a, #4a4a4a, #2a2a2a)"></div>
+<div style="position: absolute; left: 166px; top: 50px; width: 28px; height: 18px; border-radius: 4px 4px 2px 2px; background: linear-gradient(#3a3a3a, #1c1c1c); box-shadow: 0 1px 0 #000"></div>
+<div style="position: absolute; left: 200px; top: 6px; font-size: 13px; font-weight: 600; color: #92A0B0">USB-C to the FM-1</div>
+
+<!-- PBF4 -->
+<div style="position: absolute; left: 0; top: 68px; width: 360px; height: 360px; box-sizing: border-box; border: 3px solid #0b0b0b; border-radius: 4px; background-color: #1a1a1a; background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.028) 0 1px, transparent 1px 4px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.028) 0 1px, transparent 1px 4px); box-shadow: 0 6px 18px rgba(0,0,0,0.55)">
+<div style="position: absolute; left: -3px; top: -3px; width: 360px; height: 360px">
+<sc-for list="{{screws}}" as="s" hint-placeholder-count="4"><div style="{{s}}"></div></sc-for>
+<sc-for list="{{pots}}" as="p" hint-placeholder-count="4">
+<div style="{{p.led}}"><div style="{{p.glow}}"></div></div>
+<div style="{{p.cap}}" aria-hidden="true"><div style="{{p.line}}"></div></div>
+<button class="gx-nudge" type="button" aria-label="{{p.decLabel}}" onClick="{{p.dec}}" style="{{p.decPos}}"><svg width="10" height="14" viewBox="0 0 10 14" aria-hidden="true"><path d="M7 2 L2 7 L7 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+<button class="gx-nudge" type="button" aria-label="{{p.incLabel}}" onClick="{{p.inc}}" style="{{p.incPos}}"><svg width="10" height="14" viewBox="0 0 10 14" aria-hidden="true"><path d="M3 2 L8 7 L3 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+</sc-for>
+<sc-for list="{{faders}}" as="f" hint-placeholder-count="4">
+<div style="{{f.led}}"><div style="{{f.glow}}"></div></div>
+<div style="{{f.slot}}"></div>
+<div style="{{f.cap}}"><div style="position: absolute; left: 0; right: 0; top: 15px; height: 3px; background: #F2F2F2"></div></div>
+<input class="gx-fader" type="range" min="0" max="127" aria-label="{{f.aria}}" value="{{f.value}}" onChange="{{f.onChange}}" style="{{f.input}}">
+</sc-for>
+<sc-for list="{{keys}}" as="b" hint-placeholder-count="4">
+<button class="gx-key" type="button" aria-label="{{b.aria}}" onClick="{{b.press}}" style="{{b.pos}}">
+<div style="{{b.led}}"><div style="{{b.glow}}"></div></div>
+</button>
+</sc-for>
+</div>
+<div style="position: absolute; left: 168px; bottom: -9px; width: 18px; height: 7px; border-radius: 0 0 4px 4px; background: #0c0c0c"></div>
+</div>
+
+<!-- EN16 -->
+<div style="position: absolute; left: 361px; top: 68px; width: 360px; height: 360px; box-sizing: border-box; border: 3px solid #0b0b0b; border-radius: 4px; background-color: #1a1a1a; background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.028) 0 1px, transparent 1px 4px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.028) 0 1px, transparent 1px 4px); box-shadow: 0 6px 18px rgba(0,0,0,0.55)">
+<div style="position: absolute; left: -3px; top: -3px; width: 360px; height: 360px">
+<sc-for list="{{screws}}" as="s" hint-placeholder-count="4"><div style="{{s}}"></div></sc-for>
+<sc-for list="{{encs}}" as="e" hint-placeholder-count="16">
+<div style="{{e.led}}"><div style="{{e.glow}}"></div></div>
+<button class="gx-cap" type="button" aria-label="{{e.pushLabel}}" onClick="{{e.push}}" style="{{e.cap}}"></button>
+<button class="gx-nudge" type="button" aria-label="{{e.decLabel}}" onClick="{{e.dec}}" style="{{e.decPos}}"><svg width="10" height="14" viewBox="0 0 10 14" aria-hidden="true"><path d="M7 2 L2 7 L7 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+<button class="gx-nudge" type="button" aria-label="{{e.incLabel}}" onClick="{{e.inc}}" style="{{e.incPos}}"><svg width="10" height="14" viewBox="0 0 10 14" aria-hidden="true"><path d="M3 2 L8 7 L3 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+</sc-for>
+</div>
+<div style="position: absolute; left: 168px; bottom: -9px; width: 18px; height: 7px; border-radius: 0 0 4px 4px; background: #0c0c0c"></div>
+</div>
+</div>
+<div style="display: flex; justify-content: space-between; width: 721px; font-size: 14px; font-weight: 600; color: #92A0B0">
+<span>PBF4 · pots CC 32–35 · faders CC 36–39 · keys note 40–43</span>
+<span>EN16 · turn CC 48–63 · push note 48–63</span>
+</div>
+<div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; background: #141920; font-size: 15px; font-weight: 600">
+<span style="color: #92A0B0">MIDI in</span>
+<span style="color: #DEE4E8; font-variant-numeric: tabular-nums">{{mon}}</span>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1400,"height":860}}'>
+const ACC = '#5CC4CC', DIM = '#92A0B0', S = 1.6;
+const T = [
+  ['Off', 'off', DIM, 'Does nothing'], ['Filter', 'flt', ACC, 'Shut: under water. Open: thin'],
+  ['Wet', 'mac', ACC, 'More or less of the dub'], ['Energy', 'mac', ACC, 'The piece busier, or calmer'],
+  ['Duck', 'mac', ACC, 'How hard the kick pumps the rest'],
+  ['Chord', 'lvl', '#54C8BA', 'The chord’s level'], ['Pings', 'lvl', '#80AAE0', 'The pings’ level'],
+  ['Bass', 'lvl', '#CCB470', 'The bass’s level'], ['Drums', 'lvl', '#EC9654', 'The drums’ level'],
+  ['Kick', 'lvl', '#EC9654', 'The kick’s level'], ['Hats', 'lvl', '#DEE4E8', 'The hats’ level'],
+  ['Noise', 'lvl', '#BAAE9C', 'The noise’s level'],
+  ['Cutoff', 'ctr', '#54C8BA', 'The chord’s filter, round its own'], ['Reso', 'ctr', '#54C8BA', 'The chord filter’s resonance'],
+  ['Attack', 'pct', '#54C8BA', 'How slowly the chord comes in'], ['Decay', 'pct', '#54C8BA', 'How long the chord rings'],
+  ['Reverb', 'pct', ACC, 'How much of the plate'], ['Echo', 'pct', ACC, 'How much goes to the echo'],
+  ['Feedback', 'pct', ACC, 'How long the repeats go on'], ['Echo time', 'step', ACC, 'The echo’s time'],
+  ['Cloud', 'pct', ACC, 'The granular reverb'], ['Density', 'pct', '#80AAE0', 'How many notes the pings play'],
+  ['Vary', 'pct', ACC, 'How much the loop varies'], ['Hits', 'pct', '#EC9654', 'How busy the drums are'],
+  ['Swing', 'pct', '#EC9654', 'The groove’s swing'], ['Size', 'pct', ACC, 'The plate’s size'],
+  ['Blur', 'pct', ACC, 'How much the echo smears'], ['Echo tone', 'pct', ACC, 'The repeats darker or brighter'],
+  ['Width', 'pct', ACC, 'The mix’s stereo width'], ['Crackle', 'lvl', '#BAAE9C', 'The vinyl’s level']
+];
+const P = [['Chord', '#54C8BA', 1], ['Pings', '#80AAE0', 2], ['Bass', '#CCB470', 4], ['Kick', '#EC9654', 8],
+           ['Hats', '#DEE4E8', 16], ['Noise', '#BAAE9C', 32], ['Drums', '#EC9654', 24], ['Off', DIM, 0]];
+const A = ['Off', 'Reset', 'Throw'];
+const STEPS = ['1/16', '1/8', '3/16', '1/4', '3/8', '1/2'];
+const EN0 = [70, 76, 40, 64, 45, 70, 38, 50, 64, 64, 0, 45, 64, 44, 104, 13];
+/* the EN16's Tracks layout: columns are tracks (DUB-1's channel strips), rows what each sets */
+const TR = [['Chord', '#54C8BA'], ['Pings', '#80AAE0'], ['Bass', '#CCB470'], ['Kick', '#EC9654'], ['Hats', '#DEE4E8'], ['Noise', '#BAAE9C'],
+            ['Drums', '#EC9654']];
+const RP = ['Filter', 'Echo', 'Plate', 'Level', 'Effects', 'Off'];
+const RP_TITLE = ['filter', 'echo send', 'plate send', 'level'];
+const RP_HELP = ['Down: low-pass. Up: high-pass', 'How much of it goes to the echo', 'How much of it goes to the plate', 'Its level on the desk'];
+const RP_ROW = ['Each column’s track filter', 'Each column’s echo send', 'Each column’s plate send', 'Each column’s level',
+                'Four effects, one an encoder', 'This row does nothing'];
+const TRK0 = [64, 64, 64, 64, 40, 30, 20, 50, 50, 60, 30, 40, 70, 76, 64, 70];
+const INIT = {
+  page: 'pbf4', layout: 'free', sel: 4, ch: 1, mutes: 0, learn: false, big: null, card: null, flash: -1, hot: -1,
+  trk: { cols: [0, 1, 2, 6], rows: [0, 1, 2, 4], fx: [17, 18, 16, 25], push: [1, 2, 2, 1], vals: TRK0.slice() },
+  msg: { a: 'GRID', b: 'CONNECTED' }, mon: 'Grid connected: PBF4 + EN16',
+  pbf: { vals: [64, 64, 64, 64, 90, 45, 76, 83], tgt: [1, 2, 3, 4, 5, 6, 7, 8], cc: [32, 33, 34, 35, 36, 37, 38, 39],
+         mute: [0, 1, 2, 6], note: [40, 41, 42, 43] },
+  en: { vals: EN0.slice(), tgt: [17, 18, 19, 27, 16, 25, 20, 26, 12, 13, 14, 15, 28, 29, 22, 24],
+        cc: [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63], act: [2, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        note: [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63] }
+};
+const CX = [45, 135, 225, 315];                   /* cell centres: 28.125 + 56.25 n editor px, x 1.6 */
+
+function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+function pbfLbl(k) { return k < 4 ? 'P' + (k + 1) : k < 8 ? 'F' + (k - 3) : 'B' + (k - 7); }
+function centred(t) { return t[1] === 'flt' || t[1] === 'ctr' || t[1] === 'mac'; }
+function vt(t, v) {
+  const n = Math.round(v * 100 / 127) - 50;
+  switch (t[1]) {
+  case 'off': return 'Off';
+  case 'flt': return n === 0 ? 'Off' : (n < 0 ? 'Shut ' : 'Open ') + Math.abs(n) * 2;
+  case 'ctr': return n > 0 ? '+' + n : String(n);
+  case 'mac': return n > 0 ? '+' + n * 2 : String(n * 2);
+  case 'step': return STEPS[Math.round(v * 5 / 127)];
+  default: return String(Math.round(v * 100 / 127));
+  }
+}
+function trkDesc(tk, i, v) {                    /* what EN16 encoder i sets in the Tracks layout, for the big ring */
+  const c = i % 4, r = Math.floor(i / 4), rp = tk.rows[r];
+  if (rp === 4) { const t = T[tk.fx[c]]; return { title: t[0], value: vt(t, v), frac: v / 127, centred: centred(t), color: t[2], help: t[3], name: t[0] }; }
+  if (rp === 5) return { title: 'Off', value: 'Off', frac: 0, color: DIM, help: 'This row does nothing', name: 'Off' };
+  const tr = TR[tk.cols[c]], n = Math.round(v * 100 / 127) - 50;
+  return { title: tr[0] + ' ' + RP_TITLE[rp], frac: v / 127, centred: rp === 0, color: tr[1], help: RP_HELP[rp], name: tr[0] + ' ' + RP_TITLE[rp],
+           value: rp === 0 ? (n === 0 ? 'Off' : (n < 0 ? 'LP ' : 'HP ') + Math.abs(n) * 2) : String(Math.round(v * 100 / 127)) };
+}
+function at(x, y, w, h) { return 'position: absolute; left: ' + x + 'px; top: ' + y + 'px; width: ' + w + 'px; height: ' + h + 'px;'; }
+function led(x, y, on, color) {
+  return {
+    led: at(x - 6.5, y - 6.5, 13, 13) + ' box-sizing: border-box; border-radius: 50%; background: #202020; border: 1px solid #333;',
+    glow: 'position: absolute; inset: -1px; border-radius: 50%; background: ' + color + '; opacity: ' + (0.08 + 0.92 * on).toFixed(2) +
+          '; box-shadow: 0 0 ' + Math.round(14 * on) + 'px ' + Math.round(3 * on) + 'px ' + color
+  };
+}
+const SKIRT = 'radial-gradient(circle at 50% 50%, #242424 0 54%, transparent 56%), repeating-conic-gradient(#141414 0 7.5deg, #0a0a0a 7.5deg 15deg)';
+
+class Component extends DCLogic {
+  s() { return Object.assign({}, INIT, this.state || {}); }
+  later(key, ms, patch) {
+    this.timers = this.timers || {};
+    clearTimeout(this.timers[key]);
+    this.timers[key] = setTimeout(() => this.setState(patch), ms);
+  }
+  componentDidMount() { this.later('msg', 2600, { msg: null }); }
+  componentWillUnmount() { Object.values(this.timers || {}).forEach(clearTimeout); }
+
+  show(patch, big) {
+    patch.big = big;
+    patch.card = null;
+    patch.msg = null;
+    this.setState(patch);
+    this.later('flash', 180, { flash: -1 });
+    this.later('big', 1300, { big: null, hot: -1 });
+  }
+  card(patch, card) {
+    patch.card = card;
+    patch.big = null;
+    patch.msg = null;
+    patch.hot = -1;
+    this.setState(patch);
+    this.later('card', 1100, { card: null });
+  }
+  pbfMove(k, v) {
+    const s = this.s(), pb = Object.assign({}, s.pbf, { vals: s.pbf.vals.slice() });
+    pb.vals[k] = v;
+    if (s.learn)
+      return this.card({ pbf: pb, page: 'pbf4', sel: k, learn: false }, { head: 'LEARNED', line: 'PBF4 ' + pbfLbl(k) + ' · CC ' + pb.cc[k], color: ACC });
+    const t = T[pb.tgt[k]];
+    this.show({ pbf: pb, page: 'pbf4', sel: k, flash: k, hot: -1, mon: 'ch ' + s.ch + ' · CC ' + pb.cc[k] + ' · ' + v + '   → ' + t[0] },
+              { title: t[0], value: vt(t, v), frac: v / 127, centred: centred(t), color: t[2], help: t[3] });
+  }
+  pbfKey(b) {
+    const s = this.s(), p = P[s.pbf.mute[b]];
+    if (s.learn)
+      return this.card({ page: 'pbf4', sel: 8 + b, learn: false }, { head: 'LEARNED', line: 'PBF4 B' + (b + 1) + ' · note ' + s.pbf.note[b], color: ACC });
+    const muted = p[2] !== 0 && (s.mutes & p[2]) === p[2];
+    const mutes = p[2] === 0 ? s.mutes : muted ? s.mutes & ~p[2] : s.mutes | p[2];
+    this.card({ mutes: mutes, page: 'pbf4', sel: 8 + b, mon: 'ch ' + s.ch + ' · Note ' + s.pbf.note[b] + ' · 127   → mute ' + p[0] },
+              p[2] === 0 ? { head: 'B' + (b + 1), line: 'set to nothing', color: DIM }
+                         : { head: p[0].toUpperCase(), line: muted ? 'on' : 'muted', color: muted ? p[1] : DIM });
+  }
+  trkMove(i, v) {
+    const s = this.s(), tk = Object.assign({}, s.trk, { vals: s.trk.vals.slice() });
+    tk.vals[i] = v;
+    const d = trkDesc(tk, i, v);
+    this.show({ trk: tk, page: 'en16', sel: i, flash: i, hot: -1, mon: 'ch ' + s.ch + ' · CC ' + s.en.cc[i] + ' · ' + v + '   → ' + d.name }, d);
+  }
+  trkPush(i) {
+    const s = this.s(), r = Math.floor(i / 4), act = s.trk.push[r], d = trkDesc(s.trk, i, s.trk.vals[i]);
+    const mon = 'ch ' + s.ch + ' · Note ' + s.en.note[i] + ' · 127   → ' + A[act] + ' ' + d.name;
+    if (act === 1) {
+      const tk = Object.assign({}, s.trk, { vals: s.trk.vals.slice() });
+      tk.vals[i] = TRK0[i];
+      return this.card({ trk: tk, page: 'en16', sel: i, mon: mon }, { head: d.name.toUpperCase(), line: 'back to the piece’s', color: d.color });
+    }
+    this.card({ page: 'en16', sel: i, mon: mon }, act === 2 ? { head: 'THROW', line: d.name + ' all the way up while held', color: d.color }
+                                                              : { head: 'PUSH ' + (i + 1), line: 'set to nothing', color: DIM });
+  }
+  algo() {                                        /* ALGORITHM on the EN16 page: its character, Free or Tracks */
+    const s = this.s(), layout = s.layout === 'tracks' ? 'free' : 'tracks';
+    this.card({ page: 'en16', layout: layout, sel: 0, learn: false },
+              { head: layout === 'tracks' ? 'TRACKS' : 'FREE', line: layout === 'tracks' ? 'columns are tracks, rows what they set' : 'each encoder its own target', color: ACC });
+  }
+  enMove(i, v) {
+    if (this.s().layout === 'tracks' && !this.s().learn) return this.trkMove(i, v);
+    const s = this.s(), en = Object.assign({}, s.en, { vals: s.en.vals.slice() });
+    en.vals[i] = v;
+    if (s.learn)
+      return this.card({ en: en, page: 'en16', sel: i, learn: false }, { head: 'LEARNED', line: 'EN16 ' + (i + 1) + ' · CC ' + en.cc[i], color: ACC });
+    const t = T[en.tgt[i]];
+    this.show({ en: en, page: 'en16', sel: i, flash: i, hot: -1, mon: 'ch ' + s.ch + ' · CC ' + en.cc[i] + ' · ' + v + '   → ' + t[0] },
+              { title: t[0], value: vt(t, v), frac: v / 127, centred: centred(t), color: t[2], help: t[3] });
+  }
+  enPush(i) {
+    if (this.s().layout === 'tracks') return this.trkPush(i);
+    const s = this.s(), t = T[s.en.tgt[i]], act = s.en.act[i], mon = 'ch ' + s.ch + ' · Note ' + s.en.note[i] + ' · 127   → ' + A[act] + ' ' + t[0];
+    if (act === 1) {
+      const en = Object.assign({}, s.en, { vals: s.en.vals.slice() });
+      en.vals[i] = EN0[i];
+      return this.card({ en: en, page: 'en16', sel: i, mon: mon }, { head: t[0].toUpperCase(), line: 'back to the piece’s', color: t[2] });
+    }
+    this.card({ page: 'en16', sel: i, mon: mon }, act === 2 ? { head: 'THROW', line: t[0] + ' up while held', color: ACC }
+                                                              : { head: 'PUSH ' + (i + 1), line: 'set to nothing', color: DIM });
+  }
+  glo() {
+    const s = this.s();
+    this.setState({ page: s.page === 'pbf4' ? 'en16' : 'pbf4', sel: 0, learn: false, big: null, card: null, hot: -1 });
+  }
+  turn(n, d) {
+    const s = this.s(), patch = { hot: n };
+    if (s.page === 'pbf4') {
+      const pb = Object.assign({}, s.pbf, { tgt: s.pbf.tgt.slice(), cc: s.pbf.cc.slice(), mute: s.pbf.mute.slice(), note: s.pbf.note.slice() });
+      const btn = s.sel >= 8, j = btn ? s.sel - 8 : s.sel;
+      patch.pbf = pb;
+      if (n === 0) {
+        patch.sel = (s.sel + d + 12) % 12;
+        return this.show(patch, { title: 'Control', value: pbfLbl(patch.sel), frac: patch.sel / 11, color: ACC, help: 'Which PBF4 control you set' });
+      }
+      if (n === 1 && !btn) {
+        pb.tgt[j] = (pb.tgt[j] + d + T.length) % T.length;
+        const t = T[pb.tgt[j]];
+        return this.show(patch, { title: pbfLbl(j) + ' turns', value: t[0], frac: pb.tgt[j] / (T.length - 1), color: t[2], help: t[3] });
+      }
+      if (n === 1) {
+        pb.mute[j] = (pb.mute[j] + d + P.length) % P.length;
+        const p = P[pb.mute[j]];
+        return this.show(patch, { title: 'B' + (j + 1) + ' mutes', value: p[0], frac: pb.mute[j] / (P.length - 1), color: p[1], help: 'Which channel this key mutes' });
+      }
+      if (n === 2) return this.num(patch, btn ? pb.note : pb.cc, j, d, btn ? 'Note' : 'CC');
+      patch.ch = clamp(s.ch + d, 1, 16);
+      return this.show(patch, { title: 'Channel', value: String(patch.ch), frac: (patch.ch - 1) / 15, color: ACC, help: 'The channel the Grid sends on' });
+    }
+    if (s.layout === 'tracks') {
+      const tk = Object.assign({}, s.trk, { cols: s.trk.cols.slice(), rows: s.trk.rows.slice(), fx: s.trk.fx.slice(), push: s.trk.push.slice() });
+      const c = s.sel % 4, r = Math.floor(s.sel / 4);
+      patch.trk = tk;
+      if (n === 0) {
+        patch.sel = (s.sel + d + 16) % 16;
+        return this.show(patch, { title: 'Cell', value: String(patch.sel + 1), frac: patch.sel / 15, color: ACC, help: trkDesc(tk, patch.sel, 64).name });
+      }
+      if (n === 1 && tk.rows[r] === 4) {
+        tk.fx[c] = (tk.fx[c] + d + T.length) % T.length;
+        const t = T[tk.fx[c]];
+        return this.show(patch, { title: 'Effect ' + (c + 1), value: t[0], frac: tk.fx[c] / (T.length - 1), color: t[2], help: t[3] });
+      }
+      if (n === 1) {
+        tk.cols[c] = (tk.cols[c] + d + TR.length) % TR.length;
+        const tr = TR[tk.cols[c]];
+        return this.show(patch, { title: 'Column ' + (c + 1), value: tr[0], frac: tk.cols[c] / (TR.length - 1), color: tr[1], help: 'Which track this column sets' });
+      }
+      if (n === 2) {
+        tk.rows[r] = (tk.rows[r] + d + RP.length) % RP.length;
+        return this.show(patch, { title: 'Row ' + (r + 1), value: RP[tk.rows[r]], frac: tk.rows[r] / (RP.length - 1), color: ACC, help: RP_ROW[tk.rows[r]] });
+      }
+      tk.push[r] = (tk.push[r] + d + 3) % 3;
+      return this.show(patch, { title: 'Row ' + (r + 1) + ' push', value: A[tk.push[r]], frac: tk.push[r] / 2, color: ACC,
+                                help: ['Its pushes do nothing', 'Back to the piece’s value', 'All the way up while held'][tk.push[r]] });
+    }
+    const en = Object.assign({}, s.en, { tgt: s.en.tgt.slice(), cc: s.en.cc.slice(), act: s.en.act.slice() }), j = s.sel;
+    patch.en = en;
+    if (n === 0) {
+      patch.sel = (s.sel + d + 16) % 16;
+      return this.show(patch, { title: 'Encoder', value: String(patch.sel + 1), frac: patch.sel / 15, color: ACC, help: 'Which EN16 encoder you set' });
+    }
+    if (n === 1) {
+      en.tgt[j] = (en.tgt[j] + d + T.length) % T.length;
+      const t = T[en.tgt[j]];
+      return this.show(patch, { title: (j + 1) + ' turns', value: t[0], frac: en.tgt[j] / (T.length - 1), color: t[2], help: t[3] });
+    }
+    if (n === 2) return this.num(patch, en.cc, j, d, 'CC');
+    en.act[j] = (en.act[j] + d + 3) % 3;
+    this.show(patch, { title: (j + 1) + ' push', value: A[en.act[j]], frac: en.act[j] / 2, color: ACC,
+                       help: ['Its push does nothing', 'Back to the piece’s value', 'All the way up while held'][en.act[j]] });
+  }
+  num(patch, arr, j, d, name) {                   /* CC / note, Learn at the left end */
+    const s = this.s();
+    let learn = s.learn;
+    if (learn) { if (d > 0) learn = false; }
+    else if (arr[j] === 0 && d < 0) learn = true;
+    else arr[j] = clamp(arr[j] + d, 0, 127);
+    patch.learn = learn;
+    this.show(patch, { title: name, value: learn ? 'Learn' : String(arr[j]), frac: learn ? 0 : arr[j] / 127, color: ACC,
+                       help: learn ? 'Move a Grid control to bind it' : 'Its number; at the left end: Learn' });
+  }
+
+  renderVals() {
+    const s = this.s(), pb = s.pbf, en = s.en, onPbf = s.page === 'pbf4';
+    const btn = onPbf && s.sel >= 8;
+    const tracks = !onPbf && s.layout === 'tracks', tk = s.trk;
+    const labels = onPbf ? ['CONTROL', btn ? 'MUTES' : 'TARGET', btn ? 'NOTE' : 'CC', 'CHANNEL']
+                 : tracks ? ['CELL', tk.rows[Math.floor(s.sel / 4)] === 4 ? 'TARGET' : 'TRACK', 'ROW', 'PUSH'] : ['ENCODER', 'TARGET', 'CC', 'PUSH'];
+    const knobsUI = labels.map((l, n) => ({ n: n + 1, label: l, decLabel: 'Turn knob ' + (n + 1) + ' (' + l + ') left',
+      incLabel: 'Turn knob ' + (n + 1) + ' (' + l + ') right', dec: () => this.turn(n, -1), inc: () => this.turn(n, 1) }));
+    const screws = [[11, 11], [349, 11], [11, 349], [349, 349]].map((p) => at(p[0] - 4.5, p[1] - 4.5, 9, 9) +
+      ' border-radius: 50%; background: radial-gradient(circle at 40% 35%, #3c3c3c, #0d0d0d 70%); box-shadow: inset 0 0 0 1px #050505');
+    const nudges = (x, y, label) => ({ decPos: at(x - 46, y - 20, 22, 40), incPos: at(x + 24, y - 20, 22, 40),
+                                       decLabel: label + ' left', incLabel: label + ' right' });
+    const pots = [0, 1, 2, 3].map((i) => {
+      const x = CX[i], y = 34.4 * S, v = pb.vals[i], t = T[pb.tgt[i]];
+      return Object.assign(led(x, 13.5 * S, v / 127, '#7C7CFF'), nudges(x, y, 'Turn PBF4 pot P' + (i + 1)), {
+        cap: at(x - 22, y - 22, 44, 44) + ' border-radius: 50%; background: ' + SKIRT + '; box-shadow: 0 3px 4px rgba(0,0,0,0.65); transform: rotate(' +
+             (-50 + v * 280 / 127).toFixed(1) + 'deg)',
+        line: 'position: absolute; left: 7px; top: 20.75px; width: 11px; height: 2.5px; border-radius: 2px; background: #FFFFFF',
+        dec: () => this.pbfMove(i, clamp(pb.vals[i] - 6, 0, 127)), inc: () => this.pbfMove(i, clamp(pb.vals[i] + 6, 0, 127)),
+        title: t[0]
+      });
+    });
+    const faders = [0, 1, 2, 3].map((i) => {
+      const x = CX[i], yc = 120.8 * S, v = pb.vals[4 + i], k = 4 + i, off = 43.5 * (1 - 2 * v / 127);
+      return Object.assign(led(x, 71.7 * S, v / 127, '#7C7CFF'), {
+        slot: at(x - 4, yc - 62, 8, 124) + ' box-sizing: border-box; border-radius: 4px; background: #050505; border: 1px solid #2a2a2a',
+        cap: at(x - 25, yc - 16.5 + off, 50, 33) + ' background: linear-gradient(#2c2c2c, #101010); clip-path: polygon(10% 0, 90% 0, 100% 100%, 0 100%); box-shadow: 0 2px 3px rgba(0,0,0,0.6)',
+        input: at(x - 27, yc - 62, 54, 124),
+        value: v, aria: 'PBF4 fader F' + (i + 1) + ' (' + T[pb.tgt[k]][0] + ')', onChange: (e) => this.pbfMove(k, Number(e.target.value))
+      });
+    });
+    const keys = [0, 1, 2, 3].map((b) => {
+      const x = CX[b], p = P[pb.mute[b]], heard = p[2] === 0 || (s.mutes & p[2]) !== p[2];
+      const l = led(32, 16.5, heard ? (p[2] ? 1 : 0) : 0.35, heard ? p[1] : '#E85C54');
+      return { pos: at(x - 32, 196.9 * S - 32, 64, 64), led: l.led, glow: l.glow,
+               aria: 'PBF4 key B' + (b + 1) + ': mute ' + p[0] + (heard ? '' : ' (muted)'), press: () => this.pbfKey(b) };
+    });
+    const encs = [];
+    for (let i = 0; i < 16; i++) {
+      const x = CX[i % 4], cy = CX[Math.floor(i / 4)], y = cy + 6.3 * S;
+      const v = tracks ? tk.vals[i] : en.vals[i], dsc = tracks ? trkDesc(tk, i, v) : null, t = T[en.tgt[i]];
+      const name = tracks ? dsc.name : t[0], act = tracks ? tk.push[Math.floor(i / 4)] : en.act[i];
+      encs.push(Object.assign(led(x, cy - 14.6 * S, v / 127, tracks ? dsc.color : '#7C7CFF'), nudges(x, y, 'Turn EN16 encoder ' + (i + 1) + ' (' + name + ')'), {
+        cap: at(x - 22, y - 22, 44, 44) + ' background: ' + SKIRT + '; box-shadow: 0 3px 4px rgba(0,0,0,0.65)',
+        pushLabel: 'Push EN16 encoder ' + (i + 1) + ' (' + A[act] + ' ' + name + ')',
+        push: () => this.enPush(i),
+        dec: () => this.enMove(i, clamp(v - 6, 0, 127)), inc: () => this.enMove(i, clamp(v + 6, 0, 127))
+      }));
+    }
+    const on = 'color: #5CC4CC', off = 'color: #92A0B0';
+    return {
+      model: { page: s.page, layout: s.layout, sel: s.sel, ch: s.ch, mutes: s.mutes, learn: s.learn, big: s.big, card: s.card, flash: s.flash,
+               hot: s.hot, msg: s.msg, pbf: pb, en: en, trk: tk },
+      tabPbf: onPbf ? on : off, tabEn: onPbf ? off : on, enTab: s.layout === 'tracks' ? 'EN16 (Tracks)' : 'EN16 (Free)',
+      algoLabel: 'ALGORITHM · ' + (s.layout === 'tracks' ? 'Tracks → Free' : 'Free → Tracks'),
+      knobsUI: knobsUI, glo: () => this.glo(), algo: () => this.algo(), screws: screws, pots: pots, faders: faders, keys: keys, encs: encs, mon: s.mon
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -132,6 +132,11 @@ __attribute__((section(".fast_text"))) void fm1_timer5_irq(void)   /* (in RAM: 1
     }
     if (usb_due && !en_dbg.in_audio) {
         usb_due = 0;
+#if EN_USBH
+        if (usbh.on)
+            usbh_poll();                            /* (host mode: a controller on the port) */
+        else
+#endif
         usb_poll();
 #if EN_TRS
         uart_midi_poll();                           /* the TRS jack: same context, same queue */
@@ -314,6 +319,16 @@ static void fm1_main(void)
     fm1_delay_ms(30);
     if ((fm1_in.buttons & 3u) == 3u)
         panel_setup();                              /* OCT- + OCT+ held at power-on */
+#if EN_USBH
+    if (fm1_in.buttons & (1u << panel.btn[B_HOME])) {   /* HOME held at power-on: USB host, this session */
+        lcd_fill(0, 0, 240, 240, C_BLACK);
+        draw_text_box(0, 96, 240, &FONT_B, "USB HOST", C_HI, 1);
+        draw_text_box(0, 130, 240, &FONT_S, "PLUG IN A MIDI CONTROLLER", C_WHITE, 1);
+        while (fm1_in.buttons & (1u << panel.btn[B_HOME]))   /* (let go first: not a tap for the UI) */
+            fm1_wdt_feed();
+        usbh_begin();
+    }
+#endif
     {   /* the launch screen, played out while the rest settles (it was a still, 400 ms) */
         int f;
         for (f = 1; f < UI_SPLASH_N; f++) {
@@ -375,6 +390,23 @@ static void fm1_main(void)
             if (ota_frame_get(&p, &n) && ann_frame(p, n, fm1_ms))
                 ota_frame_done();
         }
+#if EN_USBH
+        if (usbh.on) {                              /* USB host: the controller's comings and goings, said */
+            static uint8_t was = H_POWER;
+            const uint8_t st = usbh.st;
+            if (st != was) {
+                if (st == H_RUN)
+                    ui_say("CONTROLLER", "CONNECTED");
+                else if (st == H_NOMIDI)
+                    ui_say(usbh.hub ? "USB HUB" : "USB DEVICE", usbh.hub ? "NOT SUPPORTED" : "NOT MIDI");
+                else if (st == H_FAIL)
+                    ui_say("CONTROLLER", "NO ANSWER");
+                else if (was == H_RUN && st <= H_ATTACH)
+                    ui_say("CONTROLLER", "UNPLUGGED");
+                was = st;
+            }
+        }
+#endif
         ota_service();                              /* M-UPGRADE handshake (other SysEx is dropped) */
         if (usb.ota_req) {
             usb.ota_req = 0;

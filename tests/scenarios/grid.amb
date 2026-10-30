@@ -1,0 +1,150 @@
+# The Intech Grid (a PBF4 and an EN16, ui.c's map): their factory numbers on channel 1, the PBF4's keys mute, the
+# EN16's pushes throw and reset, its Tracks layout, GLO's two pages, Learn, the map kept over a reboot
+wait 300
+expect pool 0x6AD
+# off at first: a CC 36 is nobody's, a note 55 the scale's (the EN16's pushes are a keyboard's notes too)
+midi B0 24 00
+wait 20
+expect par0 >0
+# on: Song mode's KNOB 3 (GLO, GLO); then back to the Form page
+tap GLO
+wait 100
+tap GLO
+wait 100
+expect view 28
+spin K3 1
+wait 1600
+shot songmode.png
+tap HOME
+wait 100
+expect view 0
+# the PBF4, a column a track: fader F1 (CC 36) the chord's level, pot P1 (CC 32) the chord's track filter
+midi B0 24 00
+wait 20
+expect par0 0
+midi B0 24 7F
+wait 20
+expect par0 100
+midi B0 20 00
+wait 20
+expect par148 -50
+midi B0 20 40
+wait 20
+expect par148 0
+# pot P4 (CC 35): the drums' filter, the kick's strip and the hats' both
+midi B0 23 7F
+wait 20
+expect par156 50
+expect par151 50
+# another channel: not the Grid's
+midi B1 24 00
+wait 20
+expect par0 100
+# key B1 (note 40) mutes the chord, and again it's back; its notes don't touch the scale
+midi 90 28 7F
+wait 20
+midi 90 28 00
+wait 20
+expect mutes 1
+expect pool 0x6AD
+midi 90 28 7F
+wait 20
+expect mutes 0
+# key B4 (note 43): the drums, the kick and the hats both
+midi 90 2B 7F
+wait 20
+expect mutes 24
+midi 90 2B 7F
+wait 20
+expect mutes 0
+# the EN16: encoder 1 (CC 48) the echo; its push (note 48) throws it while held
+midi B0 30 19
+wait 20
+expect par8 20
+midi 90 30 7F
+wait 20
+expect par8 100
+midi 80 30 00
+wait 20
+expect par8 20
+# encoder 2 (CC 49) the feedback; its push resets it to the piece's own
+midi B0 31 00
+wait 20
+expect par11 0
+midi 90 31 7F
+wait 20
+expect par11 >0
+# GLO: Setup, Song mode, then the PBF4's page and the EN16's, then Setup again
+tap GLO
+wait 100
+expect view 6
+tap GLO
+wait 100
+expect view 28
+tap GLO
+wait 100
+expect view 31
+wait 1600
+shot pbf4.png
+tap GLO
+wait 100
+expect view 32
+wait 1600
+shot en16.png
+# ALGORITHM on the EN16's page: Tracks. Encoder 1 the chord's track filter; encoder 4 the drums', the kick's and the
+# hats' strips both
+turn ALGO 1
+wait 100
+midi B0 30 00
+wait 20
+expect par148 -50
+midi B0 33 7F
+wait 20
+expect par156 50
+expect par151 50
+# encoder 5's push (the echo sends' row, Throw): the chord's echo send up while held
+midi B0 34 00
+wait 20
+expect par140 0
+midi 90 34 7F
+wait 20
+expect par140 100
+midi 90 34 00
+wait 20
+expect par140 0
+wait 1600
+shot tracks.png
+turn ALGO 1
+wait 100
+# Learn on the PBF4's page: P1 chosen (KNOB 1), KNOB 3 to its left end, a CC binds it
+tap GLO
+wait 100
+tap GLO
+wait 100
+tap GLO
+wait 100
+expect view 31
+spin K3 -40
+wait 1600
+shot learn.png
+# (the chord's filter -50 here, Tracks' encoder 1 left it so: the binding CC's own value doesn't move it)
+midi B0 46 7F
+wait 20
+expect par148 -50
+midi B0 46 40
+wait 20
+expect par148 0
+midi B0 20 7F
+wait 20
+expect par148 0
+# saved (GLO held), and kept over a reboot
+press GLO
+wait 700
+release GLO
+wait 100
+expect dirty 0
+reboot
+wait 300
+midi B0 46 7F
+wait 20
+expect par148 50

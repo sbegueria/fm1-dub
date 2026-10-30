@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DUB-1 PBF4 and EN16 pages</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 480px; height: 480px; overflow: hidden; background: #10141A; font-family: 'Barlow Semi Condensed', sans-serif; color: #DEE4E8">
+<div style="position: relative; width: 240px; height: 240px; transform: scale(2); transform-origin: 0 0">
+
+<!-- header -->
+<sc-if value="{{noMsg}}" hint-placeholder-val="{{ true }}">
+<div style="position: absolute; left: 4px; top: 4px; height: 20px; padding: 0 6px; border-radius: 6px; background: #DEE4E8; color: #10141A; font-weight: 700; font-size: 15px; line-height: 20px">Basic</div>
+<div style="position: absolute; left: 54px; top: 6px; font-weight: 600; font-size: 12px; line-height: 15px; color: #92A0B0">FULL</div>
+<sc-for list="{{bars}}" as="b" hint-placeholder-count="8">
+<div style="{{b.style}}"></div>
+</sc-for>
+<div style="position: absolute; left: 186px; top: 6px; font-weight: 600; font-size: 12px; line-height: 15px; color: #92A0B0">HOST</div>
+<div style="position: absolute; left: 215px; top: 9px; width: 15px; height: 9px; box-sizing: border-box; border: 1px solid #92A0B0; border-radius: 2px; display: flex; gap: 1px; padding: 1px">
+<div style="width: 3px; background: #92A0B0"></div><div style="width: 3px; background: #92A0B0"></div><div style="width: 3px; background: #92A0B0"></div>
+</div>
+<div style="position: absolute; left: 230px; top: 12px; width: 2px; height: 3px; background: #92A0B0"></div>
+</sc-if>
+<sc-if value="{{hasMsg}}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; left: 10px; top: 6px; display: flex; gap: 8px; font-weight: 700; font-size: 15px; line-height: 16px">
+<span style="color: #DEE4E8">{{msgA}}</span><span style="color: #5CC4CC">{{msgB}}</span>
+</div>
+</sc-if>
+
+<!-- the Tracks layout's column heads -->
+<sc-for list="{{heads}}" as="h" hint-placeholder-count="0">
+<div style="{{h.style}}">{{h.text}}</div>
+</sc-for>
+
+<!-- the module's controls, as they sit on it -->
+<sc-for list="{{cells}}" as="c" hint-placeholder-count="12">
+<div style="{{c.box}}">
+<div style="{{c.idStyle}}">{{c.id}}</div>
+<sc-if value="{{c.hasRing}}" hint-placeholder-val="{{ true }}">
+<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" style="{{c.iconPos}}">
+<path d="{{c.iconTrack}}" fill="none" stroke="#404C5E" stroke-width="2.5" stroke-linecap="round"></path>
+<path d="{{c.iconFill}}" fill="none" stroke="{{c.iconColor}}" stroke-width="2.5" stroke-linecap="round"></path>
+</svg>
+</sc-if>
+<sc-if value="{{c.hasBar}}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; right: 6px; top: 4px; width: 5px; height: 40px; border-radius: 2px; background: #404C5E; overflow: hidden">
+<div style="{{c.barFill}}"></div>
+</div>
+</sc-if>
+<div style="{{c.nameStyle}}">{{c.name}}</div>
+<div style="{{c.subStyle}}">{{c.sub}}</div>
+<sc-if value="{{c.hasTag}}" hint-placeholder-val="{{ false }}">
+<span style="{{c.tagStyle}}">{{c.tag}}</span>
+</sc-if>
+</div>
+</sc-for>
+
+<!-- the big ring, while something turns -->
+<sc-if value="{{hasBig}}" hint-placeholder-val="{{ false }}">
+<div style="{{bigPanel}}"></div>
+<div style="{{bigTitleStyle}}">{{bigTitle}}</div>
+<svg width="96" height="96" viewBox="0 0 96 96" aria-hidden="true" style="position: absolute; left: 72px; top: 44px">
+<circle cx="48" cy="48" r="44" fill="#10141A"></circle>
+<path d="{{bigTrack}}" fill="none" stroke="#404C5E" stroke-width="6" stroke-linecap="round"></path>
+<path d="{{bigFill}}" fill="none" stroke="{{bigColor}}" stroke-width="6" stroke-linecap="round"></path>
+</svg>
+<div style="{{bigValueStyle}}">{{bigValue}}</div>
+<div style="position: absolute; left: 4px; width: 232px; top: 136px; text-align: center; font-weight: 500; font-size: 15px; line-height: 16px; color: #B3BEC8">{{bigHelp}}</div>
+</sc-if>
+
+<!-- a card: a mute, a throw, a learn -->
+<sc-if value="{{hasCard}}" hint-placeholder-val="{{ false }}">
+<div style="{{cardBox}}">
+<div style="{{cardHeadStyle}}">{{cardHead}}</div>
+<div style="font-weight: 600; font-size: 12px; line-height: 15px; color: #92A0B0">{{cardLine}}</div>
+</div>
+</sc-if>
+
+<!-- the knob strip -->
+<div style="position: absolute; left: 0; top: 168px; width: 240px; height: 14px; display: flex; align-items: center; gap: 5px; padding: 0 6px; box-sizing: border-box">
+<span style="font-weight: 600; font-size: 12px; line-height: 15px; color: #5CC4CC">{{pageName}}</span>
+<span style="font-weight: 600; font-size: 12px; line-height: 15px; color: #92A0B0">{{pagePos}}</span>
+<div style="flex-grow: 1; height: 1px; background: #404C5E"></div>
+<span style="font-weight: 600; font-size: 12px; line-height: 15px; color: #92A0B0">{{ruleRight}}</span>
+</div>
+<div style="position: absolute; left: 60px; top: 188px; width: 1px; height: 50px; background: #404C5E"></div>
+<div style="position: absolute; left: 120px; top: 188px; width: 1px; height: 50px; background: #404C5E"></div>
+<div style="position: absolute; left: 180px; top: 188px; width: 1px; height: 50px; background: #404C5E"></div>
+<sc-for list="{{knobs}}" as="k" hint-placeholder-count="4">
+<sc-if value="{{k.hot}}" hint-placeholder-val="{{ false }}">
+<div style="{{k.hotBox}}"></div>
+</sc-if>
+<div style="{{k.labelStyle}}">{{k.label}}</div>
+<sc-if value="{{k.isRing}}" hint-placeholder-val="{{ true }}">
+<svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true" style="{{k.ringPos}}">
+<path d="{{k.track}}" fill="none" stroke="#404C5E" stroke-width="5" stroke-linecap="round"></path>
+<path d="{{k.fill}}" fill="none" stroke="{{k.fillColor}}" stroke-width="5" stroke-linecap="round"></path>
+</svg>
+<div style="{{k.numStyle}}">{{k.num}}</div>
+</sc-if>
+<sc-if value="{{k.isWord}}" hint-placeholder-val="{{ false }}">
+<div style="{{k.wordStyle}}">{{k.word}}</div>
+<sc-if value="{{k.hasDots}}" hint-placeholder-val="{{ true }}">
+<div style="{{k.dotsRow}}">
+<sc-for list="{{k.dots}}" as="d" hint-placeholder-count="8">
+<div style="{{d.style}}"></div>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{k.hasBar}}" hint-placeholder-val="{{ false }}">
+<div style="{{k.barLine}}"></div>
+<div style="{{k.barDot}}"></div>
+</sc-if>
+</sc-if>
+</sc-for>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"model":{"editor":null},"$preview":{"width":480,"height":480}}'>
+const ACC = '#5CC4CC', DIM = '#92A0B0', TEXT = '#DEE4E8', LINE = '#404C5E', BG = '#10141A', PANEL = '#242C38', PAD = '#54C8BA';
+const T = [
+  ['Off', 'off', DIM], ['Filter', 'flt', ACC], ['Wet', 'mac', ACC], ['Energy', 'mac', ACC], ['Duck', 'mac', ACC],
+  ['Chord', 'lvl', '#54C8BA'], ['Pings', 'lvl', '#80AAE0'], ['Bass', 'lvl', '#CCB470'], ['Drums', 'lvl', '#EC9654'],
+  ['Kick', 'lvl', '#EC9654'], ['Hats', 'lvl', '#DEE4E8'], ['Noise', 'lvl', '#BAAE9C'],
+  ['Cutoff', 'ctr', '#54C8BA'], ['Reso', 'ctr', '#54C8BA'], ['Attack', 'pct', '#54C8BA'], ['Decay', 'pct', '#54C8BA'],
+  ['Reverb', 'pct', ACC], ['Echo', 'pct', ACC], ['Feedback', 'pct', ACC], ['Echo time', 'step', ACC], ['Cloud', 'pct', ACC],
+  ['Density', 'pct', '#80AAE0'], ['Vary', 'pct', ACC], ['Hits', 'pct', '#EC9654'], ['Swing', 'pct', '#EC9654'], ['Size', 'pct', ACC],
+  ['Blur', 'pct', ACC], ['Echo tone', 'pct', ACC], ['Width', 'pct', ACC], ['Crackle', 'lvl', '#BAAE9C']
+];
+const P = [['Chord', '#54C8BA', 1], ['Pings', '#80AAE0', 2], ['Bass', '#CCB470', 4], ['Kick', '#EC9654', 8],
+           ['Hats', '#DEE4E8', 16], ['Noise', '#BAAE9C', 32], ['Drums', '#EC9654', 24], ['Off', DIM, 0]];
+const A = ['Off', 'Reset', 'Throw'];
+/* the Tracks layout: columns are tracks (the channel strips), rows what each sets */
+const TR = [['Chord', '#54C8BA'], ['Pings', '#80AAE0'], ['Bass', '#CCB470'], ['Kick', '#EC9654'], ['Hats', '#DEE4E8'], ['Noise', '#BAAE9C'],
+            ['Drums', '#EC9654']];
+const RP = ['Filter', 'Echo', 'Plate', 'Level', 'Effects', 'Off'];
+function rowVal(rp, v) {
+  const n = Math.round(v * 100 / 127) - 50;
+  return rp === 0 ? (n === 0 ? 'Off' : (n < 0 ? 'LP ' : 'HP ') + Math.abs(n) * 2) : String(Math.round(v * 100 / 127));
+}
+function vtS(t, v) {
+  const n = Math.round(v * 100 / 127) - 50;
+  return t[1] === 'off' ? 'Off' : t[1] === 'flt' ? (n === 0 ? 'Off' : (n < 0 ? 'Shut ' : 'Open ') + Math.abs(n) * 2)
+       : t[1] === 'ctr' ? (n > 0 ? '+' + n : String(n)) : t[1] === 'mac' ? (n > 0 ? '+' + n * 2 : String(n * 2))
+       : t[1] === 'step' ? ['1/16', '1/8', '3/16', '1/4', '3/8', '1/2'][Math.round(v * 5 / 127)] : String(Math.round(v * 100 / 127));
+}
+const DEF = {
+  page: 'pbf4', layout: 'free', sel: 4, ch: 1, mutes: 8 | 16, learn: false, big: null, card: null, flash: -1, hot: -1, msg: null,
+  trk: { cols: [0, 1, 2, 6], rows: [0, 1, 2, 4], fx: [17, 18, 16, 25], push: [1, 2, 2, 1],
+         vals: [64, 64, 64, 64, 40, 30, 20, 50, 50, 60, 30, 40, 70, 76, 64, 70] },
+  pbf: { vals: [64, 64, 64, 64, 90, 45, 76, 83], tgt: [1, 2, 3, 4, 5, 6, 7, 8], cc: [32, 33, 34, 35, 36, 37, 38, 39],
+         mute: [0, 1, 2, 6], note: [40, 41, 42, 43] },
+  en: { vals: [70, 76, 40, 64, 45, 70, 38, 50, 64, 64, 0, 45, 64, 44, 104, 13],
+        tgt: [17, 18, 19, 27, 16, 25, 20, 26, 12, 13, 14, 15, 28, 29, 22, 24],
+        cc: [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63],
+        act: [2, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        note: [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63] }
+};
+
+function arc(cx, cy, r, a0, a1) {
+  if (Math.abs(a1 - a0) < 0.5) return '';
+  const p = (a) => [cx + r * Math.cos(a * Math.PI / 180), cy + r * Math.sin(a * Math.PI / 180)];
+  const s = p(a0), e = p(a1);
+  return 'M' + s[0].toFixed(2) + ' ' + s[1].toFixed(2) + ' A' + r + ' ' + r + ' 0 ' + (Math.abs(a1 - a0) > 180 ? 1 : 0) +
+         ' ' + (a1 > a0 ? 1 : 0) + ' ' + e[0].toFixed(2) + ' ' + e[1].toFixed(2);
+}
+function fillArc(cx, cy, r, f, centred) {
+  return centred ? arc(cx, cy, r, 270, 270 + (f - 0.5) * 270) : arc(cx, cy, r, 135, 135 + 270 * f);
+}
+function centred(t) { return t[1] === 'flt' || t[1] === 'ctr' || t[1] === 'mac'; }
+function abs(x, y, w, h) { return 'position: absolute; left: ' + x + 'px; top: ' + y + 'px; width: ' + w + 'px; height: ' + h + 'px;'; }
+function pbfLbl(k) { return k < 4 ? 'P' + (k + 1) : k < 8 ? 'F' + (k - 3) : 'B' + (k - 7); }
+
+class Component extends DCLogic {
+  renderVals() {
+    const m = Object.assign({}, DEF, this.props.model || {});
+    const pb = Object.assign({}, DEF.pbf, m.pbf || {}), en = Object.assign({}, DEF.en, m.en || {});
+    const isPbf = m.page !== 'en16', sel = m.sel, isTracks = !isPbf && m.layout === 'tracks';
+    const tk = Object.assign({}, DEF.trk, m.trk || {});
+    const heads = [];
+    const box = (x, y, w, h, flash, selected, fill) => abs(x, y, w, h) + ' box-sizing: border-box; border-radius: 6px; background: ' +
+      (flash ? PAD : fill || PANEL) + '; border: 2px solid ' + (selected ? ACC : 'transparent') + ';';
+    const XS = 'font-weight: 600; font-size: 12px; line-height: 15px;';
+    const cells = [];
+    if (isPbf) {
+      for (let i = 0; i < 12; i++) {
+        const x = 4 + (i % 4) * 58, row = Math.floor(i / 4), flash = m.flash === i, ink = flash ? BG : TEXT, inkDim = flash ? BG : DIM;
+        if (row < 2) {
+          const t = T[pb.tgt[i]], f = pb.vals[i] / 127, pot = row === 0, y = pot ? 30 : 70, h = pot ? 36 : 50;
+          cells.push({
+            id: pbfLbl(i), name: t[0], sub: 'CC ' + pb.cc[i], hasRing: pot, hasBar: !pot, hasTag: false,
+            box: box(x, y, 54, h, flash, sel === i),
+            idStyle: 'position: absolute; left: 4px; top: 1px; ' + XS + ' color: ' + inkDim,
+            iconPos: 'position: absolute; right: 4px; top: 3px', iconTrack: arc(7, 7, 5, 135, 405),
+            iconFill: fillArc(7, 7, 5, f, centred(t)), iconColor: flash ? BG : t[2],
+            barFill: 'width: 5px; margin-top: ' + Math.round(40 * (1 - f)) + 'px; height: ' + Math.round(40 * f) + 'px; background: ' + (flash ? BG : t[2]),
+            nameStyle: 'position: absolute; left: 4px; top: ' + (pot ? 14 : 16) + 'px; width: 38px; white-space: nowrap; overflow: hidden; font-weight: 700; font-size: ' +
+                       (t[0].length > 6 ? 12 : 15) + 'px; line-height: 16px; color: ' + (pb.tgt[i] === 0 ? inkDim : ink),
+            subStyle: 'position: absolute; left: 4px; top: ' + (pot ? 28 : 31) + 'px; ' + XS + ' color: ' + inkDim + (pot ? '; display: none' : '')
+          });
+        } else {
+          const b = i - 8, p = P[pb.mute[b]], muted = p[2] !== 0 && (m.mutes & p[2]) === p[2];
+          cells.push({
+            id: pbfLbl(i), name: p[2] ? 'MUTE ' + p[0].toUpperCase() : 'OFF', sub: 'NOTE ' + pb.note[b], hasRing: false, hasBar: false,
+            hasTag: muted, tag: 'MUTED',
+            box: box(x, 124, 54, 40, flash, sel === i, muted ? '#3A1E1C' : PANEL),
+            idStyle: 'position: absolute; left: 4px; top: 1px; ' + XS + ' color: ' + DIM,
+            nameStyle: 'position: absolute; left: 4px; top: 13px; width: 46px; white-space: nowrap; overflow: hidden; ' + XS + ' color: ' +
+                       (muted || !p[2] ? DIM : p[1]),
+            subStyle: 'position: absolute; left: 4px; top: 24px; font-weight: 600; font-size: 10px; line-height: 12px; color: ' + DIM,
+            tagStyle: 'position: absolute; right: 3px; top: 3px; padding: 0 3px; border-radius: 3px; background: #803834; color: #F4D6D2; font-size: 9px; line-height: 11px; font-weight: 700'
+          });
+        }
+      }
+    } else if (isTracks) {
+      for (let c = 0; c < 4; c++) {
+        const tr = TR[tk.cols[c]];
+        heads.push({ text: tr[0].toUpperCase(), style: abs(4 + c * 58, 28, 54, 15) + ' box-sizing: border-box; border-bottom: 2px solid ' + tr[1] +
+                     '; text-align: center; font-weight: 700; font-size: 12px; line-height: 13px; color: ' + tr[1] });
+      }
+      for (let i = 0; i < 16; i++) {
+        const c = i % 4, r = Math.floor(i / 4), x = 4 + c * 58, y = 46 + r * 30, rp = tk.rows[r], v = tk.vals[i], f = v / 127;
+        const flash = m.flash === i, ink = flash ? BG : TEXT, inkDim = flash ? BG : DIM, act = tk.push[r];
+        let label, value, color, cen;
+        if (rp === 4) { const t = T[tk.fx[c]]; label = t[0]; value = vtS(t, v); color = t[2]; cen = centred(t); }
+        else if (rp === 5) { label = 'Off'; value = '–'; color = DIM; cen = false; }
+        else { label = RP[rp]; value = rowVal(rp, v); color = TR[tk.cols[c]][1]; cen = rp === 0; }
+        cells.push({
+          id: label.toUpperCase(), name: value, sub: '', hasRing: rp !== 5, hasBar: false, hasTag: act !== 0 && rp !== 5,
+          tag: act === 2 ? 'THROW' : 'RESET',
+          box: box(x, y, 54, 28, flash, sel === i, rp === 4 ? '#1C222C' : PANEL),
+          idStyle: 'position: absolute; left: 4px; top: 0px; white-space: nowrap; font-weight: 600; font-size: 9px; line-height: 11px; color: ' + inkDim,
+          iconPos: 'position: absolute; right: 3px; top: 3px', iconTrack: arc(7, 7, 5, 135, 405),
+          iconFill: fillArc(7, 7, 5, f, cen), iconColor: flash ? BG : color,
+          nameStyle: 'position: absolute; left: 4px; top: 11px; white-space: nowrap; font-weight: 700; font-size: 13px; line-height: 14px; color: ' + ink,
+          subStyle: 'display: none',
+          tagStyle: 'position: absolute; right: 3px; bottom: 1px; font-weight: 700; font-size: 8px; line-height: 10px; color: ' +
+                    (flash ? BG : act === 2 ? ACC : DIM)
+        });
+      }
+    } else {
+      for (let i = 0; i < 16; i++) {
+        const x = 4 + (i % 4) * 58, y = 30 + Math.floor(i / 4) * 34, t = T[en.tgt[i]], f = en.vals[i] / 127, flash = m.flash === i;
+        const ink = flash ? BG : TEXT, inkDim = flash ? BG : DIM, act = en.act[i];
+        cells.push({
+          id: String(i + 1), name: t[0], sub: 'CC ' + en.cc[i], hasRing: true, hasBar: false, hasTag: act !== 0,
+          tag: act === 2 ? 'THROW' : 'RESET',
+          box: box(x, y, 54, 32, flash, sel === i),
+          idStyle: 'position: absolute; left: 4px; top: 0px; font-weight: 600; font-size: 10px; line-height: 12px; color: ' + inkDim,
+          iconPos: 'position: absolute; right: 3px; top: 3px', iconTrack: arc(7, 7, 5, 135, 405),
+          iconFill: fillArc(7, 7, 5, f, centred(t)), iconColor: flash ? BG : t[2],
+          nameStyle: 'position: absolute; left: 4px; top: 10px; width: 40px; white-space: nowrap; overflow: hidden; font-weight: 700; font-size: ' +
+                     (t[0].length > 6 ? 11 : 13) + 'px; line-height: 13px; color: ' + (en.tgt[i] === 0 ? inkDim : ink),
+          subStyle: 'position: absolute; left: 4px; top: 20px; font-weight: 600; font-size: 9px; line-height: 10px; color: ' + inkDim,
+          tagStyle: 'position: absolute; right: 3px; bottom: 2px; font-weight: 700; font-size: 8px; line-height: 10px; color: ' +
+                    (flash ? BG : act === 2 ? ACC : DIM)
+        });
+      }
+    }
+    const bars = [];
+    for (let i = 0; i < 8; i++) {
+      const tall = i === 3 || i === 7;
+      bars.push({ style: abs(80 + i * 9, tall ? 8 : 10, 6, tall ? 11 : 9) + ' background: ' + (i < 2 ? TEXT : i === 2 ? ACC : LINE) });
+    }
+
+    const kn = (i, label) => {
+      const x = i * 60;
+      return { x0: x, label: label, hot: m.hot === i, hotBox: abs(x + 3, 182, 54, 56) + ' border-radius: 6px; background: ' + PANEL,
+               labelStyle: abs(x, 184, 60, 16) + ' text-align: center; font-weight: 500; font-size: ' + (label.length > 7 ? 12 : 15) +
+                           'px; line-height: 16px; color: ' + TEXT,
+               ringPos: 'position: absolute; left: ' + (x + 10) + 'px; top: 198px' };
+    };
+    const word = (k, w, color) => {
+      k.isWord = true;
+      k.word = w;
+      k.wordStyle = abs(k.x0, 199, 60, 16) + ' text-align: center; white-space: nowrap; font-weight: 700; font-size: ' + (w.length > 6 ? 12 : 15) +
+                    'px; line-height: 16px; color: ' + (color || TEXT);
+    };
+    const dots = (k, n, at, color) => {
+      const d = [];
+      for (let q = 0; q < n; q++)
+        d.push({ style: q === at ? 'width: 5px; height: 5px; border-radius: 2px; background: ' + color
+                                 : 'width: 2px; height: 2px; border-radius: 1px; background: ' + DIM });
+      k.hasDots = true;
+      k.dots = d;
+      k.dotsRow = abs(k.x0, 222, 60, 5) + ' display: flex; align-items: center; justify-content: center; gap: ' + (n > 8 ? 2 : 4) + 'px';
+    };
+    const bar = (k, at, n, color) => {
+      k.hasBar = true;
+      k.barLine = abs(k.x0 + 10, 224, 40, 1) + ' background: ' + LINE;
+      k.barDot = abs(k.x0 + 8 + Math.round(40 * at / (n - 1)), 222, 5, 5) + ' border-radius: 2px; background: ' + color;
+    };
+    const ring = (k, f, num, color) => {
+      k.isRing = true;
+      k.track = arc(20, 20, 16, 135, 405);
+      k.fill = fillArc(20, 20, 16, f, false);
+      k.fillColor = color;
+      k.num = num;
+      k.numStyle = abs(k.x0, 211, 60, 15) + ' text-align: center; ' + XS + ' color: ' + TEXT;
+    };
+    const hotc = (i) => m.hot === i ? ACC : PAD;
+    const knobs = [];
+    if (isPbf) {
+      const btn = sel >= 8, j = btn ? sel - 8 : sel, num = btn ? pb.note[j] : pb.cc[j];
+      const k1 = kn(0, 'CONTROL'); word(k1, pbfLbl(sel), m.hot === 0 ? ACC : TEXT); dots(k1, 12, sel, hotc(0));
+      const k2 = kn(1, btn ? 'MUTES' : 'TARGET');
+      if (btn) { const p = P[pb.mute[j]]; word(k2, p[0], p[1]); dots(k2, 8, pb.mute[j], p[1]); }
+      else { const t = T[pb.tgt[j]]; word(k2, t[0], pb.tgt[j] ? TEXT : DIM); bar(k2, pb.tgt[j], T.length, hotc(1)); }
+      const k3 = kn(2, btn ? 'NOTE' : 'CC');
+      if (m.learn) word(k3, 'Learn', ACC); else ring(k3, num / 127, String(num), hotc(2));
+      const k4 = kn(3, 'CHANNEL'); ring(k4, (m.ch - 1) / 15, String(m.ch), hotc(3));
+      knobs.push(k1, k2, k3, k4);
+    } else if (isTracks) {
+      const c = sel % 4, r = Math.floor(sel / 4), rp = tk.rows[r], fxRow = rp === 4;
+      const k1 = kn(0, 'CELL'); word(k1, String(sel + 1), m.hot === 0 ? ACC : TEXT); bar(k1, sel, 16, hotc(0));
+      const k2 = kn(1, fxRow ? 'TARGET' : 'TRACK');
+      if (fxRow) { const t = T[tk.fx[c]]; word(k2, t[0], tk.fx[c] ? TEXT : DIM); bar(k2, tk.fx[c], T.length, hotc(1)); }
+      else { const tr = TR[tk.cols[c]]; word(k2, tr[0], tr[1]); dots(k2, TR.length, tk.cols[c], tr[1]); }
+      const k3 = kn(2, 'ROW'); word(k3, RP[rp], rp === 5 ? DIM : TEXT); dots(k3, RP.length, rp, hotc(2));
+      const k4 = kn(3, 'PUSH'); word(k4, A[tk.push[r]], tk.push[r] === 2 ? ACC : tk.push[r] ? TEXT : DIM); dots(k4, 3, tk.push[r], hotc(3));
+      knobs.push(k1, k2, k3, k4);
+    } else {
+      const t = T[en.tgt[sel]];
+      const k1 = kn(0, 'ENCODER'); word(k1, String(sel + 1), m.hot === 0 ? ACC : TEXT); bar(k1, sel, 16, hotc(0));
+      const k2 = kn(1, 'TARGET'); word(k2, t[0], en.tgt[sel] ? TEXT : DIM); bar(k2, en.tgt[sel], T.length, hotc(1));
+      const k3 = kn(2, 'CC');
+      if (m.learn) word(k3, 'Learn', ACC); else ring(k3, en.cc[sel] / 127, String(en.cc[sel]), hotc(2));
+      const k4 = kn(3, 'PUSH'); word(k4, A[en.act[sel]], en.act[sel] === 2 ? ACC : en.act[sel] ? TEXT : DIM); dots(k4, 3, en.act[sel], hotc(3));
+      knobs.push(k1, k2, k3, k4);
+    }
+
+    const b = m.big, c = m.card, bigColor = b ? b.color || ACC : ACC;
+    const mix = (h) => { const a = [16, 20, 26], q = [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+                         return 'rgb(' + a.map((v, i) => Math.round(v + (q[i] - v) * 7 / 16)).join(',') + ')'; };
+    const longVal = b && b.value.length > 6;
+    return {
+      noMsg: !m.msg, hasMsg: !!m.msg, msgA: m.msg ? m.msg.a : '', msgB: m.msg ? m.msg.b : '',
+      bars: bars, cells: cells, knobs: knobs, heads: heads,
+      pageName: isPbf ? 'PBF4' : 'EN16', pagePos: isPbf ? '3/4' : '4/4',
+      ruleRight: (isPbf ? 'GRID' : isTracks ? 'TRACKS' : 'FREE') + ' · CH ' + m.ch,
+      hasBig: !!b,
+      bigPanel: abs(2, 28, 236, 140) + ' box-sizing: border-box; border-radius: 6px; background: rgba(16,20,26,0.86); border: 1px solid ' + mix(bigColor),
+      bigTitle: b ? b.title.toUpperCase() : '',
+      bigTitleStyle: abs(0, 28, 240, 21) + ' text-align: center; font-weight: 700; font-size: 20px; line-height: 21px; color: ' + bigColor,
+      bigTrack: arc(48, 48, 40, 135, 405), bigFill: b ? fillArc(48, 48, 40, b.frac, !!b.centred) : '', bigColor: bigColor,
+      bigValue: b ? b.value : '',
+      bigValueStyle: abs(40, longVal ? 82 : 76, 160, 32) + ' text-align: center; white-space: nowrap; font-weight: 700; font-size: ' +
+                     (longVal ? 20 : 31) + 'px; line-height: ' + (longVal ? 21 : 32) + 'px; color: ' + TEXT,
+      bigHelp: b ? b.help || '' : '',
+      hasCard: !!c,
+      cardBox: abs(22, 58, 196, 50) + ' box-sizing: border-box; border-radius: 6px; background: ' + PANEL + '; border: 2px solid ' + (c ? c.color : ACC) +
+               '; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px',
+      cardHeadStyle: 'font-weight: 700; font-size: 15px; line-height: 16px; color: ' + (c ? c.color : ACC),
+      cardHead: c ? c.head : '', cardLine: c ? c.line : ''
+    };
+  }
+}
+</script>
+</body>
+</html>

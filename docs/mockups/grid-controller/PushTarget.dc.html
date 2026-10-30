@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Controller page: push target</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 480px; height: 480px">
+<dc-import name="Screen" model="{{model}}" hint-size="480px,480px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":480,"height":480}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      model: { sel: 10, hot: 1, mutes: 4, flash: -1, push: [0, 2, 3, 4],
+               big: { title: 'Push 3 mutes', value: 'Kick', frac: 3 / 7, color: '#EC9654', help: 'Which part its push mutes' } }
+    };
+  }
+}
+</script>
+</body>
+</html>

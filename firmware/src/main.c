@@ -47,6 +47,12 @@ static inline int32_t clamp(int32_t v, int32_t lo, int32_t hi) { return v < lo ?
 #if EN_TRS
 #include "midi_uart.c"
 #endif
+#ifndef EN_USBH
+#define EN_USBH 1                 /* USB host: a MIDI controller on the FM-1's port (HOME held at power-on) */
+#endif
+#if EN_USBH
+#include "usb_host.c"
+#endif
 
 static uint8_t flash_ok;          /* JEDEC id matched at boot */
 static void audio_silence(void);

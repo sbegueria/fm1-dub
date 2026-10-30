@@ -11,7 +11,7 @@ wait 200
 tap GLO
 wait 400
 expect view 28
-said Song mode page: Mode Endless, Transition LP, only in Set mode, Values Peek
+said Song mode page: Mode Endless, Transition LP, only in Set mode, Grid Off, Values Peek
 # Endless: Transition grey, a turn says why and changes nothing
 spin K2 1
 wait 300
