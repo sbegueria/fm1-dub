@@ -1,5 +1,14 @@
 # DUB-1 for the M-VAVE FM-1
 
+[![Latest release](https://img.shields.io/github/v/release/sbegueria/fm1-dub)](https://github.com/sbegueria/fm1-dub/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/sbegueria/fm1-dub/total)](https://github.com/sbegueria/fm1-dub/releases)
+[![Try it in your browser](https://img.shields.io/badge/try%20it-in%20your%20browser-orange)](https://sbegueria.github.io/fm1-dub/emu/)
+[![Manual](https://img.shields.io/badge/docs-manual-blue)](https://sbegueria.github.io/fm1-dub/manual/)
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
+[![Last commit](https://img.shields.io/github/last-commit/sbegueria/fm1-dub)](https://github.com/sbegueria/fm1-dub/commits/main)
+[![GitHub issues](https://img.shields.io/github/issues/sbegueria/fm1-dub?logo=github)](https://github.com/sbegueria/fm1-dub/issues)
+[![Fork of AMB-1](https://img.shields.io/badge/fork%20of-AMB--1-lightgrey?logo=github)](https://github.com/charlesvestal/fm1-amb)
+
 DUB-1 turns the M-VAVE FM-1 into a generative dub techno machine. It plays itself
 from the moment it's switched on: chord stabs through a resonant low-pass into a tape echo, short
 FM pings on loops of unequal length, a sub bass on one of five grooves, a kick that ducks the rest
