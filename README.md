@@ -108,3 +108,5 @@ The code is `chord_change` and `voice_chord` in `firmware/src/dsp/amb.c`.
 
 M-VAVE and FM-1 are trademarks of their owners. DUB-1 is not affiliated with M-VAVE or Hügelton
 Instruments.
+
+You can also try DUB-1 in the browser, no flashing needed, in the free community [FM-1 Emulator](https://fm1-emulator.atst.tools/).
