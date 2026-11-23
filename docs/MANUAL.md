@@ -48,16 +48,21 @@ same code the FM-1 runs, with sound.
 to install on the computer. Don't unplug it while it's writing; when it finishes, the FM-1 restarts
 into DUB-1.
 
-**Or from the command line:** download `dub-1.4.3.fwsc` from the
+**Or from the command line:** download `dub-1.4.4.fwsc` from the
 [releases](https://github.com/sbegueria/fm1-dub/releases), install Python 3 with
 `pip3 install mido python-rtmidi`, and run, in a checkout of the source:
 
 ```
-python3 tools/fm1_install.py dub-1.4.3.fwsc
+python3 tools/fm1_install.py dub-1.4.4.fwsc
 ```
 
 **Go back:** the installer page's "Back to the stock firmware", or M-VAVE's own updater, M-UPGRADE,
 puts the stock firmware back.
+
+**FM-1s with the newer flash chip** (the UC25HQ80, on units sold since autumn 2026): DUB-1 saves on
+them from 1.4.4. On 1.4.3 they showed "NOT SAVED · FLASH ERROR" and refused another install over
+DUB-1. To get such a unit onto 1.4.4, use [M-Flasher](https://github.com/jvitkauskas/m-flasher):
+`download-mode`, then `firmware dub-1.4.4.fwsc` (it backs up first and keeps the bootloader).
 
 > Installing other firmware is at your own risk. If the FM-1 ever won't start, see
 > [Recovering an FM-1 that won't start](#recovering-an-fm-1-that-won-t-start).
