@@ -238,7 +238,9 @@ function progress(k, pct) {
   lastPct = pct; lastAt = now;
   sayK(k, (lang === "ja" ? " " : ", ") + pct + t("percent"));
 }
-const log = (t) => { $("log").textContent += t + "\n"; };
+/* the step lines ("write 46" ...) go to the session's log (Copy the log), not onto the page: a hundred of them pushed
+   the outcome out of sight (the user, 1.5.0) */
+const log = (t) => { if (lastUp) lastUp.ev(`step ${t}`); };
 let image = null;
 const meta = /*META*/;
 
