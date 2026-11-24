@@ -27,5 +27,23 @@
   "format": 37,
   "made": "1.5.0",
   "about": "The four pieces of the hour-long night video (4 a.m. to 5 a.m.), in its order, as DUB-1 1.5 plays them (the video was 1.1.0's); Endless: change pieces by hand, as the video does."
+ },
+ {
+  "file": "the-pieces.dub1",
+  "name": "The Pieces",
+  "pieces": [
+   "Basic",
+   "Chamber",
+   "Steppers",
+   "Fog",
+   "Concrete",
+   "Night Drive",
+   "Pressure",
+   "Haze"
+  ],
+  "bytes": 4184,
+  "format": 37,
+  "made": "1.5.0",
+  "about": "DUB-1's own eight pieces, as a new FM-1 has them: load it to get the originals back (your pieces are replaced: back up first). Endless, as a new FM-1."
  }
 ]

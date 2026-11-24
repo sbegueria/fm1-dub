@@ -8,6 +8,8 @@
 # Song mode, Transition, the sirens' knobs and Tune. The scenarios are read only (tests/film).
 # (step 7) A set marked so gets its video's performer moves as cues: tools/cues_film.py runs the script (its film left
 # out) recording every move, compiles them into each piece's cues and writes them into the set (CUES chunks).
+# (the user, 2026-11-24) One set has no scenario: The Pieces, DUB-1's own eight as a fresh simulator (a new FM-1) has
+# them, so a player who loaded other sets over them gets the originals back.
 # Each set is then checked, in WORK (default build/sets-work; the heavy part: the renders):
 #   round trip  a fresh simulator loads the file as the FM-1 loads a set (`setin`) and writes its pieces out: each the
 #               same as the scenario's own (every value, the ping loops, the notes, the recipe, the name, the view),
@@ -34,13 +36,19 @@ ${CC:-cc} -O2 -ffp-contract=off -std=c99 -w -D_DEFAULT_SOURCE -DEN_HOST -DDUB1_C
 
 # one set: KEY FILE SCRIPT SLOTS "SET NAME" "PIECE|PIECE|.." [cues]
 #   SLOTS: the scenario's pieces (0..7), in the set's order; cues: the script's moves compiled into the set's cues
+#   SCRIPT "-": no scenario, a fresh simulator (the pieces, Mode, Transition, the sirens and Tune a new FM-1's)
 make() {
     key=$1 file=$2 script=$3 slots=$4 sname=$5 pnames=$6 withcues=${7:-}
     w="$WORK/$key"
     mkdir -p "$w"
     {
-        echo "# (made by tools/make_sets.sh) $sname from $script"
-        echo "include $script splash"
+        if [ "$script" = - ]; then       # (no scenario: a fresh simulator, its pieces as a new FM-1 boots with them)
+            echo "# (made by tools/make_sets.sh) $sname from a fresh FM-1"
+            echo "wait 600"
+        else
+            echo "# (made by tools/make_sets.sh) $sname from $script"
+            echo "include $script splash"
+        fi
         i=0
         echo "$slots" | tr ',' '\n' | while read -r s; do
             n=$(echo "$pnames" | cut -d'|' -f$((i + 1)))
@@ -163,6 +171,11 @@ make winter winter-set.dub1 tests/film/21-set.amb 3,4,5,6,7 "Winter Set" "Hoarfr
 # the first hour (4 a.m. to 5 a.m., tests/film/20-night.amb, 1.1.0's video): its four pieces in the night's order,
 # today's recipes (the film's own were 1.1.0's)
 make night four-to-five.dub1 tests/film/20-night.amb 5,6,3,7 "4 to 5 a.m." "Night Drive|Pressure|Fog|Haze"
+# (the user, 2026-11-24: "I have lost the original themes") DUB-1's own eight pieces, as a fresh FM-1 boots with them
+# (amb.c's PIECES, in their slots' order), each named as its recipe; Endless, Transition and the rest a new FM-1's.
+# Not one the FM-1 comes with (tools/gen_sets.py): loading it brings the originals back
+make pieces the-pieces.dub1 - 0,1,2,3,4,5,6,7 "The Pieces" \
+    "Basic|Chamber|Steppers|Fog|Concrete|Night Drive|Pressure|Haze"
 
 "$PY" - <<'EOF'
 import json, sys
@@ -174,6 +187,8 @@ SETS = [   # (file, what it is): the pages' list, in this order
                                                    # played by 1.5.0: not said)
     ("four-to-five.dub1", "The four pieces of the hour-long night video (4 a.m. to 5 a.m.), in its order, as DUB-1 1.5 "
                           "plays them (the video was 1.1.0's); Endless: change pieces by hand, as the video does."),
+    ("the-pieces.dub1", "DUB-1's own eight pieces, as a new FM-1 has them: load it to get the originals back (your "
+                        "pieces are replaced: back up first). Endless, as a new FM-1."),
 ]
 out = []
 for f, blurb in SETS:
