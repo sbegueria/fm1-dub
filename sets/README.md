@@ -1,8 +1,9 @@
 DUB-1 ready-made sets
 
 Sets for DUB-1 1.5 or later on the M-VAVE FM-1. A set is a .dub1 file of pieces to play together, each piece whole
-(its sound as it was made, and its name), with the set's own Mode, Transition, the sirens' knobs and Tune. The FM-1 comes with both sets below: DUB-1 1.5.0
-stores them at its first start, into the first empty set numbers (usually 1 and 2).
+(its sound as it was made, and its name), with the set's own Mode, Transition, the sirens' knobs and Tune. The FM-1 comes with the first two below: DUB-1
+1.5.0 stores them at its first start, into the first empty set numbers (usually 1 and 2). The third, The Pieces, brings
+back DUB-1's own eight pieces.
 
 How to use one:
 - Hear it first in the emulator, in the browser: https://sbegueria.github.io/fm1-dub/emu/ ("Hear a set": pick one
@@ -26,7 +27,11 @@ four-to-five.dub1   "4 to 5 a.m.", 4 pieces: Night Drive, Pressure, Fog, Haze
     1.5 plays them (the video was made with 1.1.0, whose recipes sounded different). Endless: each piece plays until
     you change it, as the video does about every fifteen minutes.
 
-How they were made: by DUB-1's host simulator from the scripts of the videos (tools/make_sets.sh, from
-tests/film/21-set.amb and tests/film/20-night.amb), so each piece is set as the video's script sets it. Each file
-was checked to load back the same, and the first 30 seconds of each piece to sound the same from the file as from the
-script. GPL-3.0, as DUB-1.
+the-pieces.dub1   "The Pieces", 8 pieces: Basic, Chamber, Steppers, Fog, Concrete, Night Drive, Pressure, Haze
+    DUB-1's own eight pieces, as a new FM-1 has them, in their order. Load it to get the originals back after other
+    sets have replaced them (it replaces all eight of your pieces: back up first). Endless, as a new FM-1.
+
+How they were made: by DUB-1's host simulator (tools/make_sets.sh): the first two from the scripts of the videos
+(tests/film/21-set.amb and tests/film/20-night.amb), so each piece is set as the video's script sets it; The Pieces
+from a fresh simulator, its pieces as a new FM-1 boots with them. Each file was checked to load back the same, and
+the first 30 seconds of each piece to sound the same from the file as from where it was made. GPL-3.0, as DUB-1.

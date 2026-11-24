@@ -217,7 +217,7 @@ on <http://127.0.0.1:8000/dub1_sets.html> and the emulator (`build/emu`, built f
 **Ready-made sets** (1.5.0, step 6). On the site, *Hear a set* also offers the ready-made sets (`sets/` in the repo,
 published beside the Sets page by `tools/make_pages.py` with their list, `sets.json`): one chosen is read as a file
 chosen is. Served alone (`build/emu`), there is no list and the choice stays hidden. The sets are made by
-`tools/make_sets.sh` from the videos' scripts (the host simulator's `include`, `setfile`; checked with `setin`, see
+`tools/make_sets.sh` from the videos' scripts (The Pieces from a fresh simulator) (the host simulator's `include`, `setfile`; checked with `setin`, see
 `sets/README.md`).
 
 **Its memory.** The emulator keeps what the firmware saves (the frame store's 272 KB: the pieces and the sets) in the

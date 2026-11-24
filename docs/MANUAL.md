@@ -1719,7 +1719,7 @@ Lights and Values stay yours. The FM-1 keeps **eight sets** besides your pieces,
 on a computer, sent to a friend or downloaded.
 
 The FM-1 comes with two sets: the first time 1.5.0 starts, it stores **Winter Set** and **4 to 5 a.m.** (the
-ready-made sets of the Sets page) into the first empty set numbers, usually sets 1 and 2 (the header says **2 SETS
+two of the Sets page's ready-made sets) into the first empty set numbers, usually sets 1 and 2 (the header says **2 SETS
 ADDED**), so you can load one at once from the Set page's **Load**. A set already there is never replaced, and this
 happens only once: a set you delete stays deleted (send it again from the Sets page if you want it back).
 
@@ -1790,9 +1790,12 @@ the page says *stop it first*. Listing, backing up and downloading work while it
 is refused ("update the FM-1 first"), and so is a damaged file; neither changes anything. While a set is coming in, a
 save waits (**NOT SAVED YET**) and happens by itself afterwards.
 
-**Ready-made sets.** The Sets page offers sets made from DUB-1's videos, to download or send: *Winter Set* (the
-five songs of the hour-long Winter Set video, in Set mode with Transition Mix: press PLAY and it plays the hour) and *4 to 5 a.m.* (the night video's four
-pieces, in its order, to change by hand). The FM-1 comes with both (above).
+**Ready-made sets.** The Sets page offers three sets to download or send. Two are made from DUB-1's videos:
+*Winter Set* (the five songs of the hour-long Winter Set video, in Set mode with Transition Mix: press PLAY and it
+plays the hour) and *4 to 5 a.m.* (the night video's four pieces, in its order, to change by hand); the FM-1 comes
+with both (above). The third, *The Pieces*, is DUB-1's own eight pieces (Basic, Chamber, Steppers, Fog, Concrete,
+Night Drive, Pressure, Haze) as a new FM-1 has them: loading it brings the originals back after other sets have
+replaced them (it replaces all eight of your pieces, so back up first).
 
 A set can be heard first in the [emulator](https://sbegueria.github.io/fm1-dub/emu/): *Hear a set*, under the FM-1,
 loads a `.dub1` file, or one of the ready-made sets, into its pieces the same way. For the command line, `tools/dub1_set.py` does the same as the page
