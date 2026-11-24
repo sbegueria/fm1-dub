@@ -1718,8 +1718,8 @@ left it, and its name), with the set's name and its own Mode (Endless, Song, Set
 Lights and Values stay yours. The FM-1 keeps **eight sets** besides your pieces, and a set's file (`.dub1`) can be kept
 on a computer, sent to a friend or downloaded.
 
-The FM-1 comes with two sets: the first time 1.5.0 starts, it stores **Winter Set** and **4 to 5 a.m.** (the
-two of the Sets page's ready-made sets) into the first empty set numbers, usually sets 1 and 2 (the header says **2 SETS
+The FM-1 comes with two sets: the first time 1.5.0 starts, it stores **Winter Set** and **4 to 5 a.m.** (two
+of the Sets page's ready-made sets) into the first empty set numbers, usually sets 1 and 2 (the header says **2 SETS
 ADDED**), so you can load one at once from the Set page's **Load**. A set already there is never replaced, and this
 happens only once: a set you delete stays deleted (send it again from the Sets page if you want it back).
 
