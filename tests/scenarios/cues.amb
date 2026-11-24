@@ -1,0 +1,298 @@
+# (1.5.0, step 7) The cue player: a piece's cues fire on the engine's bar and semicorchea (16th) clock with the calls
+# PERFORM's keys and knobs make (a mute, a solo, a throw held, an effect held, a siren, the DJ filter ridden, a knob
+# ridden), each on its step; a cue whose part ends first is dropped (a main's past the main, an outro's past the song);
+# you can play on top (a key, a knob); a Set's Mix reads the next piece's list at the hand-over and plays it from its
+# downbeat; the cues kept in WORK (a reboot); the Set page's Cues off: none played, said, saved.
+# (build: DUB1_CUES=1) the cues played: run on build/host/amb_host_cues (the release plays none: nocues.amb)
+listen
+wait 1500
+tap PLAY
+wait 300
+expect playing 0
+# Set mode, Transition Mix (the Set page: GLO twice); Cues on (KNOB 3), said with the page
+tap GLO
+wait 200
+tap GLO
+wait 400
+expect view 28
+said Cues On
+spin K1 2
+wait 300
+spin K2 2
+wait 300
+expect par158 2
+expect trans 2
+expect cuesoff 0
+# two short songs: Basic (no intro, Main 32 bars, Outro 16), then Chamber (Intro 16, Main 32, Outro 16)
+turn PRESET 1
+wait 600
+tap HOME
+wait 200
+tap HOME
+wait 300
+spin K1 -2
+spin K2 -16
+spin K3 -2
+wait 300
+turn PRESET -1
+wait 600
+spin K1 -4
+spin K2 -16
+spin K3 -2
+wait 300
+expect piece 0
+expect par15 >-1
+# Basic's cues (its main from bar 0): the DJ filter Shut 60 at once, then opened over 2 bars; a chord throw a bar; the
+# kick muted a bar; Freeze half a bar; Wail tapped; Motion ridden to 80 over 2 bars; the bass soloed a bar; the echo
+# pushed in the outro's 3rd bar; and two never heard: a main's at bar 40 (the main is 32), an outro's at its bar 20
+cue 0 m 0 0 macro 0 -30 0
+cue 0 m 2 0 macro 0 0 32
+cue 0 m 4 0 move 0 0 16
+cue 0 m 6 0 mute 3 1 0
+cue 0 m 7 0 mute 3 0 0
+cue 0 m 8 0 fx 10 0 8
+cue 0 m 9 4 siren 0 0 0
+cue 0 m 10 0 knob 15 80 32
+cue 0 m 13 0 solo 2 1 0
+cue 0 m 14 0 solo 2 0 0
+cue 0 m 40 0 move 1 0 16
+cue 0 o 2 0 move 4 0 16
+cue 0 o 20 0 mute 0 1 0
+# Chamber's: the noise muted from its downbeat, back with its main; and 62 more (dub hold off, from its main's bar 20:
+# nothing to hear), a list of 64, the most a piece has, to read at the hand-over while it plays
+cue 1 i 0 0 mute 5 1 0
+cue 1 m 0 0 mute 5 0 0
+cue 1 m 20 0 hold 0 0 0
+cue 1 m 20 4 hold 0 0 0
+cue 1 m 20 8 hold 0 0 0
+cue 1 m 20 12 hold 0 0 0
+cue 1 m 21 0 hold 0 0 0
+cue 1 m 21 4 hold 0 0 0
+cue 1 m 21 8 hold 0 0 0
+cue 1 m 21 12 hold 0 0 0
+cue 1 m 22 0 hold 0 0 0
+cue 1 m 22 4 hold 0 0 0
+cue 1 m 22 8 hold 0 0 0
+cue 1 m 22 12 hold 0 0 0
+cue 1 m 23 0 hold 0 0 0
+cue 1 m 23 4 hold 0 0 0
+cue 1 m 23 8 hold 0 0 0
+cue 1 m 23 12 hold 0 0 0
+cue 1 m 24 0 hold 0 0 0
+cue 1 m 24 4 hold 0 0 0
+cue 1 m 24 8 hold 0 0 0
+cue 1 m 24 12 hold 0 0 0
+cue 1 m 25 0 hold 0 0 0
+cue 1 m 25 4 hold 0 0 0
+cue 1 m 25 8 hold 0 0 0
+cue 1 m 25 12 hold 0 0 0
+cue 1 m 26 0 hold 0 0 0
+cue 1 m 26 4 hold 0 0 0
+cue 1 m 26 8 hold 0 0 0
+cue 1 m 26 12 hold 0 0 0
+cue 1 m 27 0 hold 0 0 0
+cue 1 m 27 4 hold 0 0 0
+cue 1 m 27 8 hold 0 0 0
+cue 1 m 27 12 hold 0 0 0
+cue 1 m 28 0 hold 0 0 0
+cue 1 m 28 4 hold 0 0 0
+cue 1 m 28 8 hold 0 0 0
+cue 1 m 28 12 hold 0 0 0
+cue 1 m 29 0 hold 0 0 0
+cue 1 m 29 4 hold 0 0 0
+cue 1 m 29 8 hold 0 0 0
+cue 1 m 29 12 hold 0 0 0
+cue 1 m 30 0 hold 0 0 0
+cue 1 m 30 4 hold 0 0 0
+cue 1 m 30 8 hold 0 0 0
+cue 1 m 30 12 hold 0 0 0
+cue 1 m 31 0 hold 0 0 0
+cue 1 m 31 4 hold 0 0 0
+cue 1 m 31 8 hold 0 0 0
+cue 1 m 31 12 hold 0 0 0
+cue 1 m 32 0 hold 0 0 0
+cue 1 m 32 4 hold 0 0 0
+cue 1 m 32 8 hold 0 0 0
+cue 1 m 32 12 hold 0 0 0
+cue 1 m 33 0 hold 0 0 0
+cue 1 m 33 4 hold 0 0 0
+cue 1 m 33 8 hold 0 0 0
+cue 1 m 33 12 hold 0 0 0
+cue 1 m 34 0 hold 0 0 0
+cue 1 m 34 4 hold 0 0 0
+cue 1 m 34 8 hold 0 0 0
+cue 1 m 34 12 hold 0 0 0
+cue 1 m 35 0 hold 0 0 0
+cue 1 m 35 4 hold 0 0 0
+cuesave
+expect slotcues0 13
+expect slotcues1 64
+cuelist 0
+# mutated containers of this project, its cue lists' bytes among them: never a fault (container-asan), none read with
+# its CRC not mended, every one read valid; written as WORK's newest and booted: taken whole or the version before
+fuzz 20000
+fuzzboot 300
+expect slotcues0 13
+# (a reboot: the cues are WORK's, in its frame)
+reboot
+wait 1500
+tap PLAY
+wait 300
+expect playing 0
+expect slotcues0 13
+expect slotcues1 64
+expect piece 0
+expect cuen 13
+expect cuelive 0
+tap SEL
+wait 300
+expect view 17
+tap PLAY
+wait 100
+expect playing 1
+expect cuelive 1
+expect mac0 -30
+expect cuedone 3
+# the filter's ride: its first step at once, Off by bar 4
+bar 2
+wait 30
+expect mac0 >-30
+expect mac0 <-27
+bar 3
+wait 30
+expect mac0 >-18
+expect mac0 <-12
+bar 4
+wait 30
+expect mac0 0
+expect cuemoves 1
+bar 5
+wait 30
+expect cuemoves 0
+# the kick muted a bar by a cue; played on top: its key taps it back on, the cue's unmute changes nothing then
+bar 6
+wait 30
+expect mutes 8
+tapkey w3
+expect mutes 0
+bar 7
+wait 30
+expect mutes 0
+bar 8
+wait 30
+expect cuefx 1024
+wait 900
+expect cuefx 1024
+wait 200
+expect cuefx 0
+# Wail tapped on bar 9's 5th semicorchea (16th), not before
+bar 9
+wait 30
+expect sirenon 0
+wait 600
+expect sirenon 1
+# Motion ridden by the engine only: the piece's own value stays (nothing to save)
+bar 10
+wait 30
+expect epar15 !=80
+bar 12
+wait 30
+expect epar15 80
+expect dirty 0
+bar 13
+wait 30
+expect solo 4
+bar 14
+wait 30
+expect solo 0
+# the main's bar 40 dropped once the outro is planned (bar 32): never fired
+bar 33
+expect cuemoves 0
+bar 34
+wait 30
+expect song 3
+expect cuemoves 16
+bar 35
+wait 30
+expect cuemoves 0
+# the hand-over (Mix): Chamber set at the outro's last bar, its list read then, none of it till its downbeat
+irqreset
+bar 47
+wait 1500
+expect trcue 1
+expect piece 1
+expect cuen 64
+# (read while it plays: 512 bytes, 64 at a time, each an IRQ-off window of ~0.1 ms: no xrun, none as long as a page)
+expect flashxruns 0
+expect irqlong 0
+expect irqmax <2
+expect mutes 0
+wait 1000
+expect trcue 0
+expect song 1
+expect mutes 32
+# (Basic's outro bar 20 never came: Basic's run over, 13 of 13 done or dropped, its Motion the piece's again)
+expect epar15 !=80
+bar 16
+wait 30
+expect mutes 0
+wait 200
+expect song 2
+expect mutes 0
+# stopped; the Set page's Cues off (said, saved): Basic again, none of its cues
+tap PLAY
+wait 500
+expect playing 0
+expect cuelive 0
+turn PRESET -1
+wait 600
+expect piece 0
+tap GLO
+wait 200
+tap GLO
+wait 400
+expect view 28
+spin K3 -1
+wait 300
+said Cues Off
+expect cuesoff 1
+press GLO
+wait 700
+release GLO
+wait 500
+expect dirty 0
+reboot
+wait 1500
+tap PLAY
+wait 300
+expect cuesoff 1
+expect slotcues0 13
+tap PLAY
+wait 100
+expect playing 1
+expect cuelive 0
+expect mac0 0
+bar 6
+wait 30
+expect mutes 0
+bar 8
+wait 30
+expect cuefx 0
+# on again mid-song: the cues ahead play, those past don't (the throw at bar 4, the mute at bar 6 left)
+tap GLO
+wait 200
+tap GLO
+wait 400
+spin K3 1
+wait 300
+expect cuesoff 0
+expect cuelive 1
+expect cuedone 8
+bar 13
+wait 30
+expect solo 4
+tap PLAY
+wait 300
+expect cuelive 0
+# (Decisions 7) the solo a cue made undone at the stop
+expect solo 0

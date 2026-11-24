@@ -11,7 +11,7 @@ wait 200
 tap GLO
 wait 400
 expect view 28
-said Song mode page: Mode Endless
+said Set page, the pieces, playing 1 of 8, Basic: Mode Endless
 spin K1 1
 wait 300
 said Mode Song
@@ -117,7 +117,7 @@ release GLO
 wait 300
 reboot
 wait 1000
-expect format 36
+expect format 37
 expect par158 2
 expect piece 6
 expect par160 4

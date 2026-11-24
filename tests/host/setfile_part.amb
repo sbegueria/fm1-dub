@@ -1,0 +1,8 @@
+# (step 6) a scenario's setup and its film, as tests/film's are: tests/scenarios/setfile.amb includes it up to its
+# "splash" (its film's first command, not run), as tools/make_sets.sh includes the videos' scripts
+slotrecipe 2 7
+name 2 Dawn
+spin K2 5
+splash 0
+# (never run: include stops at "splash")
+expect piece 7

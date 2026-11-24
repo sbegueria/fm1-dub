@@ -41,9 +41,11 @@ class Amb extends AudioWorkletProcessor {
       this.ex = instance.exports;
       this.mem = this.ex.memory;
       if (this.ex._initialize) this.ex._initialize();
-      const max = this.ex.web_store_max();
+      const max = this.ex.web_store_max();          // (1.5.0: each object its own, the frame store's region 272 KB)
+      const cap = (o) => (this.ex.web_store_cap ? this.ex.web_store_cap(o) : max);
       for (const [obj, bytes] of Object.entries(m.store || {})) {
-        const b = new Uint8Array(bytes).subarray(0, max);
+        const b = new Uint8Array(bytes).subarray(0, cap(+obj));
+        if (!this.ex.web_store(+obj)) continue;
         new Uint8Array(this.mem.buffer, this.ex.web_store(+obj), b.length).set(b);
         this.ex.web_store_set_len(+obj, b.length);
       }
@@ -67,6 +69,14 @@ class Amb extends AudioWorkletProcessor {
       this.reader = !!m.on;
       this.sysex(this.reader ? RD_HELLO : RD_BYE);
       this.lastHello = currentTime;
+    } else if (m.type === "setload") {              // (1.5.0) a set to hear: into the slots, as the FM-1 loads one
+      const b = new Uint8Array(m.bytes);
+      let rc = -1;
+      if (this.ex.web_set_load && b.length <= 16128) {
+        new Uint8Array(this.mem.buffer, this.ex.web_set_buf(), b.length).set(b);
+        rc = this.ex.web_set_load(b.length);
+      }
+      this.port.postMessage({ type: "setloaded", rc });
     } else if (m.type === "where") {                // say the whole screen
       if (this.reader) this.sysex(RD_WHERE);
     }

@@ -1,0 +1,98 @@
+# (1.5.0, step 7) a short film script, as tests/film's are written (`bar N` and the keys and knobs), for
+# tests/host/cues_film_test.sh: two short songs in Set mode with a Mix, a ghost performer's moves in each (the DJ filter
+# shut and ridden open, a chord throw, the kick muted a bar, Wail held, Whoop tapped, Freeze, Motion turned, Echo pushed
+# in the outro; in the second, the bass soloed, Shut held), and one move after the music has stopped.
+# Not a scenario of its own (tests/scenarios): cues_film.py runs it, compiles its moves into the set made from it.
+wait 1500
+tap PLAY
+wait 300
+expect playing 0
+tap GLO
+wait 200
+tap GLO
+wait 400
+spin K1 2
+wait 300
+spin K2 2
+wait 300
+expect par158 2
+expect trans 2
+# the last two pieces, so the set ends after them as the set file made of them will: Pressure, then Haze (each no
+# intro, Main 32, Outro 16)
+turn PRESET 7
+wait 600
+expect piece 7
+tap HOME
+wait 200
+tap HOME
+wait 300
+spin K1 -4
+spin K2 -16
+spin K3 -2
+wait 300
+turn PRESET -1
+wait 600
+expect piece 6
+spin K1 -4
+spin K2 -16
+spin K3 -2
+wait 300
+tap HOME
+wait 300
+tap HOME
+wait 300
+expect view 0
+expect piece 6
+# ---------------------------------------------------------------------------------------- the film ---
+splash 0
+film cues_film.film
+bar 0 PRESSURE: the set starts
+splashrun
+spin SELECT -20
+wait 200
+expect playing 1
+bar 2 the DJ filter opened over about two bars
+turn SELECT 20 200
+bar 4 a chord throw, 2 bars
+tap SEL
+key b0 down
+bar 6 let go
+key b0 up
+bar 8 the kick muted a bar
+tapkey w3
+bar 9 back
+tapkey w3
+bar 10 Wail held 2 bars
+key b7 down
+bar 12 let go
+key b7 up
+bar 13 Whoop tapped
+tapkey b8
+bar 14 Freeze, a bar
+key w13 down
+bar 15 let go
+key w13 up
+bar 16 Motion up 10 (KNOB 3, the Form page), slowly
+tap HOME
+turn K3 10 300
+bar 34 the outro: Echo pushed, 2 bars
+tap SEL
+key w11 down
+bar 36 let go
+key w11 up
+bar 47 the last bar
+wait 2600
+expect piece 7
+bar 2 HAZE: the bass soloed, 2 bars
+tapkey b2
+bar 4 the solo off
+tapkey b2
+bar 20 Shut, 2 bars
+key w9 down
+bar 22 let go
+key w9 up
+bar 47 the last bar (then it rests, the tails ringing)
+wait 12000
+expect playing 0
+tapkey w5
+filmstop

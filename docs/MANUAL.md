@@ -47,22 +47,53 @@ same code the FM-1 runs, with sound.
 (they have Web MIDI), connect the FM-1 with a USB data cable, switch it on and press Install. Nothing
 to install on the computer. Don't unplug it while it's writing; when it finishes, the FM-1 restarts
 into DUB-1.
+*Check this FM-1*, on the same page, says what the FM-1 runs before you install: an older DUB-1 (nothing to back
+up: the update keeps its pieces), DUB-1 1.5 or later with its full version (and whether it's a test build or the
+release) and a link to the Sets page to back it up first, or another firmware.
 
-**Or from the command line:** download `dub-1.4.4.fwsc` from the
+**Or from the command line:** download `dub-1.5.0.fwsc` from the
 [releases](https://github.com/sbegueria/fm1-dub/releases), install Python 3 with
 `pip3 install mido python-rtmidi`, and run, in a checkout of the source:
 
 ```
-python3 tools/fm1_install.py dub-1.4.4.fwsc
+python3 tools/fm1_install.py dub-1.5.0.fwsc
 ```
 
+**Before you install:** plug the FM-1 straight into the computer, not through a USB hub, and keep it
+switched on (charged, or on USB power) until the install has finished. Both installs that stalled so far
+went through a hub or a flaky connection.
+
+**If the install stalls:** while writing, the FM-1 asks the computer for the firmware piece by piece. If it
+stops asking, or drops off USB, the installer doesn't give up at once: it says *the FM-1 stopped answering;
+waiting for it*, sends its last answer again, and if the FM-1 comes back within about 30 seconds (on the
+same cable, or after you replug it), the write starts again. What is already written is only checked, not
+written twice. It tries this up to three times. If the FM-1 doesn't come back:
+
+1. Unplug the USB cable and plug it straight into the computer. Leave the FM-1 switched on.
+2. Install again: if the FM-1 is still in update mode (its screen blank), the install finishes the write.
+3. If the FM-1 isn't found at all and its screen stays blank, it may have dropped into the chip's own
+   download mode, which no installer reaches: see
+   [Recovering an FM-1 that won't start](#recovering-an-fm-1-that-won-t-start), then install again.
+
+**A cut-off write** (from 1.5.0's package on): if the FM-1 restarts or is switched off before the write ends, it
+doesn't start the half-written firmware. Switched on again, it comes back in update mode (its screen blank), and the
+install goes on: by itself if the installer is still waiting for it, else when you install again. What is already
+written is kept. (Older packages could start the half-written firmware instead and end up in the chip's download
+mode: see above.)
+
+**The install's log:** `fm1_install.py` writes a log of each install (each request and its timing, the
+pauses, how it ended) to the `fm1-install-logs` folder in your home folder, and says where at the end.
+The web installer keeps the same log in the page: after a failed install, *Copy the log* copies it. If
+you report a problem with an install, include it.
+
 **Go back:** the installer page's "Back to the stock firmware", or M-VAVE's own updater, M-UPGRADE,
-puts the stock firmware back.
+puts the stock firmware back. To go back to an older DUB-1, install its `.fwsc` from the releases the same way (see
+[Older saves](#older-saves) for what it finds).
 
 **FM-1s with the newer flash chip** (the UC25HQ80, on units sold since autumn 2026): DUB-1 saves on
 them from 1.4.4. On 1.4.3 they showed "NOT SAVED · FLASH ERROR" and refused another install over
-DUB-1. To get such a unit onto 1.4.4, use [M-Flasher](https://github.com/jvitkauskas/m-flasher):
-`download-mode`, then `firmware dub-1.4.4.fwsc` (it backs up first and keeps the bootloader).
+DUB-1. To get such a unit off 1.4.3, use [M-Flasher](https://github.com/jvitkauskas/m-flasher):
+`download-mode`, then `firmware dub-1.5.0.fwsc` (it backs up first and keeps the bootloader).
 
 > Installing other firmware is at your own risk. If the FM-1 ever won't start, see
 > [Recovering an FM-1 that won't start](#recovering-an-fm-1-that-won-t-start).
@@ -95,7 +126,7 @@ DUB-1 starts playing as soon as it's on. A few minutes with it:
 7. **Rest.** Press PLAY: the music stops and the echo and reverb ring away. PLAY again and it
    starts from the top of a phrase.
 
-What you change is kept with the piece. DUB-1 saves it by itself while resting, or hold GLO for half a second (or turn Setup's KNOB 4).
+What you change is kept with the piece. DUB-1 saves it by itself while resting, or hold GLO for half a second.
 
 Want a new colour? Hold a layer's button (ENV, ARP, LFO or SEQ) for half a second: its sound takes a small step somewhere new.
 
@@ -118,17 +149,17 @@ page, the dub desk); here they are in more detail.
 | SEL | A tap: the **Arrangement page** (PERFORM's until 1.4.0): the screen shows each part's level on a desk's meters, the knobs are Width, Wet and Duck (KNOB 2 free: the dub mixer's rides are the Form page's Drift, its moves Motion's), and the keys stop being the scale: they mute and solo the parts (white 1–6 held: a part's channel strip; a black key held: that part thrown into the echo), make the dub moves, play four of the grid's effects and the dub sirens (see below). Again, it stays; a page's button leaves it (SELECT stays the DJ filter here too). Lit while on. **Held** (half a second), on any page: **Lock** on or off (below). |
 | HOME | The **Form** page (Dub until 1.4.0): how the piece unfolds (Energy, Vary, Motion, Drift). Again: the **Song** page (its intro, main and outro, 1.4.0); again: the Key page (tempo, root, mode, swing), and again back to Form; HOME blinks on the Key page. Held on for 1.5 s (nothing turned meanwhile): **a shake of everything**, the chord, the pings, the bass, the drums and the noise at once ("SHAKE ALL"), the page kept; again and again, to explore until something sounds right. Held with SELECT turned: the tempo. |
 | ENV · ARP · LFO · SEQ | The layers' pages: Chord, Pings, Bass, Drums, each its part (see [The pages](#8-the-pages)). Again: the layer's voice page (**Chord voice**, **Pings voice**, **Bass voice**; the drums' **Kick**), then its FM page or, for the drums, the **Hats** page and then the Pattern page, then back. The chord has two more: between its voice page and its FM page, the **Chord filter** page (Cutoff, Reso, Env, Env decay), and after its FM page (for every chord voice: its Colour is there, and on the voice page), the **Chord LFO** page, then back. Held (half a second): a **nudge** to the layer's sound; held on (1.5 s): a **shake** (below). |
-| FX · GLO | The **Dub** page, the echo and the plate (Space until 1.4.0; FX again: the **Echo page**, the echo's blur and tone, the plate's size and its cloud, FX blinking; again, back); the Setup page, for what holds for every piece (GLO again: **Song mode**, Endless, Song or Set, and a set's Transition, LP, Segue or Mix; again, back). The lit button shows the page. FX held: a nudge to the space; held on: a shake (a new echo time). **GLO held** (half a second, then let go): **saves** all eight pieces (a card, SAVED); held on (1.5 s): the piece back to its recipe (a red card, RESET). |
+| FX · GLO | The **Dub** page, the echo and the plate (Space until 1.4.0; FX again: the **Echo page**, the echo's blur and tone, the plate's size and its cloud, FX blinking; again, back); the Setup page, for what holds for every piece (Tune, MIDI out, Lights, Values; GLO again: the **Set** page, the eight pieces by name, and the Mode, Endless, Song or Set, a set's Transition, LP, Segue or Mix, **Store**, your pieces kept as a stored set from the FM-1 itself, and **Load**, a stored set loaded from the FM-1 itself; again, back). The lit button shows the page. FX held: a nudge to the space; held on: a shake (a new echo time). **GLO held** (half a second, then let go): **saves** all eight pieces (a card, SAVED); held on (1.5 s): the piece back to its recipe (a red card, RESET). |
 | SELECT | **The DJ filter**, on every page (its only place since 1.4.0's Chord pages; the Arrangement page's Open and Shut keys push on top of it): left shuts it (a low-pass, under water), right opens it (a high-pass, thin and bright), Off in the middle, where it stops on its way through (three clicks to leave it). While it turns, a big ring in the middle shows it (FILTER over it, the amount inside, Shut or Open under it); the page stays. Hold HOME and turn it for the tempo, from any page. The pages are on their buttons; the page's name, on the rule above the knobs, says where you are. |
 | ALGORITHM | On a layer's page (Chord, Pings, Bass, Drums): that layer's **voice** (see [The voices](#the-voices)). On the Noise pages: its character. On the LFO pages: where the LFO goes, its **Target**, as their KNOB 4 (the Chord LFO's: Cutoff, Reso, Colour; the Noise LFO's: Filter, Tone, Air). On the Chords page: the walk's character (Home, Wander, Free). Anywhere else: the middle of the screen: ripples, a scope, a spectrum or the tape (see [The screen](#4-the-screen)). The mode, a piece's choice, is on the Key page (HOME again). |
 | PRESETS | The piece (see [The pieces](#7-the-pieces)). |
-| KNOB 1–4 | The four values on the screen. A few clicks are always single steps; a quick turn speeds up, so half a turn sweeps the range. While a knob turns, its value shows large in the middle of the screen, in a big ring with its name and what it does under it, on a panel that darkens what's behind it (on the Chords and Pattern pages, which show the change themselves, there's no big ring). Under the page, each knob is its name and one of three pictures, drawn for what it is: **a ring** for an amount (its **number** inside it only for a moment when the page opens, 1.5 s, then it fades; and in the big ring while it turns); **a ring with its unit inside** for an amount that has one (the strip's Filter "LP 2.6k", the song's bars, the Feedback's seconds; shortened to the figure where it's long); or, for a **choice** (a few positions, or named values: a voice, Wander, Four, 64 bars, Sine, the Root, the Mode), **the word itself, large**, with a dot for each option under it, the chosen one lit (a thin bar with its place past twelve). To see the numbers always, the Song mode page's KNOB 4 (GLO again), **Values: Always** (they show inside the rings). A knob with **zones** (Motion, the Drums page's Hits, the Bass page's Density) has its ring in segments, a gap where each zone begins; while it turns, the big ring names the zone and says what it adds. A **centred** knob (0 in the middle: the voice pages' −50…+50 ones, the chord's Cutoff, the Noise voice's Tone, the Filter, the Form page's Energy and the Arrangement page's Wet) has a **notch** at 0: turning through, it stops there, and to leave it takes three clicks the same way, each within 3 s of the last (the first two are held back: a slow turn, a click a second, leaves it; a stray click doesn't). A grey knob does nothing there. |
+| KNOB 1–4 | The four values on the screen. A few clicks are always single steps; a quick turn speeds up, so half a turn sweeps the range. While a knob turns, its value shows large in the middle of the screen, in a big ring with its name and what it does under it, on a panel that darkens what's behind it (on the Chords and Pattern pages, which show the change themselves, there's no big ring). Under the page, each knob is its name and one of three pictures, drawn for what it is: **a ring** for an amount (its **number** inside it only for a moment when the page opens, 1.5 s, then it fades; and in the big ring while it turns); **a ring with its unit inside** for an amount that has one (the strip's Filter "LP 2.6k", the song's bars, the Feedback's seconds; shortened to the figure where it's long); or, for a **choice** (a few positions, or named values: a voice, Wander, Four, 64 bars, Sine, the Root, the Mode), **the word itself, large**, with a dot for each option under it, the chosen one lit (a thin bar with its place past twelve). To see the numbers always, Setup's KNOB 4 (GLO), **Values: Always** (they show inside the rings). A knob with **zones** (Motion, the Drums page's Hits, the Bass page's Density) has its ring in segments, a gap where each zone begins; while it turns, the big ring names the zone and says what it adds. A **centred** knob (0 in the middle: the voice pages' −50…+50 ones, the chord's Cutoff, the Noise voice's Tone, the Filter, the Form page's Energy and the Arrangement page's Wet) has a **notch** at 0: turning through, it stops there, and to leave it takes three clicks the same way, each within 3 s of the last (the first two are held back: a slow turn, a click a second, leaves it; a stray click doesn't). A grey knob does nothing there. |
 | OCT− / OCT+ | On a layer's page (Chord, Pings, Bass, Drums or Noise, and their voice, FM, Hats and Pattern pages, and the Noise pages): that layer's **level**, 5 down or up a press (a big ring in the middle, in the layer's colour, BASS over it, the level inside, until a second after the last press); held, it keeps going. **Both together**, let go within a second: the layer **muted** ("BASS MUTED"), its level kept; again, back ("BASS ON"). The drums mute the kick and the hats together. These are the Arrangement page's mutes (white 1–6): a mute made here shows there, and the other way round. Held together for five seconds: the update mode (see [Troubleshooting](#11-troubleshooting)); a long press never mutes. On the other pages they do nothing. (The pings' octave is on the Pings voice page, KNOB 1.) |
 | MASTER | Volume. |
 | SAVE | The **Noise page** (below: its part); again, the **Noise voice** (its Air, Tone, Decay and Width; SAVE blinks); again, **Noise LFO** (its wave and wander, as much as Drift says, on its filter, its Tone or its Air); again, back to the Noise page. (Its sends are its channel strip's, on the Arrangement page.) Held: a nudge to the noise; held on (1.5 s): a shake (another noise character). Saving is on GLO. |
 
 **One rule for the buttons:** a button with one page stays on it when you press it again
-(SEL); a button with several steps through them (HOME: Form, Song, Key; EDIT: Chords, Walk; GLO: Setup, Song mode; FX: Dub, Echo; SAVE: Noise,
+(SEL); a button with several steps through them (HOME: Form, Song, Key; EDIT: Chords, Walk; GLO: Setup, Set; FX: Dub, Echo; SAVE: Noise,
 Noise voice, Noise LFO; a layer's: its page, its voice page, its FM page; the drums': Drums, Kick, Hats,
 Pattern; the chord's, Chord, Chord voice, Chord filter, Chord FM and Chord LFO). To leave a page, press
 another page's button.
@@ -495,7 +526,8 @@ GLO held on, RESET (red); SEL held, LOCK.
     **!** for a second when the master clips (the output at full scale: the Arrangement page's meters
     show where; it is not Setup's grey "!n", the audio's dropouts, beside the CPU's load); the battery
     when it is low (under a fifth) or charging on USB (its bars filling in turn), and always on Setup,
-    with its charge.
+    with its charge. (1.5.0) A long piece name takes the battery's place while it shows, except when the battery is
+    low: then the battery stays and the name is cut short with "…".
   - **The tempo** isn't there any more: it lives on the Key page, and the big ring shows it while HOME
     held and SELECT turn it.
   - **In a song,** a line along the header's bottom edge is the whole song, each part in its own hue: the
@@ -797,11 +829,12 @@ marks the B bars (dots 4 and 8, brighter) and blinks dot 8 when the next phrase 
 
 ![A song's intro on the Form page: INTRO in the header, and along its bottom edge the song's line, the intro teal, its tip near the start](img/screen-song-intro.png "A song's intro")
 
-DUB-1 plays for ever, starting full, as it always has: that's **Endless**, the Song mode it starts in.
-Set **Song** (GLO again, the Song mode page) and a piece becomes a song: PLAY starts its **intro**, the
+DUB-1 plays for ever, starting full, as it always has: that's **Endless**, the Mode it starts in.
+Set **Song** (GLO again, the Set page's Mode) and a piece becomes a song: PLAY starts its **intro**, the
 parts coming in one by one; then the **main**, the piece as Endless plays it; then the **outro**, the
 parts leaving; then silence, the last echoes ringing out, and PLAY goes off by itself. **Set** plays
-the same, then the next piece, from the piece you're on to the last (Haze); after it, DUB-1 rests.
+the same, then the next piece, from the piece you're on to the last (Haze, or a loaded set's last piece: see
+[Sets](#sets)); after it, DUB-1 rests.
 How one piece hands over to the next is the set's **Transition** (on the same page, KNOB 2):
 
 - **LP** (as an album): each song ends, PLAY goes off, the tails ring out, and the next piece starts
@@ -833,7 +866,7 @@ How one piece hands over to the next is the set's **Transition** (on the same pa
 
 In all three the old piece's notes end cleanly (MIDI out gets an All Notes Off at the change). The
 tape view's TIME starts again with each piece, as its song line does. PLAY stops a set by hand,
-also while a Segue or a Mix hands over. Song mode and Transition are the player's, as Tune: the
+also while a Segue or a Mix hands over. The Mode and the Transition are the player's, as Tune: the
 same for every piece, and saved.
 
 How long each part is, and how the intro goes, is the piece's own, on the Song page (HOME again):
@@ -870,7 +903,7 @@ into the held echo at the end.
 
 The knobs work as ever during a song: what you turn is kept, and the song's moves are around it (each
 part's fader, the filter's and the echo's offsets), never on its values. Turning Main as it plays moves
-the outro (if it's already past it, to the next phrase); turning the Song mode to Endless lets the song
+the outro (if it's already past it, to the next phrase); turning the Mode to Endless lets the song
 go, the parts back in, playing on. A song's lengths with the defaults (32, 160 and 32 bars) make
 about 7 minutes at 122 BPM, the intro and the outro about 29% of it (the records' run from 3% to 37%).
 
@@ -881,7 +914,7 @@ about 7 minutes at 122 BPM, the intro and the outro about 29% of it (the records
 PRESETS chooses one of eight pieces. Each is a recipe for the whole machine: the layers, the
 sounds, tempo, key and mode, the groove, the space, how busy it is and how far it moves. Each
 remembers how you left it. Hold GLO for 1.5 s to put the piece you're on back to its recipe.
-Tune, MIDI out, Lights, the Song mode, a set's Transition, Values and the dub sirens' knobs are the same for all.
+Tune, MIDI out, Lights, Values, the Mode (Endless, Song, Set), a set's Transition and the dub sirens' knobs are the same for all.
 
 | Piece | What it is |
 |---|---|
@@ -1176,7 +1209,7 @@ spectrum or tape (see [The screen](#4-the-screen)). **HOME** again: the Song pag
 ![The Song page: INTRO 32 bars, MAIN 160 bars, OUTRO 32 bars, KIND Pulse; the song's shape in the middle, a row a part from where it comes in to where it leaves](img/screen-song.png "The Song page")
 
 The piece's song (1.4.0): how long its intro, its main and its outro are, and which parts come first
-(see [Songs](#songs-an-intro-the-main-an-outro)). It plays when the Song mode (GLO again) is Song or
+(see [Songs](#songs-an-intro-the-main-an-outro)). It plays when the Mode (the Set page, GLO again) is Song or
 Set; in Endless the page shows the song it would be, dimmed. HOME again goes to the Key page.
 
 - **Intro:** 0 to 128 bars, a phrase (8 bars) a click; None: the song starts full.
@@ -1521,17 +1554,21 @@ space pages (SEL).
 
 ### GLO: Setup
 
-![The Setup page: CLOCK, the clock's registers, BUILD, PEAK and MEAN over the picture; CPU at the header's right; TUNE 0, MIDI OUT On, LIGHTS On, SAVE](img/screen-setup.png "The Setup page")
+![The Setup page: CLOCK, the clock's registers, BUILD, PEAK and MEAN over the picture; CPU at the header's right; TUNE 0, MIDI OUT On, LIGHTS On, VALUES Peek](img/screen-setup.png "The Setup page")
 
 What holds for every piece and the whole machine (the root is the piece's: on the Key page). GLO
-again: the Song mode page (below).
+again: the Set page (below).
 
 - **Tune:** fine tuning, ±50 cents.
 - **MIDI out:** on or off.
 - **Lights:** On: the keys light the scale, and the unlit buttons glow dimly so they can be read
   on the black FM-1. Keys: the key lights only. Off.
-- **Save:** a turn saves all eight pieces. It shows **Save**, its dot lit, while there are unsaved
-  changes, and **Saved** after. (GLO held does the same.)
+- **Values** (KNOB 4, 1.4.0; the Set page's until 1.5.0): **Peek** (a knob's number shown a moment as its page opens,
+  then only its ring; the number in the big ring while it turns) or **Always** (the numbers inside the rings). The same
+  for every piece, saved.
+
+To save all eight pieces now, hold GLO for half a second (Setup's KNOB 4 was **Save** until 1.5.0); the small disk at
+the header's right shows there are unsaved changes.
 
 On this page the header's right shows the machine. **CPU 35/61** is how much of
 the FM-1's time the sound takes: 35% now (smoothed), and 61% at the heaviest moment of the last
@@ -1554,12 +1591,20 @@ Over the middle of the screen, on a dark panel, the machine in figures (1.4.0, f
   CTL, FAD and EVT the engine's own work: its commands, its slow controls, the faders and LFOs, the
   steps' events).
 
-### GLO again: Song mode
+### GLO again: Set
 
-![The Song mode page: MODE Set, TRANSITION Mix, VALUES Peek; the song's shape in the middle](img/screen-song-mode.png "The Song mode page")
+![The Set page: SET 2/2 and WINTER SET on its line; the eight pieces in two columns, Black Ice lit (playing), an arrow at Snowfield (next), Night Drive, Pressure and Haze dimmed (past the set's end); MODE Set, TRANSITION Mix, STORE Set 1, LOAD 2 sets (both grey: it is playing)](img/screen-set.png "The Set page")
 
-How DUB-1 plays a piece (1.4.0; see [Songs](#songs-an-intro-the-main-an-outro)): the player's, the
-same for every piece, and saved. GLO again goes back to Setup.
+(1.5.0; Song mode until then) The set you're playing, and how DUB-1 plays a piece (see
+[Songs](#songs-an-intro-the-main-an-outro)): the player's, the same for every piece, and saved. GLO again goes back to
+Setup.
+
+On the page's line, **SET** and the loaded set's name ([Sets](#sets)): **SET 2/2 · WINTER SET**; before any set was
+loaded, **THE PIECES**. In the middle, the eight pieces by name, 1 to 4 and 5 to 8 in two columns: the one playing
+(or chosen, resting) lit; in Set mode an arrow at the one that comes next; the pieces after a set's last (a set of
+five: 6 to 8, which Set mode doesn't reach) dimmed. The song's shape is on the [Song page](#home-again-song) (HOME
+again). The screen reader says the page so: "Set page, Winter Set, playing 2 of 5, Black Ice, next Snowfield", then
+the knobs.
 
 - **Mode** (KNOB 1): **Endless** (as ever: it starts full and plays on), **Song** (PLAY: an intro, the main,
   an outro, then silence, PLAY off), **Set** (the same, then the next piece from its intro, to the
@@ -1572,10 +1617,34 @@ same for every piece, and saved. GLO again goes back to Setup.
   downbeat under the old echo). See [Songs](#songs-an-intro-the-main-an-outro). Only in Set mode:
   in Endless and Song it's grey, and a turn only says so (its setting kept). LP in projects saved
   before it (before format 33).
-- KNOB 3: none.
-- **Values** (KNOB 4, 1.4.0): **Peek** (a knob's number shown a moment as its page opens, then only its ring; the
-  number in the big ring while it turns) or **Always** (the numbers inside the rings). The same for
-  every piece, saved.
+- **Store** (KNOB 3, 1.5.0): your pieces as they are now kept as a stored set ([Sets](#sets)), from the FM-1 itself,
+  no computer needed. At rest it shows the set it would store into, **Set 3**, and the eight set numbers as dots (the
+  stored ones lit, that one marked): the set you loaded, if it is still stored (load a set, change it, and Store keeps
+  your changes in it), else the first empty set. Turn it: the first click shows that set, each click after it the next
+  number, used or empty (1 to 8; it stops at the ends), the big ring showing the number and what is there (*empty*, or
+  *replaces Night Set*). Let it rest on one for a little over a second, as Load, and the FM-1 saves your pieces (as GLO
+  held does), writes them as a set and asks **STORE SET 3?** with the set's name and how many pieces (and *replaces
+  Night Set* when that set is used): **GLO** yes, any other button, key or knob no, 30 seconds no. Then **STORED**, or
+  **NOT STORED**, on the whole screen, as for a set sent from the computer.
+  - **What is stored:** with a set loaded, its pieces (a set of five: pieces 1 to 5) under its name; with none loaded,
+    all eight pieces, named **SET 3** (after its number). The pieces keep their names. The set takes your Mode,
+    Transition, sirens' knobs and Tune as they are now; MIDI out, Lights and Values stay yours, as with any set.
+  - Once stored, that set is the loaded set: its name is on the page's line, and Store offers it next time. It isn't
+    loaded again (the pieces already are that set), so the FM-1 doesn't ask **LOAD IT NOW?**.
+  - Only while **stopped** (writing to the memory interrupts the sound): while the music plays Store is grey, and a turn
+    says **STOP FIRST** and asks nothing. If the memory fails, it says **FLASH ERROR** and nothing is stored (the set
+    there stays as it was). The screen reader says the set as it turns ("Store, set 3, replaces Night Set"), then the
+    question.
+- **Load** (KNOB 4, 1.5.0): a set stored on the FM-1 ([Sets](#sets)) loaded from the FM-1 itself, no computer
+  needed. At rest it shows how many sets are stored (**3 sets**, or **None**) and the eight set numbers as dots, the
+  stored ones lit. Turn it: a click a stored set (the empty numbers skipped; it stops at the first and the last), the
+  big ring showing the set's number, with its name and pieces under it ("Echospace 12, 5 pieces"). Let it rest on one
+  for a little over a second (1.2 s, the ring's own time) and the FM-1 asks **LOAD SET 3?** with its name, the same
+  question as a load from the Sets page: **GLO** yes, any other button, key or knob no, 30 seconds no. Yes loads it as
+  the Sets page's Load does (its pieces into your pieces, its first playing, saved), and the list above shows them.
+  Only while **stopped**, as from the computer: while the music plays Load is grey, and a turn says **STOP FIRST** and
+  asks nothing. With no set stored, a turn says **NO SETS STORED**. The screen reader says the set as it turns ("Load,
+  set 3, Echospace 12"), then the question. (Values, KNOB 4 here until 1.5.0, is on Setup now.)
 
 ---
 
@@ -1629,21 +1698,119 @@ site, and the FM-1 tells the reader where to find it.
 ## 10. Saving
 
 DUB-1 keeps all eight pieces in the FM-1's memory, each as you left it: the knobs, the scale, the
-mode, the root, the tempo and the pings' octave, each piece's song, plus Tune, MIDI out, Lights, the Song mode, a set's
-Transition, Values and the dub sirens' knobs.
+mode, the root, the tempo and the pings' octave, each piece's song, plus Tune, MIDI out, Lights, the
+Mode (Endless, Song, Set), a set's Transition, Values and the dub sirens' knobs.
 
 - **By itself:** a few seconds after a change, but only while resting and once the stabs have
   died away. Writing to the memory interrupts the sound for a moment, so it never happens while
   the music plays. A small disk at the top right of the screen means there are unsaved changes.
-- **GLO held** for half a second, then let go: saves now, playing or not ("SAVED").
-- **Setup's KNOB 4 (Save):** shows **Save**, its dot lit, while there are unsaved changes, and
-  **Saved** once there aren't; a turn saves.
+- **GLO held** for half a second, then let go: saves now, playing or not ("SAVED"). (Setup's KNOB 4, **Save**, did
+  the same until 1.5.0: it's Values now.)
 - **Hold GLO** on for 1.5 s: the piece goes back to its recipe ("RESET"). That isn't saved until the
   next save, so switching off before then brings your version back.
 
 Lock, the Filter, Energy (the Form page's) and the Arrangement page's Wet aren't saved; its Width and its Duck are the piece's, and are.
 
-Projects saved by an older DUB-1, since 1.0.0 (formats 8 to 34; 1.4.0 saves format 35), are read and converted. **A piece you never changed takes its
+### Sets
+
+(1.5.0) A **set** is a file of pieces to play together: one to eight of them, each whole (its sound as its author
+left it, and its name), with the set's name and its own Mode (Endless, Song, Set), Transition, the sirens' knobs and Tune. MIDI out,
+Lights and Values stay yours. The FM-1 keeps **eight sets** besides your pieces, and a set's file (`.dub1`) can be kept
+on a computer, sent to a friend or downloaded.
+
+The FM-1 comes with two sets: the first time 1.5.0 starts, it stores **Winter Set** and **4 to 5 a.m.** (the
+ready-made sets of the Sets page) into the first empty set numbers, usually sets 1 and 2 (the header says **2 SETS
+ADDED**), so you can load one at once from the Set page's **Load**. A set already there is never replaced, and this
+happens only once: a set you delete stays deleted (send it again from the Sets page if you want it back).
+
+Sets go to and from the FM-1 on the **Sets page**, <https://sbegueria.github.io/fm1-dub/sets/>, from Chrome or Edge
+with the FM-1 connected by USB (the same cable as the installer; the browser asks to let the page use MIDI devices:
+allow it). Press **Connect**: the page lists the pieces as they are now and the eight sets, with their names.
+
+- **Back up everything:** the pieces as they are and every set, in one file (`dub1-backup-DATE.dub1`). It works while
+  the music plays. Do it before installing another firmware: DUB-1's own updates keep the pieces and the sets, others
+  may not. **Download** beside a set saves that set alone; beside *The pieces now*, the pieces as they are.
+- **Send a set:** choose a `.dub1` file. The page shows what it holds first (its name, its pieces and what each was
+  made from); a whole backup lets you pick one of its sets, or its pieces, which go as a set. Give it a name if you like
+  (up to 12 letters, numbers and a few marks, as wide as the FM-1's header shows: the page says when one is too wide),
+  pick the set it goes into, and **Send**.
+- **Make a set:** a new set from the pieces you choose, with new names. Shape your pieces on the FM-1 and hold GLO to
+  save them; then, on the page, add pieces from **The pieces now** (read from the FM-1), from any of its sets, from a
+  ready-made set or from a `.dub1` file (a set, the pieces of a backup, or one of a whole backup's sets), as many
+  sources as you like. Each piece has a row: tick the ones to put in (one to eight), put them in order with the ↑ and ↓
+  buttons, and type each one's name; then name the set and choose its **Mode** and **Transition** (they start as the
+  first source's, and so do the sirens' knobs and Tune). The names are checked as you type, as in *Send a set*. Each
+  piece goes whole, its sound as it is. Then **Download the set**, **Hear it in the emulator**, or **Send to the FM-1**:
+  that fills *Send a set* with it, where you pick **Into** and press **Send**; the FM-1 asks **STORE SET 3?** as for any
+  set. Files work without the FM-1 connected. (`tools/dub1_set.py make` does the same from files.)
+- **Load** puts a set's pieces into your pieces: a set of five into pieces 1 to 5, the rest
+  as they were, its first piece playing, and saves. A stored set can also be loaded from the FM-1 itself, with no
+  computer: the Set page's KNOB 4, **Load** ([GLO again](#glo-again-set)). In Set mode the set ends at its last piece; a piece after it, chosen by hand, plays alone.
+  The loaded set's name shows on the [Set page](#glo-again-set) (GLO again), beside the page's name, with its pieces
+  listed, and the screen reader says it.
+- **Delete** removes a set from the FM-1 (here on the page only: the FM-1 itself has no Delete).
+- **Store your pieces as a set from the FM-1:** the Set page's KNOB 3, **Store** ([GLO again](#glo-again-set)), keeps
+  the pieces as they are now as a stored set, no computer needed (a loaded set you changed goes back into its own
+  number). To name a set or choose which pieces go into it, use the Sets page.
+- **Restore everything:** choose a whole backup (the file *Back up everything* made). The page shows what it puts
+  back first: each set it holds into its own number (replacing what is there now) and its pieces into your pieces;
+  the sets the backup doesn't hold stay as they are. The FM-1 asks **once**, **RESTORE BACKUP?** with how many sets
+  and the pieces; after GLO the page sends them one after another and the FM-1 keeps each as it comes, without asking
+  again (only those sets, only once, and only while the page keeps sending: 10 seconds of silence, the music starting
+  or Cancel ends it). The screen says **RESTORING**, **RESTORED SET 3**, **RESTORED THE PIECES**, then **RESTORE
+  DONE** with how many were kept (or **NOT ALL CAME** if the page stopped sending), each for 3 seconds as below.
+  If the FM-1's memory fails on one of them, the restore **stops there**: the screen says **RESTORE STOPPED**, which
+  one failed and which sets were kept before it, and the page (and `dub1_set.py restore`) says the same and lists what
+  was never sent. Nothing after it changes; try again, or restore those later. A restore brings back the backup's
+  MIDI out, Lights and Values with its pieces (they were the pieces' settings when the backup was made).
+
+**The FM-1 asks first.** Before it keeps, loads or deletes a set, its whole screen asks, in big type: **STORE SET
+3?**, **LOAD SET 3?**, **DELETE SET 3?** or **RESTORE BACKUP?**, the set's name and how many pieces (for a restore:
+how many sets, and the pieces). **GLO** says yes; any other button, key or knob says no, and so does waiting 30 seconds
+or starting the music. A thick bar at the bottom runs down the time left, the seconds beside it. The page shows the
+same question while it waits ("Answer on the FM-1: GLO says yes") and what the FM-1 answered. A web page can never
+change your pieces without you.
+
+**The answer stays on the screen.** After you answer (or the time runs out), the whole screen shows what happened for 3
+seconds: what was asked on top (**STORE SET 3**), the outcome big in the middle, the set's name under it.
+**STORED**, **LOADED** and **RESTORING** in the page colour; **DELETED** in red; **NOT STORED**, **NOT LOADED**,
+**NOT DELETED**, **NOT RESTORED** and **NOT DONE** (with why: *no answer in 30 s*, or *the music started*) in amber;
+**FLASH ERROR** in red if the FM-1's memory failed. A set loaded whose save failed says **LOADED** with **NOT SAVED:
+FLASH ERROR** under it (the pieces are loaded but not yet kept: hold GLO to save them). Any button, key or knob takes
+the screen away sooner, and does nothing else (after the first moment, so the press or knob turn that answered
+doesn't take it away at once). The screen reader says the outcome as before.
+
+**Storing into the set loaded.** Loading a set copies its pieces into the pieces; storing a new version into that
+same set changes the stored copy only, so the FM-1 still plays the old one. After its **STORED**, the FM-1 asks
+**LOAD IT NOW?** (the same question: **GLO** loads it, anything else leaves the pieces as they were). If the music
+started meanwhile, it says **STORED** with *load it to hear it* instead. The page says so too.
+
+Sending, loading and deleting need the FM-1 **stopped** (writing to its memory interrupts the sound): while it plays,
+the page says *stop it first*. Listing, backing up and downloading work while it plays. A set made for a newer DUB-1
+is refused ("update the FM-1 first"), and so is a damaged file; neither changes anything. While a set is coming in, a
+save waits (**NOT SAVED YET**) and happens by itself afterwards.
+
+**Ready-made sets.** The Sets page offers sets made from DUB-1's videos, to download or send: *Winter Set* (the
+five songs of the hour-long Winter Set video, in Set mode with Transition Mix: press PLAY and it plays the hour) and *4 to 5 a.m.* (the night video's four
+pieces, in its order, to change by hand). The FM-1 comes with both (above).
+
+A set can be heard first in the [emulator](https://sbegueria.github.io/fm1-dub/emu/): *Hear a set*, under the FM-1,
+loads a `.dub1` file, or one of the ready-made sets, into its pieces the same way. For the command line, `tools/dub1_set.py` does the same as the page
+(`list`, `backup [--all]`, `read`, `send`, `load`, `delete`, `restore`). The Sets page is also in Japanese
+(日本語, at its top right), as the installer is.
+
+### Older saves
+
+**From 1.4.x to 1.5.0.** 1.5.0 keeps the pieces in a new way, beside the sets (format 37). At its first start it
+reads the pieces 1.4.x saved, every one as it was (a 1.4.3 or 1.4.4 save as it is, an older one converted as
+below), and keeps them from then on; the FM-1 then stores its two sets (see [Sets](#sets)). It never writes over
+1.4.x's own save. **Going back to 1.4.x** (installing its `.fwsc`): it finds the pieces as they were when you
+updated, not what you changed under 1.5.0, and it doesn't know the sets: they stay in the FM-1's memory, unseen, and
+are there again when you install 1.5.0 again. If you saved under 1.4.x meanwhile, 1.5.0 takes that save at its next
+start (your 1.4.x changes win; what you changed under 1.5.0 before going back is replaced); if you didn't, it keeps
+its own. A backup from the Sets page keeps everything either way.
+
+Projects saved by an older DUB-1, since 1.0.0 (formats 8 to 36; 1.4.3 and 1.4.4 save format 36), are read and converted. **A piece you never changed takes its
 new recipe**, so it sounds as this version tunes it: DUB-1 recognises it by comparing it with that
 piece's recipes as they have been since 1.0.0, and with its scale. **A piece you changed keeps what
 you set**, and the values that are new (the chord's Wet, the kick's Density, the echo's Blur, Tone
@@ -1665,7 +1832,7 @@ the drums' strip is the Hats strip, its sends and Low cut kept, and the Kick str
 ×1 with no sends, its Low cut the drums' (as it sounded: that one cut the kick too). From 1.4.0's six
 strips (format 24), the noise LFO's Destination comes from the recipe (Filter, as it played before);
 the Cloud and the Width are kept, on their new pages. From 1.4.0's noise LFO Destination (format 25),
-each piece's song comes from its recipe (Intro 32, Main 160, Outro 32 bars, its Kind), and the Song mode is
+each piece's song comes from its recipe (Intro 32, Main 160, Outro 32 bars, its Kind), and the Mode is
 Endless, as it played before. From 1.4.0's song structure (format 26), each piece's Mixer comes from its
 recipe. From 1.4.0's dub mixer (format 27), each strip's Low cut (0–100, a high-pass) becomes its
 Filter's high-pass at the same cutoff, as near as a step goes (a Low cut of 100, about 600 Hz, is +36);
@@ -1719,8 +1886,17 @@ mode, and only the rescue below can reach it.
 ### Recovering an FM-1 that won't start
 
 An FM-1 in the chip's own update mode shows a blank screen, and neither the installer nor M-VAVE's
-updater can see it. A script can put M-VAVE's firmware back, on a Mac, with the USB cable you
-already have.
+updater can see it. (On USB it shows up as `WL80UBOOT1.00`, `4C4A:8057`.) An install cut off halfway
+can leave it there: the half-written firmware fails to start, and after a few tries DUB-1's start-up
+guard hands over to the chip's own update mode. Two ways back:
+
+- **M-Flasher** ([github.com/jvitkauskas/m-flasher](https://github.com/jvitkauskas/m-flasher), Windows,
+  macOS and Linux, third-party, at your own risk): its **FLASH FIRMWARE** writes a firmware file and keeps
+  the bootloader. Write M-VAVE's FM-1 V15 file with it (linked from the installer page), then install
+  DUB-1 again from there.
+- **The rescue script**, below, on a Mac.
+
+A script can put M-VAVE's firmware back, on a Mac, with the USB cable you already have.
 
 Open Terminal in a checkout of the DUB-1 source and run:
 
@@ -1811,9 +1987,11 @@ The defaults are Basic's; each piece has its own.
 | Setup | Tune | −50 – +50 cents | 0 |
 | Setup | MIDI out | Off, On | On |
 | Setup | Lights | Off, On, Keys | On |
-| Song mode | Mode | Endless, Song, Set (for every piece) | Endless |
-| Song mode | Transition | LP, Segue, Mix (Set mode alone; for every piece) | LP |
-| Song mode | Values | Peek, Always (for every piece) | Peek |
+| Setup | Values | Peek, Always (for every piece) | Peek |
+| Set | Mode | Endless, Song, Set (for every piece) | Endless |
+| Set | Transition | LP, Segue, Mix (Set mode alone; for every piece) | LP |
+| Set | Store | your pieces kept as a stored set, from the FM-1 (stopped only); not a setting | — |
+| Set | Load | a stored set, loaded from the FM-1 (stopped only); not a setting | — |
 | Siren (black 8–11 held) | Pitch, Rate, Depth, Echo | each siren its own (see [Controls](#3-controls)); for every piece | as before the knobs |
 | SELECT | Filter | −100 – 0 – +100 (Shut, Off, Open); for playing, not saved | Off |
 | Arrangement | Width | 0–100 (the whole mix: mono – wide) | 40 |

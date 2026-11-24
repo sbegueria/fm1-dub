@@ -1,5 +1,5 @@
-# (1.4.0, the user's: build/design/SET2.md, Transition) a Set's hand-over, the Song mode page's KNOB 2 (LP, Segue, Mix;
-# Set mode alone: grey and resting otherwise; global, saved, format 33; a format 32 save reads LP). Values on KNOB 4.
+# (1.4.0, the user's: build/design/SET2.md, Transition) a Set's hand-over, the Set page's KNOB 2 (LP, Segue, Mix;
+# Set mode alone: grey and resting otherwise; global, saved, format 33; a format 32 save reads LP). Load on KNOB 4.
 # Segue: no stop, the next piece from the bar after the outro, the echo held under it; Mix: over the last phrase the
 # tempo glides to the next piece's, its pulse on the downbeat, its chord no sooner than two bars; after the last piece
 # it rests. Each hand-over watched: no stretch under -60 dBFS longer than a bar, no step out of the music's level
@@ -11,7 +11,7 @@ wait 200
 tap GLO
 wait 400
 expect view 28
-said Song mode page: Mode Endless, Transition LP, only in Set mode, Values Peek
+said Set page, the pieces, playing 1 of 8, Basic: Mode Endless, Transition LP, only in Set mode, Store, set 3, only when stopped, Load, 2 sets stored
 # Endless: Transition grey, a turn says why and changes nothing
 spin K2 1
 wait 300
@@ -160,11 +160,11 @@ release GLO
 wait 300
 reboot
 wait 1000
-expect format 36
+expect format 37
 expect trans 2
 store32
 reboot
 wait 1000
-expect format 36
+expect format 37
 expect trans 0
 expect par158 2

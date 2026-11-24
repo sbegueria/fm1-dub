@@ -1,0 +1,31 @@
+[
+ {
+  "file": "winter-set.dub1",
+  "name": "Winter Set",
+  "pieces": [
+   "Hoarfrost",
+   "Black Ice",
+   "Snowfield",
+   "Aurora",
+   "Thaw"
+  ],
+  "bytes": 3164,
+  "format": 37,
+  "made": "1.5.0",
+  "about": "Five songs after DeepChord presents Echospace, as in the hour-long Winter Set video: Set mode, Transition Mix (each song's outro mixed into the next)."
+ },
+ {
+  "file": "four-to-five.dub1",
+  "name": "4 to 5 a.m.",
+  "pieces": [
+   "Night Drive",
+   "Pressure",
+   "Fog",
+   "Haze"
+  ],
+  "bytes": 2328,
+  "format": 37,
+  "made": "1.5.0",
+  "about": "The four pieces of the hour-long night video (4 a.m. to 5 a.m.), in its order, as DUB-1 1.5 plays them (the video was 1.1.0's); Endless: change pieces by hand, as the video does."
+ }
+]

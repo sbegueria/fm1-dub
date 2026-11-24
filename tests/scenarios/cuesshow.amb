@@ -1,0 +1,234 @@
+# (1.5.0, Decisions 7) What a cue shows, what it says, and its mutes at a stop:
+# 1. a cue shows the card its key or knob would ("CHORD THROW", "KICK muted", "SOLO", "FREEZE held", "WAIL", "LOCK"),
+#    a grid effect's, dub hold's and a knob's name in the header, the DJ filter's ring; the screen reader says none of
+#    it (said_none), and still says what the player does (a key tapped: "CHORD OFF");
+# 2. the mutes and solos the cues changed are put back as they were when the music stops (PLAY): those you tapped since
+#    are yours and stay (the hats tapped twice), a part you muted that a cue unmuted is muted again (the noise); a Mix
+#    carries a cue's mute into the next piece, and the stop after it undoes it.
+# (build: DUB1_CUES=1) the cues played: run on build/host/amb_host_cues (the release plays none: nocues.amb)
+listen
+wait 1500
+tap PLAY
+wait 300
+expect playing 0
+expect piece 0
+# Basic's cues, each a bar from PLAY (part b)
+cue 0 b 1 0 move 0 0 8
+cue 0 b 2 0 mute 3 1 0
+cue 0 b 3 0 solo 2 1 0
+cue 0 b 4 0 fx 6 0 8
+cue 0 b 5 0 fx 10 0 8
+cue 0 b 6 0 siren 0 0 0
+cue 0 b 7 0 macro 0 -20 16
+cue 0 b 8 0 knob 15 60 16
+cue 0 b 9 0 lock 0 1 0
+cue 0 b 10 0 hold 0 1 0
+cue 0 b 11 0 hold 0 0 0
+cue 0 b 12 0 lock 0 0 0
+cue 0 b 13 0 mute 4 1 0
+cue 0 b 14 0 mute 5 0 0
+cue 0 b 15 0 move 1 0 8
+cue 0 b 16 0 outro 0 0 0
+cuesave
+expect slotcues0 16
+tap SEL
+wait 300
+expect view 17
+tap PLAY
+wait 100
+expect playing 1
+expect cuelive 1
+# the player's own: the chord and the noise muted by hand, said as ever
+tapkey w0
+wait 100
+said CHORD OFF
+expect mutes 1
+tapkey w5
+wait 100
+said NOISE OFF
+expect mutes 33
+wait 1200
+bar 1
+wait 50
+expect cuemoves 1
+cardis CHORD THROW
+bar 2
+wait 50
+expect mutes 41
+cardis KICK
+bar 3
+wait 50
+expect solo 4
+cardis SOLO
+bar 4
+wait 50
+expect cuefx 64
+cardis -
+msgis Wah
+bar 5
+wait 50
+expect cuefx 1024
+cardis FREEZE
+bar 6
+wait 50
+cardis WAIL
+bar 7
+wait 50
+expect fltring 1
+bar 8
+wait 50
+msgis MOTION
+bar 9
+wait 50
+expect lock 1
+cardis LOCK
+bar 10
+wait 50
+expect frozen 1
+msgis DUB HOLD
+bar 11
+wait 50
+expect frozen 0
+bar 12
+wait 50
+expect lock 0
+bar 13
+wait 50
+expect mutes 57
+cardis HATS
+bar 14
+wait 50
+expect mutes 25
+cardis NOISE
+bar 15
+wait 50
+cardis OPEN
+# none of it said
+said_none THROW
+said_none KICK
+said_none SOLO
+said_none Wah
+said_none FREEZE
+said_none WAIL
+said_none FILTER
+said_none MOTION
+said_none LOCK
+said_none DUB HOLD
+said_none HATS
+said_none NOISE
+said_none OPEN
+# the hats, a cue's mute, tapped off and on again by hand: yours now
+tapkey w4
+wait 100
+said HATS ON
+tapkey w4
+wait 100
+said HATS OFF
+expect mutes 25
+bar 16
+wait 50
+cardis OUTRO
+said_none OUTRO
+# stopped: the kick (a cue's) on again, the bass's solo off, the noise (yours, a cue unmuted it) muted again; the chord
+# and the hats (yours) kept
+tap PLAY
+wait 300
+expect playing 0
+expect mutes 49
+expect solo 0
+# the same with a Mix: Basic's outro mutes the hats; carried into Chamber's downbeat; undone at the stop after it
+cueclear 0
+cue 0 o 2 0 mute 4 1 0
+cuesave
+expect slotcues0 1
+tapkey w0
+tapkey w4
+tapkey w5
+wait 100
+expect mutes 0
+tap GLO
+wait 200
+tap GLO
+wait 400
+expect view 28
+spin K1 2
+wait 300
+spin K2 2
+wait 300
+expect par158 2
+expect trans 2
+expect cuesoff 0
+# two short songs: Basic (no intro, Main 32 bars, Outro 16), then Chamber
+turn PRESET 1
+wait 600
+tap HOME
+wait 200
+tap HOME
+wait 300
+spin K1 -2
+spin K2 -16
+spin K3 -2
+wait 300
+turn PRESET -1
+wait 600
+spin K1 -4
+spin K2 -16
+spin K3 -2
+wait 300
+expect piece 0
+tap SEL
+wait 300
+tap PLAY
+wait 100
+expect playing 1
+bar 34
+wait 50
+expect mutes 16
+cardis HATS
+bar 47
+wait 1500
+expect piece 1
+wait 1000
+expect trcue 0
+expect song 1
+expect mutes 16
+tap PLAY
+wait 300
+expect playing 0
+expect mutes 0
+expect solo 0
+# Transition LP: a Set's own rest between two songs isn't a stop (the next comes by itself): the hats stay muted into
+# Chamber, undone at the stop after
+tap SEL
+wait 300
+tap GLO
+wait 200
+tap GLO
+wait 400
+expect view 28
+spin K2 -4
+wait 300
+expect trans 0
+turn PRESET -1
+wait 600
+expect piece 0
+tap SEL
+wait 300
+tap PLAY
+wait 100
+expect playing 1
+bar 34
+wait 50
+expect mutes 16
+bar 48
+wait 3000
+expect playing 0
+expect mutes 16
+wait 6000
+expect playing 1
+expect piece 1
+expect mutes 16
+tap PLAY
+wait 300
+expect playing 0
+expect mutes 0

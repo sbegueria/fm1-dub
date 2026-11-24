@@ -1,0 +1,259 @@
+# (the user's, 2026-11-22) Setup's KNOB 4 is Values (from the Set page; Save gone: GLO held saves); the Set page's
+# KNOB 4 is Load: a stored set chosen and loaded from the FM-1 itself. A click a stored set (the empty numbers
+# skipped, stopping at the first and the last), the big ring showing the set; resting on it 1.2 s, the question a load
+# from the computer asks (LOAD SET n? <name>: GLO yes, anything else no, 30 s), its yes loading it as APPLY's does
+# (the pieces, the list, saved: it survives a reboot), STATUS the same as after the computer's. Only while stopped:
+# playing, a turn says STOP FIRST and nothing is asked; no set stored: it says so. The screen reader's lines.
+listen
+wait 600
+tap PLAY
+wait 400
+expect playing 0
+# (the sets the FM-1 comes with, stored at its first boot: deleted, an empty store as this test was made for)
+setsdelete
+expect setmask 0
+# Setup: Tune, MIDI out, Lights, Values (no Save); Values on KNOB 4, the same setting as ever (saved, global)
+tap GLO
+wait 600
+expect view 6
+said Setup page: Tune 0, MIDI out On, Lights On, Values Peek
+expect values 0
+spin K4 1
+wait 300
+said Values Always
+expect values 1
+expect peek 1
+shot setup_values.png
+spin K4 -1
+wait 300
+said Values Peek
+expect values 0
+# the Set page with no set stored: Load says so, asks nothing
+tap GLO
+wait 600
+expect view 28
+said Set page, the pieces, 1 of 8, Basic: Mode Endless, Transition LP, only in Set mode, Store, set 1, Load, no sets stored
+shot load_none_rest.png
+spin K4 1
+wait 200
+said Load, no sets stored
+msgis NO SETS STORED
+expect bigring 1
+expect loadset 0
+shot load_none.png
+wait 1500
+expect asking 0
+expect outcome 0
+# three sets stored from the computer, with gaps: set 2 (Echospace 12, five pieces), set 4 (Night Set, eight), set 7
+# (Three, three; no GLOB)
+name -1 Echospace 12
+dub1set build/scenarios/loadknob/five.dub1 5
+name 0 Dawn
+name -1 Night Set
+dub1set build/scenarios/loadknob/eight.dub1 8
+name 0 -
+name -1 Three
+dub1set build/scenarios/loadknob/three.dub1 3 noglob
+name -1 -
+setsend 1 build/scenarios/loadknob/five.dub1
+wait 100
+tap GLO
+wait 100
+setstate yes
+wait 3200
+setsend 3 build/scenarios/loadknob/eight.dub1
+wait 100
+tap GLO
+wait 100
+setstate yes
+wait 3200
+setsend 6 build/scenarios/loadknob/three.dub1
+wait 100
+tap GLO
+wait 100
+setstate yes
+wait 3200
+expect outcome 0
+expect view 28
+expectname 0 Basic
+expect setlen 0
+# Load at rest: "3 sets", the stored numbers lit among the eight
+tap GLO
+wait 300
+tap GLO
+wait 600
+expect view 28
+said only in Set mode, Store, set 1, Load, 3 sets stored
+shot load_rest.png
+# a click a stored set: 2, 4 (3 skipped), 7 (5 and 6 skipped), then it stays at 7; back to 4
+spin K4 1
+wait 200
+expect loadset 2
+expect bigring 1
+said Load, set 2, Echospace 12
+shot load_choose.png
+spin K4 1
+wait 200
+expect loadset 4
+said Load, set 4, Night Set
+spin K4 1
+wait 200
+expect loadset 7
+said Load, set 7, Three
+spin K4 1
+wait 200
+expect loadset 7
+spin K4 -1
+wait 200
+expect loadset 4
+shot load_choose4.png
+# resting on it: asked after 1.2 s, not before
+wait 900
+expect asking 0
+wait 400
+expect asking 48
+setstate asking
+said LOAD SET 4? Night Set. GLO yes, anything else no
+shot load_ask.png
+# no (HOME): nothing changes, HOME's page not opened
+tap HOME
+wait 100
+setstate no
+said LOAD SET 4 NOT LOADED
+outis NOT LOADED
+shot load_out_no.png
+expect view 28
+expectname 0 Basic
+expect setlen 0
+wait 3200
+expect outcome 0
+# a knob turned on and off again before the rest is up: asked only once it rests
+spin K4 -1
+wait 600
+spin K4 1
+wait 600
+expect asking 0
+spin K4 -1
+wait 1300
+expect asking 48
+said LOAD SET 2? Echospace 12
+# yes (GLO): loaded as from the computer: its five pieces into 1 to 5, its name on the page's line, saved
+tap GLO
+wait 600
+setstate yes
+said LOAD SET 2 LOADED
+outis LOADED
+shot load_out_yes.png
+expect setlen 5
+expect dirty 0
+workcheck
+wait 3200
+expect outcome 0
+expect view 28
+said_none Load
+tap HOME
+wait 300
+tap GLO
+wait 300
+tap GLO
+wait 600
+said Set page, Echospace 12, 1 of 5, Basic: Mode Endless, Transition LP, only in Set mode, Store, set 2, Load, 3 sets stored
+shot load_after.png
+# it survives a reboot
+reboot
+wait 1000
+expect setlen 5
+tap PLAY
+wait 400
+expect playing 0
+# the eight: loaded over it (Dawn its first)
+tap GLO
+wait 300
+tap GLO
+wait 600
+spin K4 1
+wait 1300
+expect asking 48
+said LOAD SET 2? Echospace 12
+spin K4 1
+wait 600
+setstate no
+said LOAD SET 2 NOT LOADED
+wait 3200
+spin K4 1
+wait 200
+expect loadset 4
+wait 1300
+tap GLO
+wait 600
+setstate yes
+expect setlen 0
+expectname 0 Dawn
+wait 3200
+# 30 s unanswered: no (NOT DONE, no answer in 30 s), the pieces as they were
+spin K4 1
+wait 1300
+expect asking 48
+wait 29000
+expect asking 48
+wait 1100
+setstate timeout
+said LOAD SET 7 NOT DONE: NO ANSWER
+outis NOT DONE
+shot load_out_timeout.png
+expectname 0 Dawn
+wait 3200
+# a set coming in from the computer (BEGIN, no COMMIT yet): not loaded, the computer's transfer left as it is
+sxreq 20 02050010FFFFFFFF 20
+spin K4 -1
+wait 1300
+expect asking 0
+outis NOT LOADED
+said LOAD SET 4 NOT LOADED
+shot load_out_busy.png
+sxreq 24 - 24
+wait 3200
+# moved on before the rest is up (another page): nothing asked
+spin K4 -1
+wait 300
+tap GLO
+wait 1500
+expect view 6
+expect asking 0
+expect outcome 0
+tap GLO
+wait 600
+expect view 28
+# playing: Load grey, a turn says STOP FIRST and asks nothing
+tap PLAY
+wait 600
+expect playing 1
+tap HOME
+wait 300
+tap GLO
+wait 300
+tap GLO
+wait 600
+said Load, 3 sets stored, only when stopped
+shot load_playing_rest.png
+spin K4 1
+wait 200
+said Load, stop first: sets load only while stopped
+msgis STOP FIRST
+expect bigring 1
+shot load_playing.png
+wait 1500
+expect asking 0
+expect outcome 0
+# the music started (MIDI) while it rests: STOP FIRST, nothing asked
+tap PLAY
+wait 600
+expect playing 0
+spin K4 -1
+wait 200
+midi FA
+wait 1300
+expect asking 0
+outis STOP FIRST
+said LOAD SET 2 STOP FIRST
+shot load_out_playing.png

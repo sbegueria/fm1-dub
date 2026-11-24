@@ -49,7 +49,8 @@ wait 1700
 release GLO
 expect par111 >0
 expect par139 0
-expect store_writes 0
+# (the boot's 3 saves: the two sets the FM-1 comes with, and WORK with their flag)
+expect store_writes 3
 # a tweak, saved, survives a reboot, on the piece it was made on (the Pings page: ARP, its Ghost)
 tap ARP
 spin K2 -100
@@ -60,7 +61,7 @@ expect piece 6
 press GLO
 wait 600
 release GLO
-expect store_writes 1
+expect store_writes 4
 reboot
 wait 300
 expect piece 6

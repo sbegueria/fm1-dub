@@ -1,0 +1,55 @@
+# (1.5.0, step 2) every format DUB-1 wrote, read by project_load and as a container (wrapped as it was: its own format
+# and parameters, nothing converted, then read back as a set is, slot_upgrade on each piece): the same project, piece by
+# piece (amb_host checks every store: "the same through the container"); the formats no store writes (11, 17, 33: 12's,
+# 18's and 34's layouts) by refmt; the saves of real units (tests/host/proj-*.bin); then today's project as a container,
+# mutated 20,000 times (fuzz): no fault, none read with its CRC not mended, every one read valid, the project untouched
+wait 500
+# a piece changed by hand (Basic: a few knobs, its pings' Ghost), another played a while (Fog), the rest as they came
+spin K1 7
+tap ARP
+spin K2 -20
+turn PRESET 3
+wait 3000
+spin K3 12
+turn PRESET -3
+wait 500
+store8
+store10
+store12
+refmt 11
+store12 5
+store13
+store14
+store15
+store16
+store18
+refmt 17
+store19
+store20
+store21
+store22
+store23
+store24
+store25
+store26
+store27
+store28
+store29
+store30
+store30 60
+store30s
+store31
+store32
+store34
+refmt 33
+store35
+store36
+storescreen 3
+storefile tests/host/proj-1.2.0.bin
+storefile tests/host/proj-1.2.0-basic-changed.bin
+storefile tests/host/proj-1.3.0-test14.bin
+storefile tests/host/proj-1.3.0-test14-resaved15.bin
+storefile tests/host/proj-1.4.0-test18.bin
+reboot
+wait 300
+fuzz 20000

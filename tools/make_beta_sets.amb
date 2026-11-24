@@ -1,0 +1,47 @@
+# (1.5.0-beta1) the ready-made sets for the beta's device test (build/design/BETA-1.5.0-HOWTO.txt), made by the host
+# simulator from the recipes (not the user's pieces): run by tools/make_beta_sets.sh into build/beta-sets/.
+#   five-echospace.dub1   "Echospace 12" (85 px of 87: the widest that fits), 5 pieces in another order than the
+#                          recipes' (Night Drive first, Haze in slot 3), names from narrow to 84 px (WWWWWWW)
+#   eight-full.dub1        "Full Eight", all 8 pieces, every one renamed, two of them near the limit
+#   three-noglob.dub1      "Three", 3 pieces, no globals (the FM-1's Song mode, Transition and Tune kept)
+wait 600
+tap PLAY
+wait 300
+# five: Night Drive, Fog, Haze, Steppers, Basic; Song mode and the Transition as the recipes leave them
+slotrecipe 0 5
+slotrecipe 1 3
+slotrecipe 2 7
+slotrecipe 3 2
+slotrecipe 4 0
+name 0 Night Bus
+name 1 Fog Bank
+name 2 WWWWWWW
+name 3 Dub Chamber
+name 4 Go
+name -1 Echospace 12
+dub1set build/beta-sets/five-echospace.dub1 5
+# eight: every slot its own recipe again, each renamed
+slotrecipe 0 0
+slotrecipe 1 1
+slotrecipe 2 2
+slotrecipe 3 3
+slotrecipe 4 4
+slotrecipe 5 5
+slotrecipe 6 6
+slotrecipe 7 7
+name 0 One
+name 1 Two Rooms
+name 2 Echospace 12
+name 3 Four
+name 4 Five Steps
+name 5 Six Nights
+name 6 Dub Chamber
+name 7 Last Haze
+name -1 Full Eight
+dub1set build/beta-sets/eight-full.dub1 8
+# three, no globals
+name 0 Morning
+name 1 Noon
+name 2 Night
+name -1 Three
+dub1set build/beta-sets/three-noglob.dub1 3 noglob

@@ -1,0 +1,143 @@
+# (1.5.0, step 7) The cues go where the pieces go: a backup (READ of WORK, while playing) carries them; a set made from
+# the pieces carries theirs; sent and loaded (APPLY) its cues come into WORK, saved, kept after a reboot, the pieces
+# after the set's keeping theirs; a restore of the pieces brings their cues back, after two sets restored first (the
+# frame the pieces came in, dropped, never taken for the save that copies their cues from it); Cues off restored too
+listen
+wait 1500
+tap PLAY
+wait 300
+expect playing 0
+cue 0 m 0 0 macro 0 -20 0
+cue 0 m 8 0 move 0 0 16
+cue 0 m 9 0 siren 1 0 0
+cue 1 i 2 0 mute 4 1 0
+cue 1 o 0 0 macro 0 -40 64
+cue 5 m 4 0 knob 15 70 16
+cuesave
+expect slotcues0 3
+expect slotcues1 2
+expect slotcues5 1
+# a set of pieces 1 and 2, with their cues; a set of none's (piece 3)
+setfile build/scenarios/cueswire/two.dub1 0,1 Two Cued
+setfile build/scenarios/cueswire/plain.dub1 2 Plain
+# the backup, while playing: WORK as it is, its cues in it; the stored sets as they are
+tap PLAY
+wait 300
+expect playing 1
+irqreset
+setread 1 0 build/scenarios/cueswire/backup-work.dub1
+expect flashxruns 0
+expect irqlong 0
+tap PLAY
+wait 300
+expect playing 0
+# Cues off (as the Set page's Cues did; the release's build has no knob, the flag kept), saved; the cues of pieces 1,
+# 2 and 6 gone (as a reset would leave them)
+tap GLO
+wait 200
+tap GLO
+wait 400
+cueson 0
+expect cuesoff 1
+cueclear 0
+cueclear 1
+cueclear 5
+cuesave
+expect slotcues0 0
+expect slotcues1 0
+expect slotcues5 0
+# the set with cues sent to set 4 (yes), loaded (yes): pieces 1 and 2 take its pieces and their cues, piece 6 none
+setsend 3 build/scenarios/cueswire/two.dub1
+wait 100
+setstate asking
+tap GLO
+wait 100
+setstate yes
+sethas 3 Two Cued
+setsend 4 build/scenarios/cueswire/plain.dub1
+wait 100
+setstate asking
+tap GLO
+wait 100
+setstate yes
+sxreq 30 0203 30
+wait 100
+setstate asking
+tap GLO
+wait 600
+setstate yes
+expect setlen 2
+expect slotcues0 3
+expect slotcues1 2
+expect slotcues5 0
+expect cuesoff 1
+workcheck
+reboot
+wait 300
+tap PLAY
+wait 300
+expect playing 0
+expect slotcues0 3
+expect slotcues1 2
+workcheck
+# a set without cues loaded: its piece none; the pieces after it keep theirs (a set of one: piece 2 keeps its 2)
+sxreq 30 0204 30
+wait 100
+setstate asking
+tap GLO
+wait 600
+setstate yes
+expect setlen 1
+expect slotcues0 0
+expect slotcues1 2
+# the set of cues loaded again, then its frame deleted before WORK... (saved at APPLY: nothing read from it after)
+sxreq 30 0203 30
+wait 100
+tap GLO
+wait 600
+setstate yes
+expect slotcues0 3
+sxreq 31 0203 31
+wait 100
+tap GLO
+wait 600
+sethas 3 -
+expect slotcues0 3
+reboot
+wait 300
+tap PLAY
+wait 300
+expect playing 0
+expect slotcues0 3
+# a restore: sets 4 and 5 (the two above, sent again), then the pieces of the backup: their cues and Cues on back
+cueclear 0
+cueclear 1
+cuesave
+expect slotcues0 0
+sxreq 32 1801 32
+wait 100
+setstate asking
+tap GLO
+wait 100
+setstate yes
+setsend 3 build/scenarios/cueswire/two.dub1 200
+setsend 4 build/scenarios/cueswire/plain.dub1 200
+worksend 0 build/scenarios/cueswire/backup-work.dub1 200
+wait 600
+said RESTORE DONE 3 kept
+outis RESTORE DONE
+expect slotcues0 3
+expect slotcues1 2
+expect slotcues5 1
+expect cuesoff 0
+workcheck
+reboot
+wait 300
+tap PLAY
+wait 300
+expect playing 0
+expect slotcues0 3
+expect slotcues1 2
+expect slotcues5 1
+expect cuesoff 0
+workcheck

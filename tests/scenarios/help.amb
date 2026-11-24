@@ -44,7 +44,8 @@ release GLO
 wait 200
 # the recipe's Throws again (not the 2 it was left at)
 expect par111 >20
-expect store_writes 0
+# (the boot's 3 saves: the two sets the FM-1 comes with, and WORK with their flag)
+expect store_writes 3
 # the tempo from a known value: the Key page's first knob (HOME, HOME again: the Song page, again: the Key) down to
 # its lowest
 tap HOME

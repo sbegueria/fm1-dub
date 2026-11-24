@@ -1,0 +1,204 @@
+# (the user's, 2026-11-23) The sets the FM-1 comes with: at the first start of 1.5.0, Winter Set and 4 to 5 a.m.
+# (sets/: the Sets page's files, in the image) stored into the first empty set slots, in order, the same bytes the Sets
+# page sends (their cues kept, not played); WORK saved with D1C_F_SETS, so never again on that unit: a set deleted
+# stays deleted, a second start adds nothing. A unit with sets 1-3 used (a 1.5.0 beta's: no flag) gets them in 4 and 5;
+# a full store (8 used) none, and goes on; the flash failing in the boot leaves the unit working, the next boot storing
+# the rest (not a set twice); a return to 1.4.x and back keeps the flag. The header says how many were added, once.
+# a fresh unit: the boot stored them in sets 1 and 2, and WORK with the flag (3 saves: two sets, WORK)
+wait 300
+expect setmask 3
+expect firstsets 1
+expect works 1
+expect store_writes 3
+msgis 2 SETS ADDED
+sethas 0 Winter Set
+sethas 1 4 to 5 a.m.
+setbytes 0 sets/winter-set.dub1
+setbytes 1 sets/four-to-five.dub1
+shot fresh.png
+# they load as any stored set: Winter Set's five pieces, 4 to 5 a.m.'s four
+tap PLAY
+wait 400
+expect playing 0
+sxreq 30 0200 30
+tap GLO
+wait 100
+setstate yes
+expect setlen 5
+expectname 0 Hoarfrost
+expectname 4 Thaw
+expect slotcues0 >0
+expect cuesoff 0
+sxreq 30 0201 30
+tap GLO
+wait 100
+setstate yes
+expect setlen 4
+expectname 0 Night Drive
+expectname 3 Haze
+wait 3500
+# a second start adds nothing, says nothing
+reboot
+wait 300
+expect setmask 3
+expect firstsets 1
+expect store_writes 5
+msgis -
+# set 1 deleted (DELETE, GLO yes): it doesn't come back
+tap PLAY
+wait 400
+expect playing 0
+sxreq 31 0200 31
+tap GLO
+wait 100
+setstate yes
+wait 3500
+expect setmask 2
+reboot
+wait 300
+expect setmask 2
+sethas 0 -
+sethas 1 4 to 5 a.m.
+expect firstsets 1
+msgis -
+# a 1.5.0 beta's unit, sets 1 to 3 used (sent from the computer), WORK without the flag: they go in 4 and 5
+tap PLAY
+wait 400
+expect playing 0
+setsdelete
+expect setmask 0
+name -1 Mine A
+dub1set build/scenarios/firstsets/a.dub1 3
+name -1 Mine B
+dub1set build/scenarios/firstsets/b.dub1 2
+name -1 Mine C
+dub1set build/scenarios/firstsets/c.dub1 1
+name -1 -
+setsend 0 build/scenarios/firstsets/a.dub1
+wait 100
+tap GLO
+wait 100
+setstate yes
+wait 3500
+setsend 1 build/scenarios/firstsets/b.dub1
+wait 100
+tap GLO
+wait 100
+setstate yes
+wait 3500
+setsend 2 build/scenarios/firstsets/c.dub1
+wait 100
+tap GLO
+wait 100
+setstate yes
+wait 3500
+setsbeta
+expect firstsets 0
+reboot
+wait 300
+expect setmask 31
+expect firstsets 1
+msgis 2 SETS ADDED
+sethas 0 Mine A
+sethas 1 Mine B
+sethas 2 Mine C
+sethas 3 Winter Set
+sethas 4 4 to 5 a.m.
+setbytes 3 sets/winter-set.dub1
+setbytes 4 sets/four-to-five.dub1
+# one stored already (Winter Set in set 6, the computer's), set 4 free: only 4 to 5 a.m. added, into set 4
+tap PLAY
+wait 400
+expect playing 0
+setsdelete 3
+setsdelete 4
+setsend 5 sets/winter-set.dub1
+wait 100
+tap GLO
+wait 100
+setstate yes
+wait 3500
+setsbeta
+reboot
+wait 300
+expect setmask 47
+msgis 1 SET ADDED
+sethas 3 4 to 5 a.m.
+sethas 5 Winter Set
+setbytes 3 sets/four-to-five.dub1
+# a full store (eight used, no flag): none added, nothing overwritten, the flag saved, the unit plays on
+tap PLAY
+wait 400
+expect playing 0
+setsend 4 build/scenarios/firstsets/a.dub1
+wait 100
+tap GLO
+wait 100
+setstate yes
+wait 3500
+setsend 6 build/scenarios/firstsets/b.dub1
+wait 100
+tap GLO
+wait 100
+setstate yes
+wait 3500
+setsend 7 build/scenarios/firstsets/c.dub1
+wait 100
+tap GLO
+wait 100
+setstate yes
+wait 3500
+expect setmask 255
+setsbeta
+reboot
+wait 300
+expect setmask 255
+expect firstsets 1
+msgis -
+sethas 0 Mine A
+sethas 3 4 to 5 a.m.
+sethas 4 Mine A
+sethas 5 Winter Set
+sethas 6 Mine B
+sethas 7 Mine C
+expect playing 1
+wait 2000
+expect playing 1
+# the flash failing in the first start's (its 20th erase or program: in the second set): the first kept, no flag, the
+# unit plays; the next start stores the second (the first not twice)
+tap PLAY
+wait 400
+expect playing 0
+setsdelete
+setsbeta
+bootcut 20
+reboot
+wait 300
+expect setmask 1
+expect firstsets 0
+sethas 0 Winter Set
+msgis -
+expect playing 1
+wait 2000
+expect playing 1
+reboot
+wait 300
+expect setmask 3
+expect firstsets 1
+msgis 1 SET ADDED
+sethas 0 Winter Set
+sethas 1 4 to 5 a.m.
+setbytes 0 sets/winter-set.dub1
+setbytes 1 sets/four-to-five.dub1
+# a return to 1.4.x and back (its save newer than WORK: migrated again): the flag kept, set 2 deleted stays deleted
+tap PLAY
+wait 400
+expect playing 0
+setsdelete 1
+store36
+reboot
+wait 300
+expect migrated >0
+expect setmask 1
+expect firstsets 1
+msgis -

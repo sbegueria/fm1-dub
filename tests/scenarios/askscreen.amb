@@ -1,0 +1,128 @@
+# (the user's, testing 1.5.0-beta1) the set protocol's question and its outcome, readable: the question in big type
+# (the title, the set's name at its widest, 87 px in the header's face; RESTORE BACKUP? with eight sets and the pieces,
+# its line in two), its time bar thick and its seconds; each outcome on the whole screen for 3 s in the question's style
+# (STORED, NOT DELETED, NOT DONE: the music started, LOADED with NOT SAVED, FLASH ERROR, NOT RESTORED), the reader's
+# words as before; a button takes it away early and does nothing else. Screenshots: the question full and nearly out of
+# time, each outcome
+listen
+wait 600
+tap PLAY
+wait 400
+expect playing 0
+name -1 Wombat Mood
+dub1set build/scenarios/askscreen/wide.dub1 5
+name -1 Night Set
+dub1set build/scenarios/askscreen/eight.dub1 8
+name -1 -
+dub1out build/scenarios/askscreen/work.dub1
+# STORE SET 2? with the widest name, full and nearly out of time; GLO: STORED, 3 s
+setsend 1 build/scenarios/askscreen/wide.dub1
+wait 100
+setstate asking
+said STORE SET 2? Wombat Mood. GLO yes, anything else no
+shot ask_store_wide.png
+wait 29000
+expect asking 34
+shot ask_store_wide_late.png
+tap GLO
+wait 100
+setstate yes
+said STORE SET 2 STORED
+outis STORED
+shot out_stored_wide.png
+wait 2700
+expect outcome 1
+wait 300
+expect outcome 0
+sethas 1 Wombat Mood
+# set 8 stored; DELETE SET 8? full and nearly out of time; HOME: NOT DELETED (HOME's page not opened: the screen as
+# it was)
+setsend 7 build/scenarios/askscreen/eight.dub1
+wait 100
+tap GLO
+wait 100
+setstate yes
+wait 3100
+expect outcome 0
+expect view 0
+sxreq 31 0207 31
+wait 100
+said DELETE SET 8? Night Set
+shot ask_delete8.png
+wait 29000
+shot ask_delete8_late.png
+tap HOME
+wait 100
+setstate no
+said DELETE SET 8 NOT DELETED
+outis NOT DELETED
+shot out_not_deleted.png
+wait 500
+tap EDIT
+wait 100
+expect outcome 0
+expect view 0
+sethas 7 Night Set
+# the music started from MIDI while asked: NOT DONE, the music started
+sxreq 31 0207 31
+wait 100
+setstate asking
+midi FA
+wait 200
+setstate playing
+said NOT DONE: PLAYING
+outis NOT DONE
+shot out_not_done_playing.png
+midi FC
+wait 3200
+expect outcome 0
+tap PLAY
+wait 300
+tap PLAY
+wait 300
+expect playing 0
+# RESTORE BACKUP? eight sets and the pieces (its line in two), full and nearly out of time; HOME: NOT RESTORED
+sxreq 32 FF01 32
+wait 100
+setstate asking
+said RESTORE BACKUP? 8 sets + the pieces. GLO yes, anything else no
+shot ask_restore8.png
+wait 29000
+shot ask_restore8_late.png
+tap HOME
+wait 100
+setstate no
+said RESTORE BACKUP NOT RESTORED
+outis NOT RESTORED
+shot out_not_restored.png
+wait 3100
+# LOAD SET 2, the flash failing on its save: LOADED, NOT SAVED: FLASH ERROR (both said)
+sxreq 30 0201 30
+wait 100
+setstate asking
+powercut 1
+tap GLO
+wait 600
+setstate yes
+said LOAD SET 2 LOADED
+outis LOADED
+shot out_loaded_unsaved.png
+reboot
+wait 300
+tap PLAY
+wait 300
+expect playing 0
+# a store the flash refuses at its yes: FLASH ERROR
+setsend 2 build/scenarios/askscreen/eight.dub1
+wait 100
+setstate asking
+powercut 1
+tap GLO
+wait 100
+setstate failed
+said STORE SET 3 FLASH ERROR
+outis FLASH ERROR
+shot out_flash_error.png
+reboot
+wait 300
+sethas 2 -

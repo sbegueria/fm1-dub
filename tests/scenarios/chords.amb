@@ -132,7 +132,8 @@ expect par64 0
 expect par72 0
 tap PLAY
 wait 6000
-expect store_writes >0
+# (the boot's 3 saves: the two sets the FM-1 comes with, and WORK with their flag)
+expect store_writes >3
 reboot
 wait 1000
 expect par64 0

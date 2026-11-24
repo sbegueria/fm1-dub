@@ -1,6 +1,6 @@
 # (1.4.0, the user's) the knobs without their numbers: a ring's number shown a moment as a page opens (the peek), then
-# gone (the ring says it; the big ring gives it while a knob turns); Setup's second page, KNOB 2, Values: Peek or
-# Always (global, saved, as Lights)
+# gone (the ring says it; the big ring gives it while a knob turns); Values: Peek or Always (global, saved, as Lights),
+# on Setup's KNOB 4 (the user's, 2026-11-22: from the Set page, where Load is now)
 listen
 wait 1500
 expect values 0
@@ -15,11 +15,9 @@ expect peek 1
 wait 2000
 expect peek 0
 tap GLO
-wait 200
-tap GLO
 wait 400
-expect view 28
-said Song mode page: Mode Endless, Transition LP, only in Set mode, Values Peek
+expect view 6
+said Setup page: Tune 0, MIDI out On, Lights On, Values Peek
 spin K4 1
 wait 300
 said Values Always
@@ -37,9 +35,8 @@ wait 1000
 expect values 1
 expect peek 1
 tap GLO
-wait 200
-tap GLO
 wait 400
+expect view 6
 spin K4 -1
 wait 300
 said Values Peek

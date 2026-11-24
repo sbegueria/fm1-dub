@@ -1,0 +1,313 @@
+# (the user's, 2026-11-23) the Set page's KNOB 3 is Store (the cues' place, off): the pieces as they are now kept as a
+# stored set from the FM-1 itself, no computer. At rest it shows the set it would store into: the set loaded (still
+# known: setwire.c's sxw_live, or by its name after a boot), else the first empty. The first click wakes it on that one,
+# each click after it the next number, used or empty, 1 to 8 (stopping at the ends), the big ring saying what is there
+# ("empty", "replaces Night Set"). Resting on it 1.2 s (Load's): the pieces saved (as GLO held), written as a set and
+# checked, then STORE SET n? <name> (the computer's question: GLO yes, anything else no, 30 s; "replaces <name>" under
+# it when the set is used). The set: the set loaded's pieces (1 to its last), all eight with none; its name the set
+# loaded's, else "SET n"; the player's Mode, Transition, sirens and Tune. Its yes: the set loaded (no LOAD IT NOW?), the
+# pieces take its name. Only while stopped: playing, a turn says STOP FIRST. The flash failing: FLASH ERROR, nothing
+# stored. The stored set loads back as the pieces were, and reads as a set (setread; tests/host/storeset_file_test.sh
+# reads it with tools/dub1_container.py).
+listen
+wait 600
+tap PLAY
+wait 400
+expect playing 0
+# the sets the FM-1 comes with in 1 and 2 (Winter Set, five pieces with cues; 4 to 5 a.m.), none loaded
+expect setmask 3
+expect live 0
+# --- 1. no set loaded: the first empty (3), all eight pieces, "SET 3"
+tap GLO
+wait 300
+tap GLO
+wait 600
+expect view 28
+said Set page, the pieces, 1 of 8, Basic: Mode Endless, Transition LP, only in Set mode, Store, set 3, Load, 2 sets stored
+expect storeset 3
+shot store_rest.png
+# Mode to Set (the set carries it), unsaved
+spin K1 2
+wait 2500
+said Mode Set
+expect dirty 1
+# the first click: the set offered (3, empty), not moved on
+spin K3 1
+wait 200
+expect bigring 1
+expect storeset 3
+said Store, set 3, empty
+shot store_choose.png
+# resting: saved first, then asked; not before the rest is up
+wait 900
+expect asking 0
+projmark
+wait 400
+expect asking 34
+setstate asking
+expect dirty 0
+said STORE SET 3? SET 3. GLO yes, anything else no
+shot store_ask.png
+# yes (GLO): STORED; the set loaded now, the pieces named after it; no LOAD IT NOW?
+tap GLO
+wait 600
+setstate yes
+said STORE SET 3 STORED
+outis STORED
+shot store_out_yes.png
+expect live 3
+expect setmask 7
+expect setlen 0
+sethas 2 SET 3
+expect again 0
+workcheck
+wait 3200
+expect outcome 0
+expect asking 0
+expect again 0
+expect view 28
+expect dirty 0
+setread 2 2 build/scenarios/storeknob/set3.dub1
+# the page: its name on the line; Store offers set 3, the set loaded
+tap HOME
+wait 300
+tap GLO
+wait 300
+tap GLO
+wait 600
+said Set page, SET 3, 1 of 8, Basic, next Chamber: Mode Set, Transition LP, Store, set 3, Load, 3 sets stored
+expect storeset 3
+shot store_after.png
+# it survives a reboot: the set loaded found by its name; stored again into it (no name change, no save after)
+reboot
+wait 1000
+expect live 0
+expect setlen 0
+tap PLAY
+wait 400
+expect playing 0
+tap GLO
+wait 300
+tap GLO
+wait 600
+expect storeset 3
+said Store, set 3, Load, 3 sets stored
+# --- 2. choosing: a click a number, used or empty; the ends hold
+spin K3 -1
+wait 200
+expect storeset 3
+said Store, set 3, replaces SET 3
+spin K3 -1
+wait 200
+expect storeset 2
+said Store, set 2, replaces 4 to 5 a.m.
+shot store_choose_used.png
+spin K3 -1
+wait 200
+expect storeset 1
+said Store, set 1, replaces Winter Set
+spin K3 -1
+wait 200
+expect storeset 1
+spin K3 10
+wait 200
+expect storeset 8
+said Store, set 8, empty
+spin K3 -1
+wait 200
+expect storeset 7
+# a knob turned on and off again before the rest is up: asked only once it rests
+wait 600
+spin K3 1
+wait 600
+expect asking 0
+spin K3 -1
+wait 1300
+expect asking 34
+said STORE SET 7? SET 3. GLO yes, anything else no
+# --- 3. HOME: no; set 7 still empty, nothing loaded otherwise
+tap HOME
+wait 100
+setstate no
+said STORE SET 7 NOT STORED
+outis NOT STORED
+shot store_out_no.png
+expect view 28
+expect setmask 7
+expect live 0
+wait 3200
+expect outcome 0
+# --- 4. a set loaded (Winter Set: five pieces, cues on its first), changed, stored into it: its five, its name
+spin K4 1
+wait 1300
+expect asking 48
+said LOAD SET 1? Winter Set
+tap GLO
+wait 600
+setstate yes
+expect setlen 5
+expect live 1
+expect slotcues0 4
+wait 3200
+expect storeset 1
+setread 2 0 build/scenarios/storeknob/winter-before.dub1
+tap HOME
+wait 300
+spin K2 5
+wait 300
+tap GLO
+wait 300
+tap GLO
+wait 600
+expect dirty 1
+said Set page, Winter Set, 1 of 5, Hoarfrost, next Black Ice: Mode Set, Transition Mix, Store, set 1, Load, 3 sets stored
+spin K3 1
+wait 200
+said Store, set 1, replaces Winter Set
+wait 1300
+expect asking 34
+said STORE SET 1? Winter Set, replaces Winter Set. GLO yes, anything else no
+shot store_ask_replaces.png
+projmark
+tap GLO
+wait 600
+setstate yes
+said STORE SET 1 STORED
+expect live 1
+expect again 0
+expect setlen 5
+sethas 0 Winter Set
+wait 3200
+expect asking 0
+expect again 0
+expect outcome 0
+setread 2 0 build/scenarios/storeknob/winter-stored.dub1
+# it loads back as the pieces were: changed again, then loaded
+tap HOME
+wait 300
+spin K2 -5
+wait 300
+tap GLO
+wait 300
+tap GLO
+wait 600
+spin K4 1
+wait 200
+spin K4 -1
+wait 1300
+expect asking 48
+said LOAD SET 1? Winter Set
+tap GLO
+wait 600
+setstate yes
+projsame 5
+expect slotcues0 4
+expect setlen 5
+wait 3200
+# --- 5. HOME on set 1: the set as stored (its bytes)
+spin K3 1
+wait 1300
+expect asking 34
+tap HOME
+wait 100
+setstate no
+setbytes 0 build/scenarios/storeknob/winter-stored.dub1
+wait 3200
+# --- 6. the computer busy (a set coming in): NOT STORED, its transfer left as it is
+sxreq 20 02050010FFFFFFFF 20
+spin K3 1
+wait 1300
+expect asking 0
+outis NOT STORED
+said STORE SET 1 NOT STORED
+shot store_out_busy.png
+sxreq 24 - 24
+wait 3200
+# --- 7. the flash: the seal (the answer's) fails: FLASH ERROR, the set as it was
+spin K3 1
+wait 1300
+expect asking 34
+powercut 1
+tap GLO
+wait 600
+setstate failed
+outis FLASH ERROR
+said STORE SET 1 FLASH ERROR
+shot store_out_flash.png
+reboot
+wait 1000
+setbytes 0 build/scenarios/storeknob/winter-stored.dub1
+tap PLAY
+wait 400
+expect playing 0
+# ... and the pieces' save first fails: FLASH ERROR (not stored, not saved), still unsaved, nothing asked
+tap GLO
+wait 300
+tap GLO
+wait 600
+spin K1 -1
+wait 2500
+expect dirty 1
+powercut 1
+spin K3 1
+wait 1300
+expect asking 0
+outis FLASH ERROR
+said STORE SET 1 FLASH ERROR
+expect dirty 1
+reboot
+wait 1000
+setbytes 0 build/scenarios/storeknob/winter-stored.dub1
+expect setmask 7
+tap PLAY
+wait 400
+expect playing 0
+# --- 8. 30 s unanswered: NOT DONE, the set as it was
+tap GLO
+wait 300
+tap GLO
+wait 600
+spin K3 1
+wait 1300
+expect asking 34
+wait 29000
+expect asking 34
+wait 1100
+setstate timeout
+said STORE SET 1 NOT DONE: NO ANSWER
+outis NOT DONE
+setbytes 0 build/scenarios/storeknob/winter-stored.dub1
+wait 3200
+# --- 9. playing: Store grey, a turn says STOP FIRST and asks nothing
+tap PLAY
+wait 600
+expect playing 1
+tap HOME
+wait 300
+tap GLO
+wait 300
+tap GLO
+wait 600
+said Store, set 1, only when stopped, Load, 3 sets stored, only when stopped
+shot store_playing_rest.png
+spin K3 1
+wait 200
+said Store, stop first: sets store only while stopped
+msgis STOP FIRST
+expect bigring 1
+shot store_playing.png
+wait 1500
+expect asking 0
+expect outcome 0
+# the music started (MIDI) while it rests: STOP FIRST, nothing stored
+tap PLAY
+wait 600
+expect playing 0
+spin K3 1
+wait 200
+midi FA
+wait 1300
+expect asking 0
+outis STOP FIRST
+said STORE SET 1 STOP FIRST
+setbytes 0 build/scenarios/storeknob/winter-stored.dub1

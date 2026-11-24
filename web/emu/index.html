@@ -91,7 +91,7 @@ kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); b
 <header>
   <h1><a href="../" style="color:inherit;text-decoration:none">DUB-1</a></h1>
   <p>dub techno for the FM-1, in the browser: the same code the FM-1 runs</p>
-  <nav aria-label="DUB-1"><a href="../emu/" aria-current="page">Emulator</a><a href="../install/">Install</a><a href="../manual/">Manual</a><a href="https://github.com/sbegueria/fm1-dub">Source</a></nav>
+  <nav aria-label="DUB-1"><a href="../emu/" aria-current="page">Emulator</a><a href="../install/">Install</a><a href="../sets/">Sets</a><a href="../manual/">Manual</a><a href="https://github.com/sbegueria/fm1-dub">Source</a></nav>
 </header>
 
 <h2 class="sr" id="h-device">The FM-1</h2>
@@ -141,6 +141,21 @@ kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); b
   </div>
   <p class="note">A controller on this computer plays the FM-1 here as it would over USB: notes, CCs, clock and start / stop.
     Chrome and Edge (Web MIDI); the browser asks first.</p>
+</section>
+<section class="reader sets" aria-labelledby="h-sets">
+  <h2 id="h-sets">Hear a set</h2>
+  <p class="said"><span class="lbl">The set:</span> <span id="set-info">none chosen</span></p>
+  <div class="row" id="set-readyrow" hidden>
+    <label>A ready-made set <select id="set-ready"><option value="">choose one</option></select></label>
+  </div>
+  <div class="row">
+    <label>A <code>.dub1</code> file <input type="file" id="set-file" accept=".dub1"></label>
+    <label id="set-pickl" hidden>From the backup <select id="set-pick"></select></label>
+    <button id="set-load" type="button" disabled>Load into the pieces</button>
+  </div>
+  <p class="note">A ready-made set (made from DUB-1's videos), or one from the <a href="../sets/">Sets page</a> (or one of a backup's), loaded here as the FM-1 loads one:
+    its pieces into pieces 1 onwards (a set of five: 1 to 5, the rest as they were), its Mode and Transition, the
+    first of them playing. Hear it here before you send it. Switch on first; PLAY starts the song.</p>
 </section>
 <!-- for the computer's screen reader: what the screen says, read as it changes -->
 <div id="live-a" class="sr" aria-live="assertive" aria-atomic="true"></div>
@@ -196,7 +211,7 @@ kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); b
       <div>
         <h3>Setup <span>GLO</span></h3>
         <dl>
-          <dt>Tune</dt><dd>Fine tuning in cents, for every piece.</dd><dt>MIDI out, Lights</dt><dd>MIDI out over USB; the key lights and the buttons' glow. The audio load shows in the header, at its right.</dd><dt>Song mode <span>GLO again</span></dt><dd>Mode: Endless (as ever), Song (PLAY: an intro, the main, an outro, then silence) or Set (the songs in turn, from this piece to the last), for every piece. <b>Transition</b> (KNOB 2, Set mode alone), how one piece hands over to the next: <b>LP</b> (a pause, then the next from its intro), <b>Segue</b> (no stop: the next intro under the old echo held) or <b>Mix</b> (the tempo glides, the next kick in under the echo). <b>Values</b> (KNOB 4): the knobs' numbers a moment as a page opens (Peek), or Always.</dd>
+          <dt>Tune</dt><dd>Fine tuning in cents, for every piece.</dd><dt>MIDI out, Lights, Values</dt><dd>MIDI out over USB; the key lights and the buttons' glow; the knobs' numbers a moment as a page opens (Peek), or Always. The audio load shows in the header, at its right.</dd><dt>Set <span>GLO again</span></dt><dd>The eight pieces by name, the one playing lit (in Set mode the next marked, those past a set's end dimmed), the loaded set's name beside the page's. <b>Mode</b> (KNOB 1): Endless (as ever), Song (PLAY: an intro, the main, an outro, then silence) or Set (the songs in turn, from this piece to the last), for every piece. <b>Transition</b> (KNOB 2, Set mode alone), how one piece hands over to the next: <b>LP</b> (a pause, then the next from its intro), <b>Segue</b> (no stop: the next intro under the old echo held) or <b>Mix</b> (the tempo glides, the next kick in under the echo). <b>Store</b> (KNOB 3): your pieces as they are now kept as a set (the set loaded, else the first empty; a click a set number); rest on one and the FM-1 asks STORE SET n? (GLO yes); only while stopped. <b>Load</b> (KNOB 4): a set stored here, a click a set; rest on one and the FM-1 asks LOAD SET n? (GLO yes), as a load from the Sets page; only while stopped.</dd>
         </dl>
       </div>
       <div>
@@ -356,7 +371,7 @@ function hit(c, cls, attrs, parent = controls) {
 // what each control does (the Buttons list below says the same); a page button's light is its page, PLAY's
 // playing, REC's dub hold: those are toggle buttons (aria-pressed), the others plain ones
 const TIP = { FX: "The Dub page: the echo and the plate; again, the Echo page (Blur, Tone, Size, Cloud).", SEL: "The Arrangement page: every part's level on a meter; the knobs are Width, Wet and Duck (the dub mixer's rides the Form page's Drift); the white keys 1 to 6 mute the parts (the chord, pings, bass, kick, hats, noise; held: that part's channel strip, its Level, Echo, Plate and Filter), the black keys 1 to 5 (the chord, pings, bass, hats and kick) solo a part with a tap and throw it into the echo held, white 7 and 8 are the gap, white 9 to 12, held, make the dub moves (open, shut, drop, echo), white 13 to 16, held, four of the grid's effects (Time x2, Freeze, Tape stop, Stutter), and black 8 to 11 are the dub sirens (Wail, Whoop, Hi-lo, Laser: a tap a short one, held the slow one, its knobs Pitch, Rate, Depth, Echo). Held: Lock, the groove kept phrase after phrase.", ENV: "The Chord page (Density, Throws, Change, Vary); again, Chord voice (Attack, Decay); again, Chord filter (Cutoff around the piece's own, Reso, Env, Env decay); again, Chord FM (Algo, Ratio, Feedback, Colour); again, Chord LFO (Drift, Wave, Rate, Target; ALGORITHM its Target too).", LFO: "The Bass page (Groove, Vary, Density, Fifth); again, Bass voice (Octave, Shape, Gate, Glide); again, Bass FM (Algo, Ratio, Feedback, Bite).", EDIT: "A tap: the Chords page, eight slots (KNOB 1 the slot, the keys its root, KNOB 2 its kind, KNOB 3 its type, KNOB 4 Play: Endless, the walk writing slot 8 as they move up, or Loop, the eight in turn). Held: the next chord.",
-  GLO: "The Setup page; again, Song mode (Endless, Song, Set; a set's Transition: LP, Segue, Mix; Values). Held: saves all eight pieces; held on: the piece back to its recipe.", HOME: "The Form page (Energy, Vary, Motion, Drift); again, the Song page (Intro, Main, Outro, Kind); again, the Key page (tempo, root, mode, swing). Held with PLAY: the outro from the next phrase (again: back to the main). Held on (1.5 s): a shake of everything. Hold it and turn SELECT for the tempo.", SAVE: "The Noise page: Density, Vary; ALGORITHM its character. Again: Noise voice (Air, Tone, Decay, Width); again: Noise LFO (Drift, Wave, Rate, Target; ALGORITHM its Target too). Held: a nudge to the noise; held on: a shake.",
+  GLO: "The Setup page (Tune, MIDI out, Lights, Values); again, the Set page (the pieces by name; Mode: Endless, Song, Set; a set's Transition: LP, Segue, Mix; Store: your pieces kept as a set; Load: a stored set, loaded from here). Held: saves all eight pieces; held on: the piece back to its recipe.", HOME: "The Form page (Energy, Vary, Motion, Drift); again, the Song page (Intro, Main, Outro, Kind); again, the Key page (tempo, root, mode, swing). Held with PLAY: the outro from the next phrase (again: back to the main). Held on (1.5 s): a shake of everything. Hold it and turn SELECT for the tempo.", SAVE: "The Noise page: Density, Vary; ALGORITHM its character. Again: Noise voice (Air, Tone, Decay, Width); again: Noise LFO (Drift, Wave, Rate, Target; ALGORITHM its Target too). Held: a nudge to the noise; held on: a shake.",
   ARP: "The Pings page (Density, Vary); again, Pings voice (Octave, Tone, Length, Bend); again, Pings FM (Algo, Ratio, Feedback, Upper).", SEQ: "The Drums page (Kick, Hits, Vary). Again: Kick (Tune, Length, Punch, Rumble); again: Hats (Level, Tone, Length); again: the Pattern page (five lanes, sixteen steps on the white keys).", PLAY: "Play or rest (in Song or Set mode, a song from its intro). With HOME held: the outro.", REC: "Tap: dub hold (the echo and the cloud repeat what they hold; the chord holds). Hold: the effects grid, played on the white keys.",
   "OCT-": "On a layer's page, its level down (held: on). With OCT+, quickly: the layer muted or back.", "OCT+": "On a layer's page, its level up (held: on). With OCT-, quickly: the layer muted or back.", SELECT: "The DJ filter, on every page: left shut, right open, Off in the middle. With HOME held, the tempo.",
   ALGORITHM: "On a layer's page, its voice; on the Chords page, the walk; elsewhere, the screen (ripples, scope, spectrum, tape).", PRESETS: "The piece.", KNOB1: "The first value on the screen.", KNOB2: "The second value on the screen.",
@@ -694,20 +709,174 @@ $("again").addEventListener("click", () => last && say(last.screen, true, last.k
 for (const ev of ["pointerdown", "keydown"]) addEventListener(ev, () => { if (tts) tts.unlock(); }, true);
 
 // ---------------------------------------------------------------- storage
-function loadStore() {
+// (1.5.0, step 5) the saved objects in IndexedDB ("dub-emu", "objects": an object's number, its bytes): the frame
+// store's region alone is 272 KB, too big for localStorage's few MB once base64'd. What an older page left in
+// localStorage is moved over once (read back, then the old copy removed); without IndexedDB (a private window in some
+// browsers), localStorage as before
+const IDB_NAME = "dub-emu", IDB_OBJS = "objects";
+let storeDb = null;
+window.emuStore = { mode: "none", moved: false };
+function lsLoad() {
   try {
     const raw = JSON.parse(localStorage.getItem(STORE_KEY) || "{}"), out = {};
     for (const [o, b64] of Object.entries(raw)) out[o] = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)).buffer;
     return out;
   } catch { return {}; }
 }
-function saveStore(store) {
+function lsSave(store) {
   try {
     const raw = {};
-    for (const [o, u8] of Object.entries(store)) { let s = ""; for (const c of u8) s += String.fromCharCode(c); raw[o] = btoa(s); }
+    for (const [o, u8] of Object.entries(store)) { let s = ""; for (const c of new Uint8Array(u8)) s += String.fromCharCode(c); raw[o] = btoa(s); }
     localStorage.setItem(STORE_KEY, JSON.stringify(raw));
   } catch { /* storage unavailable: this session only */ }
 }
+const idbReq = (r) => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+function idbOpen() {
+  if (!window.indexedDB) return Promise.reject(new Error("no IndexedDB"));
+  const r = indexedDB.open(IDB_NAME, 1);
+  r.onupgradeneeded = () => r.result.createObjectStore(IDB_OBJS);
+  return idbReq(r);
+}
+async function idbAll(db) {
+  const st = db.transaction(IDB_OBJS).objectStore(IDB_OBJS);
+  const [keys, vals] = await Promise.all([idbReq(st.getAllKeys()), idbReq(st.getAll())]);
+  const out = {};
+  keys.forEach((k, i) => { out[k] = vals[i]; });
+  return out;
+}
+function idbPut(db, store) {
+  const tx = db.transaction(IDB_OBJS, "readwrite"), st = tx.objectStore(IDB_OBJS);
+  for (const [o, b] of Object.entries(store)) st.put(b instanceof ArrayBuffer ? b : new Uint8Array(b).slice().buffer, +o);
+  return new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error); });
+}
+async function loadStore() {
+  try { storeDb = await idbOpen(); } catch { storeDb = null; }
+  if (!storeDb) { window.emuStore.mode = "localStorage"; return lsLoad(); }
+  window.emuStore.mode = "IndexedDB";
+  let out = await idbAll(storeDb);
+  const old = lsLoad();
+  if (!Object.keys(out).length && Object.keys(old).length) {   // (once: an older page's, moved over)
+    try {
+      await idbPut(storeDb, old);
+      out = await idbAll(storeDb);
+      const same = Object.keys(old).every((k) => out[k] && out[k].byteLength === old[k].byteLength);
+      if (same) { try { localStorage.removeItem(STORE_KEY); } catch {} window.emuStore.moved = true; }
+      else out = old;
+    } catch { out = old; }
+  }
+  return out;
+}
+function saveStore(store) {
+  if (storeDb) idbPut(storeDb, store).catch(() => lsSave(store));
+  else lsSave(store);
+}
+async function forgetStore() {
+  try { localStorage.removeItem(STORE_KEY); } catch {}
+  try { if (storeDb) storeDb.close(); await idbReq(indexedDB.deleteDatabase(IDB_NAME)); } catch {}
+}
+
+// ---------------------------------------------------------------- a set to hear (1.5.0)
+// A .dub1 file read here (dub1sets.js's describe and asSet, dub1container.js's codec), then into the device as the
+// FM-1 loads a stored set (amb_web.c's web_set_load: the firmware's own decoder)
+let setFile = null, setHeld = false;             /* (beta2) setHeld: the Sets page's set, loaded as the emulator is on */
+const setLib = import("./dub1sets.js").catch(() => null);
+function setChosen() {
+  if (!setFile) return null;
+  return setFile.info.objs ? setFile.info.objs[+$("set-pick").value] : { bytes: setFile.bytes, info: setFile.info };
+}
+function setShow() {
+  const c = setChosen();
+  if (!c) { $("set-info").textContent = "none chosen"; $("set-load").disabled = true; return; }
+  const i = c.info, names = i.pieces.map((p) => p.name || p.recipeName).join(", ");
+  $("set-info").textContent = (setFile.from || "") + `${i.name ? "“" + i.name + "”, " : ""}${i.pieces.length} piece${i.pieces.length === 1 ? "" : "s"}: ${names}` +
+    (setHeld && !node ? " — loads when you switch on" : "");
+  $("set-load").disabled = !node;
+}
+$("set-file").addEventListener("change", async (e) => {
+  const X = await setLib, f = e.target.files && e.target.files[0];
+  setFile = null, setHeld = false;
+  $("set-pickl").hidden = true;
+  if (!f || !X) { setShow(); return; }
+  try {
+    const bytes = new Uint8Array(await f.arrayBuffer()), info = X.describe(bytes);
+    setFile = { bytes, info };
+    if (info.objs) {
+      const sel = $("set-pick");
+      sel.textContent = "";
+      info.objs.forEach((o, k) => {
+        const op = document.createElement("option");
+        op.value = k;
+        op.textContent = o.kind === 1 ? "the pieces (as they were)" : `set ${o.index + 1}: ${o.info.name || "(no name)"}`;
+        sel.append(op);
+      });
+      $("set-pickl").hidden = false;
+    }
+    setShow();
+  } catch (err) { $("set-info").textContent = err.message; $("set-load").disabled = true; }
+});
+$("set-pick").addEventListener("change", setShow);
+// (1.5.0, step 6) the ready-made sets: the site's sets/ beside the emulator (sets.json, made by tools/make_sets.sh; none
+// when the emulator is served alone): one chosen is read as a file chosen is
+fetch("../sets/sets.json").then((r) => (r.ok ? r.json() : [])).then((l) => {
+  if (!Array.isArray(l) || !l.length) return;
+  for (const o of l)
+    $("set-ready").append(new Option(`${o.name}: ${o.pieces.length} piece${o.pieces.length === 1 ? "" : "s"}`, o.file));
+  $("set-readyrow").hidden = false;
+}).catch(() => {});
+$("set-ready").addEventListener("change", async () => {
+  const X = await setLib, f = $("set-ready").value;
+  setFile = null, setHeld = false;
+  $("set-pickl").hidden = true;
+  if (!f || !X) { setShow(); return; }
+  try {
+    const r = await fetch("../sets/" + f);
+    if (!r.ok) throw new Error(`${f}: HTTP ${r.status}`);
+    const bytes = new Uint8Array(await r.arrayBuffer());
+    setFile = { bytes, info: X.describe(bytes) };
+    $("set-file").value = "";
+    setShow();
+  } catch (err) { $("set-info").textContent = err.message; $("set-load").disabled = true; }
+});
+// (step 7b) a set from the Sets page's cue editor ("Hear it": ../emu/#hear): handed over in this browser's storage
+// ("dub1-hear": its bytes, base64), read as a file chosen is; again when the editor hands over another (the storage
+// event, this tab already open). (beta2, the user's: it heard the pieces as they were) loaded by itself: at once if on,
+// else as it's switched on (the box says so)
+async function setHear() {
+  const X = await setLib;
+  let o = null;
+  try { o = JSON.parse(localStorage.getItem("dub1-hear") || "null"); } catch { o = null; }
+  if (!X || !o || !o.b64) return;
+  try {
+    const bytes = Uint8Array.from(atob(o.b64), (c) => c.charCodeAt(0));
+    setFile = { bytes, info: X.describe(bytes), from: `From the Sets page${o.from ? " (" + o.from + ")" : ""}: ` };
+    setHeld = true;
+    $("set-file").value = "";
+    $("set-ready").value = "";
+    $("set-pickl").hidden = true;
+    setShow();
+    window.emuHeard = o.t;
+    $("h-sets").scrollIntoView({ block: "center" });
+    if (node) await setLoad();
+  } catch (err) { $("set-info").textContent = err.message; $("set-load").disabled = true; }
+}
+if (location.hash === "#hear") setHear();
+window.addEventListener("hashchange", () => { if (location.hash === "#hear") setHear(); });
+window.addEventListener("storage", (e) => { if (e.key === "dub1-hear" && location.hash === "#hear") setHear(); });
+async function setLoad() {                      /* the set chosen into the pieces (Load into the pieces; the Sets page's) */
+  const X = await setLib, c = setChosen();
+  if (!X || !c || !node) return;
+  setHeld = false;
+  let bytes;
+  try { bytes = X.asSet(c.bytes); } catch (err) { status.textContent = err.message; return; }
+  const done = new Promise((res) => { setDone = res; });
+  node.port.postMessage({ type: "setload", bytes: bytes.slice().buffer });
+  const rc = await done;
+  status.textContent = rc >= 0 ? `Set loaded into the pieces${c.info.name ? ": " + c.info.name : ""}.` :
+    `Not loaded: not a set this DUB-1 takes (${rc}).`;
+  setShow();
+}
+$("set-load").addEventListener("click", setLoad);
+let setDone = null;
 
 // ---------------------------------------------------------------- MIDI in
 // Web MIDI: a controller on this computer, into the firmware as the FM-1's USB would take it (web_midi). Channel
@@ -778,16 +947,21 @@ async function switchOn() {
           if (m.said) heard(m.said);
           if (m.load !== undefined) cpu.textContent = `DUB-1 uses ${m.load}% of this computer's time`;
           if (m.store) saveStore(m.store);
+        } else if (m.type === "setloaded" && setDone) {
+          setDone(m.rc);
+          setDone = null;
         }
       };
     });
-    node.port.postMessage({ type: "load", wasm, store: loadStore(), master }, [wasm]);
+    node.port.postMessage({ type: "load", wasm, store: await loadStore(), master }, [wasm]);
     await ready;
     await ac.resume();
     $("start").hidden = true;
     controls.inert = false;
     $("mute").disabled = false;
     status.textContent = ac.sampleRate === 44100 ? "On." : `On (the browser runs audio at ${ac.sampleRate} Hz).`;
+    setShow();
+    if (setHeld) await setLoad();                /* (the Sets page's set, handed over before it was on) */
     syncButtons(); syncKeys();
     readerMode();
     // the button pressed is gone: the focus goes to the FM-1 it switched on, not back to the top of the page
@@ -808,8 +982,7 @@ $("mute").addEventListener("click", () => {
 });
 $("reset").addEventListener("click", () => {
   if ($("reset").dataset.armed) {
-    try { localStorage.removeItem(STORE_KEY); } catch {}
-    location.reload();
+    forgetStore().then(() => location.reload());
   } else {
     $("reset").dataset.armed = "1";
     $("reset").textContent = "Click again to forget everything";

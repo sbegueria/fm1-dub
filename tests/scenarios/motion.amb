@@ -35,7 +35,8 @@ shot resting.png
 # while resting, the change saves itself
 wait 5000
 expect dirty 0
-expect store_writes >0
+# (the boot's 3 saves: the two sets the FM-1 comes with, and WORK with their flag)
+expect store_writes >3
 reboot
 wait 300
 expect par0 40

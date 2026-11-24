@@ -1,0 +1,111 @@
+# (1.5.0, the user's: "instead of the current song's timeline ... the list of songs") the Set page, GLO again (was Song
+# mode): SET and the set's name on the rule ("SET 2/2 · ECHOSPACE 12"; none loaded: THE PIECES); the eight pieces by
+# name in two columns, the one playing lit, in Set mode the next marked, the pieces past the set's end dimmed; the
+# widest name (87 px) in its column; the screen reader's line; the header's battery as on every page. (setlit, setnext,
+# setdim, setcut: read from the screen; a knob's big ring, while it shows, covers the list: waited out)
+listen
+wait 600
+tap PLAY
+wait 300
+expect playing 0
+# no set ever loaded: the pieces, all eight in the set; Endless: no next mark
+tap GLO
+wait 200
+tap GLO
+wait 600
+expect view 28
+said Set page, the pieces, 1 of 8, Basic: Mode Endless, Transition LP, only in Set mode, Store, set 3, Load, 2 sets stored
+expect setlit 1
+expect setnext 0
+expect setdim 0
+expect setcut 0
+shot setpage_none.png
+# Set mode: the next marked (piece 2)
+spin K1 2
+wait 2500
+said Mode Set
+expect setnext 2
+expect setlit 1
+shot setpage_none_setmode.png
+# a set of five, "Echospace 12": its five in 1 to 5, 6 to 8 dimmed (Set mode stops before them)
+setfile build/scenarios/setpage/five.dub1 0,1,2,3,4 Echospace 12
+setin build/scenarios/setpage/five.dub1
+expect setlen 5
+expect par158 2
+# the third playing: lit; the fourth next; 6 to 8 dimmed
+piece 2
+wait 600
+tap PLAY
+wait 600
+expect playing 1
+tap HOME
+wait 300
+tap GLO
+wait 200
+tap GLO
+wait 600
+expect view 28
+said Set page, Echospace 12, playing 3 of 5, Steppers, next Fog: Mode Set, Transition LP, Store, set 3, only when stopped, Load, 2 sets stored
+expect setlit 3
+expect setnext 8
+expect setdim 224
+expect setcut 0
+shot setpage_set5_playing.png
+# Endless: the same list, no next mark
+spin K1 -2
+wait 2500
+said Mode Endless
+expect setnext 0
+expect setlit 3
+expect setdim 224
+shot setpage_set5_endless.png
+spin K1 2
+wait 2500
+expect setnext 8
+# the set's last piece: no next
+piece 4
+wait 600
+expect setlit 5
+expect setnext 0
+# a piece past the set's end, chosen by hand: lit; no next; "after the set" said
+piece 6
+wait 600
+expect setlit 7
+expect setnext 0
+tap HOME
+wait 300
+tap GLO
+wait 200
+tap GLO
+wait 600
+said Set page, Echospace 12, playing 7, after the set, Pressure: Mode Set
+shot setpage_after_set.png
+tap PLAY
+wait 600
+expect playing 0
+# the widest name, 87 px (NAME_PX): a piece's and the set's, in its column and on the rule
+piece 0
+wait 600
+name 0 WWWWWWWl
+name 4 WWWWWWWl
+name -1 WWWWWWWl
+tap HOME
+wait 300
+tap GLO
+wait 200
+tap GLO
+wait 600
+said Set page, WWWWWWWl, 1 of 5, WWWWWWWl, next Chamber: Mode Set
+expect setcut 0
+expect setlit 1
+expect setnext 2
+expect setdim 224
+shot setpage_widest.png
+# a low battery: the header's battery shown (its warning never hidden), the page as it was
+usbpower 0
+battery 530
+wait 600
+expect hdrbatt 1
+expect setlit 1
+expect setcut 0
+shot setpage_lowbatt.png

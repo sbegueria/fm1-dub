@@ -1,0 +1,204 @@
+# (the user's, testing 1.5.0-beta2) a set stored from the computer into the set loaded didn't change what played:
+# loading copies a set into the pieces, and a store replaces the stored copy only. Now its STORED outcome, then (once
+# it's over, or taken away) LOAD IT NOW? (the Load knob's question: GLO yes, anything else no, 30 s; its yes LOADED);
+# into another set, nothing more. The set loaded known from its load (APPLY, the Load knob); after a reboot, the set
+# stored whose name the pieces carry. The music started meanwhile: STORED, load it to hear it. The reader's lines
+listen
+wait 600
+tap PLAY
+wait 400
+expect playing 0
+# (the sets the FM-1 comes with, stored at its first boot: deleted, an empty store as this test was made for)
+setsdelete
+expect setmask 0
+# two versions of one set (Winter Set, five pieces): its first piece Morning, then Dawn
+name 0 Morning
+name -1 Winter Set
+dub1set build/scenarios/loadagain/a.dub1 5
+name 0 Dawn
+dub1set build/scenarios/loadagain/b.dub1 5
+name -1 Other
+dub1set build/scenarios/loadagain/c.dub1 3 noglob
+name 0 -
+name -1 -
+expectname 0 Basic
+expect live 0
+# stored into set 2, nothing loaded: STORED, nothing asked after it
+setsend 1 build/scenarios/loadagain/a.dub1
+wait 100
+tap GLO
+wait 100
+setstate yes
+outis STORED
+wait 3300
+expect outcome 0
+expect asking 0
+# loaded (the computer's APPLY): set 2 the set loaded, Morning playing
+sxreq 30 0201 30
+wait 100
+tap GLO
+wait 600
+setstate yes
+expect live 2
+expectname 0 Morning
+wait 3200
+# the new version into set 2: STORED, then LOAD IT NOW? (not while the outcome is up)
+setsend 1 build/scenarios/loadagain/b.dub1
+wait 100
+said STORE SET 2? Winter Set
+tap GLO
+wait 100
+setstate yes
+said STORE SET 2 STORED
+outis STORED
+shot again_stored.png
+wait 2700
+expect outcome 1
+expect asking 0
+wait 500
+expect asking 48
+expect again 1
+setstate asking
+said LOAD IT NOW? Winter Set. GLO yes, anything else no
+shot again_ask.png
+wait 28000
+shot again_ask_late.png
+# yes: loaded, Dawn now
+tap GLO
+wait 600
+setstate yes
+said LOAD SET 2 LOADED
+outis LOADED
+shot again_loaded.png
+expectname 0 Dawn
+expect setlen 5
+expect dirty 0
+expect live 2
+workcheck
+wait 3200
+expect outcome 0
+expect asking 0
+# the old version back into set 2, the outcome taken away early (a key): asked at once; no (HOME): the pieces as they
+# were (Dawn still), the set stored the old one
+setsend 1 build/scenarios/loadagain/a.dub1
+wait 100
+tap GLO
+wait 600
+tapkey w3
+wait 100
+expect outcome 0
+wait 100
+expect asking 48
+expect again 1
+tap HOME
+wait 100
+setstate no
+said LOAD SET 2 NOT LOADED
+outis NOT LOADED
+shot again_no.png
+expectname 0 Dawn
+expect view 0
+wait 3200
+expect outcome 0
+# unanswered 30 s: NOT DONE, as any question
+setsend 1 build/scenarios/loadagain/b.dub1
+wait 100
+tap GLO
+wait 3200
+expect asking 48
+wait 30100
+setstate timeout
+outis NOT DONE
+expectname 0 Dawn
+wait 3200
+# into another set (3): nothing asked after it
+setsend 2 build/scenarios/loadagain/c.dub1
+wait 100
+tap GLO
+wait 100
+setstate yes
+wait 3300
+expect outcome 0
+expect asking 0
+# the music started (MIDI) while STORED shows: not asked; STORED again, load it to hear it
+setsend 1 build/scenarios/loadagain/a.dub1
+wait 100
+tap GLO
+wait 100
+setstate yes
+wait 1000
+midi FA
+wait 2400
+expect asking 0
+said STORE SET 2 LOAD IT TO HEAR IT
+outis STORED
+shot again_playing.png
+midi FC
+wait 3200
+expect outcome 0
+expect asking 0
+tap PLAY
+wait 300
+tap PLAY
+wait 300
+expect playing 0
+# after a reboot the set loaded isn't known: the set stored whose name the pieces carry (Winter Set: set 2), asked
+reboot
+wait 300
+tap PLAY
+wait 300
+expect playing 0
+expect live 0
+expectname 0 Dawn
+setsend 1 build/scenarios/loadagain/b.dub1
+wait 100
+tap GLO
+wait 3300
+expect asking 48
+expect again 1
+tap GLO
+wait 600
+setstate yes
+expect live 2
+wait 3200
+# the computer's question meanwhile (a DELETE while STORED shows): LOAD IT NOW? not asked after it
+setsend 1 build/scenarios/loadagain/a.dub1
+wait 100
+tap GLO
+wait 300
+sxreq 31 0202 31
+wait 100
+expect asking 49
+tap HOME
+wait 3300
+expect asking 0
+expect outcome 0
+# set 2 deleted: no set loaded; stored again into set 2: nothing asked
+sxreq 31 0201 31
+wait 100
+tap GLO
+wait 100
+setstate yes
+expect live 0
+wait 3200
+setsend 1 build/scenarios/loadagain/b.dub1
+wait 100
+tap GLO
+wait 3300
+expect asking 0
+sethas 1 Winter Set
+# the Load knob's load: set 2 the set loaded again
+tap GLO
+wait 300
+tap GLO
+wait 600
+expect view 28
+spin K4 1
+wait 1400
+expect asking 48
+expect again 0
+said LOAD SET 2? Winter Set
+tap GLO
+wait 600
+setstate yes
+expect live 2

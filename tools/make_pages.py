@@ -8,6 +8,10 @@
   words/                      the screen reader's words files (web/words, from firmware/words.tsv)
   install/index.html          the web installer (web/amb_installer.html, with fm1pkg.js, fm1ota.js and
                               the package's metadata inlined; Chrome or Edge, Web MIDI)
+  sets/index.html             (1.5.0) the Sets page: back up, list, send, load, delete, download sets (web/dub1_sets.html,
+                              with web/dub1sets.js, web/dub1container.js, (step 7b) dub1cues.js, dub1cuetables.js and dub1makeset.js beside it; Chrome or Edge, Web MIDI)
+  sets/*.dub1, sets.json      (1.5.0, step 6) the ready-made sets (sets/, tools/make_sets.sh) to download, send or hear:
+                              their list for the Sets page and the emulator's "Hear a set"; README.txt (sets/README.md)
   manual/index.html, img/     the manual (tools/manual_html.py, from docs/MANUAL.md)
   cheatsheets/                the printable cheat sheets (docs/cheatsheets: each page and its PDF), and their list
   firmware/dub-VERSION.fwsc   the package the installer writes; also the download
@@ -87,11 +91,12 @@ your own chords and drum patterns.</p>
 <div class="shots">
   <img src="img/screen-launch.png" width="240" height="240" alt="DUB-1's launch screen: the name and its echoes in the layers' colours">
   <img src="img/screen-main.png" width="240" height="240" alt="DUB-1's main screen: the stabs' ripples round the chord Fm7, the layers' meters, the lanes of the bar">
-  <img src="img/screen-perform.png" width="240" height="240" alt="PERFORM, throwing every stab into the echo: double rings">
+  <img src="img/screen-perform.png" width="240" height="240" alt="The Arrangement page: a desk's meters, a row a part and the master, the duck under it">
 </div>
 <nav class="ways" aria-label="Get DUB-1">
   <a href="emu/"><strong>Try it in the browser</strong><span>The same code the FM-1 runs, with sound. Mouse, touch or keyboard; no FM-1 needed.</span></a>
   <a href="install/"><strong>Install <em class="v">v__VERSION__</em></strong><span>From Chrome or Edge, with the FM-1 connected by USB. Nothing to install on the computer.</span></a>
+  <a href="sets/"><strong>Sets</strong><span>Back up your pieces and sets, send a set to the FM-1, load it, make your own. Chrome or Edge, DUB-1 1.5 or later.</span></a>
   <a href="manual/"><strong>Manual</strong><span>Getting started in a few minutes, then everything else.</span></a>
   <a href="cheatsheets/"><strong>Cheat sheets</strong><span>One A4 page each: the panel, every layer, the arrangement, songs and sets. To print and keep by the FM-1.</span></a>
   <a href="firmware/__PKG__"><strong>Download <em class="v">__PKG__</em></strong><span>For the command-line installer: <code>python3 tools/fm1_install.py __PKG__</code></span></a>
@@ -109,9 +114,10 @@ your own chords and drum patterns.</p>
 <p>Eight pieces, each remembering how you left it; a voice for each layer on ALGORITHM, two more pages of
 sound under each layer's button, an FM page with the algorithm drawn. The screen shows the echo: each stab
 a ring, its repeats following.</p>
-<p>Or play it live: a DJ filter on the main page; PERFORM (SEL) mutes and solos the layers on the keys, throws,
-opens, shuts and drops the floor, and turns the knobs into four master actions, Filter, Dub, Energy and
-Space.</p>
+<p>Or play it live: a DJ filter on SELECT, on every page; the Arrangement page (SEL), a dub desk, mutes and solos
+the layers on the keys, throws them into the echo, opens, shuts and drops the floor, and plays four effects and the
+dub sirens. A piece can play as a song, an intro, the main and an outro, and the pieces as a set, one into the next.
+Keep your own sets on the FM-1: it comes with two.</p>
 <p class="small">To go back to the official firmware, use the installer's "Back to the stock firmware", or
 M-VAVE's updater, M-UPGRADE, from <a href="https://www.m-vave.com/download">m-vave.com/download</a>.
 DUB-1 is a fork of <a href="https://github.com/charlesvestal/fm1-amb">AMB-1</a> by Charles Vestal; its granular
@@ -186,6 +192,22 @@ def cheatsheets(version, out):
                                     .replace("__LIST__", "\n".join(rows)), encoding="utf-8")
 
 
+def ready_sets(out):
+    """(1.5.0, step 6) the ready-made sets beside the Sets page: each file sets/sets.json lists, read first (the Python
+    twin: a SET, its CRC, its name and pieces as listed), with the list and the README"""
+    sys.path.insert(0, str(SRC / "tools"))
+    import dub1_container as D
+    listed = json.loads((SRC / "sets" / "sets.json").read_text(encoding="utf-8"))
+    for o in listed:
+        c = D.parse((SRC / "sets" / o["file"]).read_bytes())
+        meta = next(ch for ch in c["chunks"] if ch["id"] == b"META")
+        if c["header"]["kind"] != 2 or D.name(meta["name"]) != o["name"]:
+            raise SystemExit(f"sets/{o['file']}: not the set sets/sets.json lists (tools/make_sets.sh)")
+        shutil.copy(SRC / "sets" / o["file"], out / o["file"])
+    shutil.copy(SRC / "sets" / "sets.json", out / "sets.json")
+    shutil.copy(SRC / "sets" / "README.md", out / "README.txt")
+
+
 def main(pkg, version, out):
     pkg, out = Path(pkg), Path(out)
     raw = pkg.read_bytes()
@@ -197,18 +219,25 @@ def main(pkg, version, out):
     name = f"dub-{re.sub(r'[^A-Za-z0-9.-]', '-', version)}.fwsc"
     if out.exists():
         shutil.rmtree(out)
-    for d in ("install", "manual", "firmware"):
+    for d in ("install", "sets", "manual", "firmware"):
         (out / d).mkdir(parents=True)
     shutil.copy(pkg, out / "firmware" / name)
     # the installer
     page = (SRC / "web" / "amb_installer.html").read_text(encoding="utf-8")
     lib = strip_module((SRC / "web" / "fm1pkg.js").read_text(encoding="utf-8")) + "\n" + \
         strip_module((SRC / "web" / "fm1ota.js").read_text(encoding="utf-8"))
-    meta = json.dumps({"version": version, "product": product, "pkg": "../firmware/" + name})
+    meta = json.dumps({"version": version, "product": product, "pkg": "../firmware/" + name,
+                       "sets": "../sets/dub1sets.js"})   # (Decisions 5: the check asks a 1.5+ FM-1 its full version)
     for mark in ("/*LIB*/", "/*META*/"):
         if page.count(mark) != 1:
             raise SystemExit(f"amb_installer.html must contain {mark} once")
     (out / "install" / "index.html").write_text(page.replace("/*LIB*/", lib).replace("/*META*/", meta), encoding="utf-8")
+    # (1.5.0) the Sets page, its modules beside it (the emulator has its own copies: web/emu/build.sh); (step 7b) the cue
+    # editor's two
+    shutil.copy(SRC / "web" / "dub1_sets.html", out / "sets" / "index.html")
+    for f in ("dub1sets.js", "dub1container.js", "dub1cues.js", "dub1cuetables.js", "dub1makeset.js"):
+        shutil.copy(SRC / "web" / f, out / "sets" / f)
+    ready_sets(out / "sets")
     # the manual (a complete page; its images beside it)
     subprocess.run([sys.executable, str(SRC / "tools" / "manual_html.py"), str(SRC / "docs" / "MANUAL.md"),
                     str(out / "manual" / "index.html")], check=True, capture_output=True)
@@ -225,7 +254,7 @@ def main(pkg, version, out):
     shutil.copytree(SRC / "web" / "words", out / "words")
     cheatsheets(version, out / "cheatsheets")
     (out / ".nojekyll").write_text("")
-    print(f"site: {out}: index.html, install/ ({product}), manual/, cheatsheets/, emu/, words/, firmware/{name} ({len(raw)} B)")
+    print(f"site: {out}: index.html, install/ ({product}), sets/, manual/, cheatsheets/, emu/, words/, firmware/{name} ({len(raw)} B)")
 
 
 if __name__ == "__main__":

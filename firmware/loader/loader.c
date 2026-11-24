@@ -71,6 +71,10 @@ static void ldr_record_clear(void)
 {
     fm1_updata_parm_clear();                        /* CRC 0: the SPL ignores it on a warm reset */
 }
+static void ldr_record_set(const uint8_t *r) { fm1_updata_parm_set(r); }
+/* the start counter (ldr_arm): the 8 bytes after the RAM record; they survive a warm reset as the record
+ * does, and DUB-1 zeroes them at every start (fm1_mailbox_clear) */
+static volatile uint32_t *ldr_count(void) { return fm1_ldr_count(); }
 static void ldr_progress(uint32_t done, uint32_t total) { (void)done; (void)total; ldr_poll(); }
 #include "ldr_core.c"
 
@@ -85,6 +89,7 @@ void ldr_main(void)
         ldr_poll();
         usb_retry(ldr_ms());
         if (usb.uboot_req) {                        /* soft key: mask-ROM UBOOT, as in Felucca */
+            ldr_disarm();                           /* (no stale start count after the rescue) */
             usb_detach();
             fm1_delay_ms(30);
             fm1_enter_uboot();
@@ -105,9 +110,9 @@ void ldr_main(void)
 void ldr_cstart(void)
 {
     uint32_t *p;
-    ldr_record_clear();                             /* first thing: a crash below cannot loop through a
-                                                     * warm reset; resume after power loss uses the flash record */
     for (p = _bss_start; p < _bss_end; p++)
         *p = 0;
+    ldr_arm();                                      /* first thing: counted, the RAM record armed again (at
+                                                     * most 3 starts in a row; then cleared) */
     ldr_main();
 }

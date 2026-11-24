@@ -1,0 +1,47 @@
+# (1.5.0, the user's, 2026-11-22) The cues kept but off (DUB1_CUES 0, the release's build): a set with cues loads them
+# (the Winter Set's Hoarfrost: 4, its DJ filter shut at bar 0 and opened from bar 8, two throws), Cues on, PLAY, and none
+# plays: the player never armed, none fired, no move or effect held, the DJ filter where it was; the Set page's KNOB 3
+# no Cues (a turn changes nothing of the cues, nothing said of them: since 2026-11-23 it is Store, storeknob.amb), Load
+# still KNOB 4. (amb_host_cues plays them: cues.amb)
+listen
+wait 1500
+tap PLAY
+wait 300
+expect playing 0
+setin sets/winter-set.dub1
+expect slotcues0 4
+cueson 1
+expect cuesoff 0
+tap PLAY
+wait 20000
+expect playing 1
+expect cuen 4
+expect cuelive 0
+expect cuedone 0
+expect cuemoves 0
+expect cuefx 0
+expect mac0 0
+# the Set page: Mode, Transition, Store, Load; KNOB 3 turned: the cues as they were (Store's question: no)
+tap PLAY
+wait 300
+tap GLO
+wait 200
+tap GLO
+wait 600
+expect view 28
+said Set page, Winter Set, 1 of 5, Hoarfrost, next Black Ice: Mode Set, Transition Mix, Store, set 1, Load, 2 sets stored
+shot set_nocues.png
+said_none Cues
+spin K3 -1
+wait 300
+expect cuesoff 0
+spin K3 1
+wait 300
+expect cuesoff 0
+said_none Cues
+wait 1500
+expect asking 34
+tap HOME
+setstate no
+expect cuesoff 0
+said_none Cues

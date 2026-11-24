@@ -177,7 +177,7 @@ def convert(md):
         if ln.startswith("# "):                         # the title; DUB-1's own a way home (the site's root)
             t = ln[2:].strip()
             if t == NAME:                               # the site's header (home, the other pages), then the title
-                out.append('<header class="site"><a class="home" href="../">DUB-1</a><nav aria-label="DUB-1"><a href="../emu/">Emulator</a><a href="../install/">Install</a><a href="../manual/" aria-current="page">Manual</a><a href="https://github.com/sbegueria/fm1-dub">Source</a></nav></header>')
+                out.append('<header class="site"><a class="home" href="../">DUB-1</a><nav aria-label="DUB-1"><a href="../emu/">Emulator</a><a href="../install/">Install</a><a href="../sets/">Sets</a><a href="../manual/" aria-current="page">Manual</a><a href="https://github.com/sbegueria/fm1-dub">Source</a></nav></header>')
                 out.append('<h1>Manual</h1>')
             else:
                 out.append(f'<a class="home" href="../">{NAME}</a>\n<h1>{inline(t)}</h1>')

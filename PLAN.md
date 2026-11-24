@@ -1035,6 +1035,16 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   answering after 562 requests" (about half the package), the screen blank (the loader's), then "FM-1 not found";
   unplugging and replugging the USB and installing again finished it. To look into: why the loader stopped
   mid-write (a USB drop? the loader's USB poll, its retries), and whether the installer could reconnect by itself.
+  A second stall 2026-10-31 (1.4.2 -> 1.5.0-beta1, through a hub, "disconnected after 467 requests") ended in the
+  ROM's UBOOT after a power cycle; only fm1_rescue.sh brought it back.
+  **Installers done (branch installer, build/design/REPORT-installer.txt):** both installers wait and resume (the
+  last answer again at 6 s; a handshake and the upgrade command again at 17 s; up to 30 s for the loader to come
+  back on USB; 3 times), keep a log of the session (fm1_install.py: ~/fm1-install-logs/; the page: "Copy the log"),
+  say honestly what to do when it can't finish (no hub, install again, else the chip's download mode: the rescue
+  or M-Flasher), and advise before installing (no hub, keep it on). **Firmware side, to decide (the report, 4):**
+  the loader writes the app's first sector last (a cut write then fails to mount, so the SPL looks for the flash
+  record), and keeps the RAM record armed while it writes (a loader reset comes back to the loader); both need a
+  device test with a deliberately cut write.
 - **The knobs without numbers** (the user, 2026-10-25; **prototyped**, branch dub-1.4-knobs: the rule below; with
   the big ring's panel, the user's: "more conspicuous ... a rectangle with semi-transparent background"): the
   continuous knobs (0-100, centred) lose their number (the ring shows it; the big ring gives it exactly while
@@ -1152,6 +1162,21 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
       page), the Songs take calling the outro once the chord is in
 - [x] Released 1.4.1, 2026-10-28: v1.4.1 at 861a363 (the commits since 1.4.0 cherry-picked onto main, none touching
       build/), the GitHub release with dub-1.4.1.fwsc, the site (installer FM-1_8010401)
+
+## 1.4.3 (released 2026-10-30, v1.4.3 at e89138a)
+- [x] MIDI CC in (Christian Meier's PR #4, his commit kept; host mode still open), the Chord filter page, Colour on
+      the Chord voice page, ENV's nudge on Env and Env decay, the stab's filter after the records (format 36), fuller
+      intros and outros and Segue from the second phrase (REPORT-introoutro.md), the GCC 12 fix
+- [x] The reply to Christian on PR #4 (build/design/REPLY-pr4.md), posted by the user; and on #5-#8 (REPLY-pr5-8.md)
+- [x] Short 67 (play from a controller) uploaded and the Reddit post made, by the user (2026-10-31)
+
+## MIDI controllers, from Christian's PRs (the user, 2026-10-30; REVIEW-pr5-8.md)
+- [x] #6 (the emulator's Web MIDI in) and #8 (tests on Linux) merged on dev, his authorship; for the next release
+- [ ] USB host mode, ours from #4/#5's commit 81b3f41 and its SIE test: REVIEW-pr4.md's five points, off by default or
+      experimental until tried on the FM-1 (5 V on the port, a class-compliant keyboard)
+- [ ] General MIDI feedback: a knob's CC sent back when it changes on the FM-1 (not echoing a controller's own move),
+      over USB and the emulator's MIDI out; a Setup switch, off by default
+- The Intech Grid profile not taken (too niche): his fork, linked from the manual if he likes; close #5 and #7 then
 
 ## To discuss: the pings (the user, 2026-10-28)
 "One thing to reflect upon: the pings. Most of the tracks I've analysed do not have this voice. We shall discuss

@@ -1,0 +1,190 @@
+# (1.5.0, format 37) the project in the frame store, the WORK object: saved there (never OBJ_PROJ again), read at the
+# boot; a save while playing goes into a frame erased ahead (no erase: no gap), and when none is left, it waits for the
+# stop (autosave); a 1.4 save made since (a return to 1.4.x) taken again at the boot, their newer edits winning; after a
+# failed boot the version before; a power cut in a save: the version before; names on the screens and to the reader,
+# kept by a save; and mutated WORKs written as the newest version, booted: never half taken (fuzzboot)
+wait 300
+# (a fresh unit's first boot saved WORK once: the flag of the sets the FM-1 comes with, stored with it)
+expect works 1
+expect objseq 0
+expect format 37
+# a change, saved (GLO held) while it plays: into one of the two frames the boot erased ahead
+tap ENV
+spin K2 -100
+spin K2 40
+expect par111 40
+press GLO
+wait 600
+release GLO
+expect dirty 0
+expect store_writes 4
+expect works 2
+reboot
+wait 300
+expect par111 40
+expect format 37
+expect migrated 0
+workcheck
+# mutated WORKs as the newest version, a boot each: the mutated one only when it reads whole, else the one before
+fuzzboot 300
+reboot
+wait 300
+expect par111 40
+workcheck
+# two more saves while playing (a reboot erased two frames ahead again), then a third: none erased, so not yet (no
+# erase while playing: a gap); stopped and quiet, autosave saves it
+tap ENV
+spin K2 5
+press GLO
+wait 600
+release GLO
+expect dirty 0
+spin K2 5
+press GLO
+wait 600
+release GLO
+expect dirty 0
+expect par111 50
+spin K2 5
+press GLO
+wait 600
+release GLO
+expect dirty 1
+expect playing 1
+tap PLAY
+wait 50
+expect playing 0
+wait 60000
+expect dirty 0
+reboot
+wait 300
+expect par111 55
+workcheck
+# after a failed boot (the guard's count 1): the version before (50), said; then a good boot: the newest again
+listen
+bootfail
+reboot
+wait 300
+expect par111 50
+said OLDER SAVE LOADED
+reboot
+wait 300
+expect par111 55
+# a power cut in a save (at its third erase or program): the version before
+tap ENV
+spin K2 10
+expect par111 65
+tap PLAY
+wait 50
+powercut 3
+press GLO
+wait 600
+release GLO
+expect dirty 1
+reboot
+wait 300
+expect par111 55
+workcheck
+# names, as a set gives them (the host's "name"): on the screens (the header's tag), to the reader, kept by a save.
+# (step 5, Decisions 3) On USB power the battery shows, but steps aside for a name wider than 68 px (WWWWWWW: 84)
+usbpower 1
+name 2 Night Bus
+name 5 WWWWWWW
+name -1 Winter Set
+expectname 2 Night Bus
+expectname 3 Fog
+turn PRESET 2
+wait 600
+expect piece 2
+said Night Bus
+shot name_header.png
+wait 1500
+expect hdrbatt 1
+shot name_batt.png
+turn PRESET 3
+wait 600
+expect piece 5
+shot name_wide.png
+wait 1500
+expect hdrbatt 0
+expect hdrcut 0
+shot name_tag.png
+usbpower 0
+# (Decisions 4) a low battery (under 20%) is never hidden: beside the wide name it shows, the name cut ("…"); charged
+# (or none), the name whole and no battery; a name that fits beside it not cut
+battery 530
+wait 600
+expect hdrbatt 1
+expect hdrcut 1
+shot name_lowbatt.png
+battery 600
+wait 600
+expect hdrbatt 0
+expect hdrcut 0
+battery 530
+turn PRESET -3
+wait 2200
+expect piece 2
+expect hdrbatt 1
+expect hdrcut 0
+shot name_lowbatt_fits.png
+turn PRESET 3
+wait 2200
+expect piece 5
+battery -1
+tap PLAY
+wait 50
+press GLO
+wait 600
+release GLO
+expect dirty 0
+reboot
+wait 300
+expectname 2 Night Bus
+expectname 5 WWWWWWW
+expectname 0 Basic
+workcheck
+name 5 -
+expectname 5 Night Drive
+# a 1.4 save made since WORK took the last (a return to 1.4.x, saved there: 36, OBJ_PROJ): taken at the boot, its
+# edits winning, and WORK saved from it at once; 1.4's save itself never written by 1.5.0
+tap ENV
+spin K2 -100
+spin K2 20
+store36
+expect objseq 1
+reboot
+wait 300
+expect par111 20
+expect migrated 1
+expectname 2 Steppers
+workcheck
+tap ENV
+spin K2 3
+tap PLAY
+wait 50
+press GLO
+wait 600
+release GLO
+reboot
+wait 300
+expect par111 23
+expect objseq 1
+expect migrated 1
+# a .dub1 file (tests/host/work-1.5.0.dub1: a WORK the simulator wrote, names, Fog playing) read as WORK is at a boot:
+# (step 4) refused, its "Dub Chamber" (79 px) wider than the header's tag held; (step 5, Decisions 3: the battery steps
+# aside, 87 px) read again. The same with "Woodward Dub" (92 px, tests/host/work-1.5.0-wide.dub1) refused; with "Dub
+# Room" and slot 5 holding recipe 8's piece (tests/host/work-1.5.0-step4.dub1) read
+dub1in tests/host/work-1.5.0.dub1
+expect piece 3
+expectname 1 Dub Chamber
+expectname 6 Pressure 2
+expectname 2 Steppers
+dub1no tests/host/work-1.5.0-wide.dub1
+dub1in tests/host/work-1.5.0-step4.dub1
+expect piece 3
+expectname 1 Dub Room
+expectname 6 Pressure 2
+expectname 2 Steppers
+expect recipe4 7
+expectname 4 Haze

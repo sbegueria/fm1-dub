@@ -72,7 +72,7 @@ spin K1 2
 wait 300
 spin K2 2
 wait 1498
-shot screen-song-mode.png
+# (1.5.0: the Set page, GLO again, was Song mode: its shot at the end, a set loaded; the time here kept)
 spin K2 -2
 spin K1 -2
 wait 300
@@ -161,8 +161,9 @@ wait 1500
 spin K4 -30
 tap HOME
 # (format 35, step 5b: Basic's Drift 50, back to it from the mixer's 100) a Groove: Motion 57 from Basic's 12, one
-# playing at 252 s
-turn K3 45
+# playing at 252 s; (1.5.0) Motion 55: since 1.4.0 Motion 57 has a Thin there and no Groove before 280 s (a Groove or a
+# Thin is a coin's toss), 55 a Groove at 246 to 252 s, the time the same so the shots after it keep their places
+turn K3 43
 wait 252000
 expect section 2
 shot screen-groove.png
@@ -267,3 +268,30 @@ spin K3 55
 wait 300
 expect par15 55
 shot screen-motion.png
+# (1.5.0, the user's) the Set page, GLO again: the Winter Set loaded, Set mode, Mix, its second piece playing: lit,
+# the third marked next, 6 to 8 dimmed (past the set's end), the set's name beside the page's; (the user's, 2026-11-22)
+# KNOB 4 Load: the two ready-made sets stored as sets 1 and 2 ("2 sets")
+tap PLAY
+wait 300
+setsend 0 sets/winter-set.dub1
+wait 100
+tap GLO
+wait 3300
+setsend 1 sets/four-to-five.dub1
+wait 100
+tap GLO
+wait 3300
+setin sets/winter-set.dub1
+expect setlen 5
+piece 1
+wait 600
+tap PLAY
+wait 2000
+tap GLO
+wait 200
+tap GLO
+wait 300
+expect view 28
+expect par158 2
+wait 1500
+shot screen-set.png

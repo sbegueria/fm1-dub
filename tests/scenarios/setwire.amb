@@ -1,0 +1,373 @@
+# (1.5.0, step 4) the set protocol (firmware/src/app/setwire.c) over the simulated USB, as tools/dub1_set.py speaks it:
+# a set sent in, asked on the screen, GLO keeps it, anything else (another button, a key, a knob, 30 s) doesn't; LIST,
+# READ (WORK as it is, a set as stored), APPLY into the slots (a set of five: slots 6 to 8 kept, Set mode ending at its
+# fifth), DELETE; BUSY while playing and while a question waits; the NAKs; a save while a set comes in waits for it.
+# Names by width (names.h: what the header's tag holds beside its phrase), each slot its recipe (a set may move one)
+listen
+wait 600
+namecheck
+tap PLAY
+wait 400
+expect playing 0
+# (the sets the FM-1 comes with, stored at its first boot: deleted, an empty store as this test was made for)
+setsdelete
+expect setmask 0
+# the sets, made here from the pieces as they are: five (Winter, Night Drive, recipe 8's piece in slot 3) and three (no
+# GLOB: the device's globals kept)
+name 0 Winter
+name 1 Night Drive
+name -1 Echo Set
+slotrecipe 2 7
+expect recipe2 7
+expectname 2 Haze
+tap ENV
+spin K2 -100
+spin K2 31
+expect par111 31
+dub1set build/scenarios/setwire/set5.dub1 5
+name -1 Three
+dub1set build/scenarios/setwire/set3.dub1 3 noglob
+name -1 -
+# while playing: HELLO, STATUS, LIST and READ answer (Decisions 3: read-only), the rest BUSY "stop first"
+tap PLAY
+wait 300
+expect playing 1
+sxreq 01 - 01
+sxreq 03 - 03
+sxreq 02 - 02
+sxreq 10 010000000001 10
+sxreq 30 0201 7E 01
+sxreq 31 0201 7E 01
+setsend 1 build/scenarios/setwire/set5.dub1 101
+tap PLAY
+wait 300
+expect playing 0
+# sent to set 2 (slot 1): asked on the whole screen and to the reader; a request meanwhile BUSY "answer on the FM-1"
+setsend 1 build/scenarios/setwire/set5.dub1
+wait 100
+expect asking 34
+setstate asking
+said STORE SET 2? Echo Set. GLO yes, anything else no
+shot ask_store.png
+wait 28000
+expect asking 34
+shot ask_store_late.png
+sxreq 02 - 7E 02
+sxreq 20 0201 7E 02
+expect playing 0
+tap GLO
+wait 100
+setstate yes
+expect asking 0
+said STORE SET 2 STORED
+sethas 1 Echo Set
+expect playing 0
+# (the user's, 1.5.0-beta1: the header's 1.3 s couldn't be read) the outcome on the whole screen, 3 s, the reader's
+# words as before; then the screen as it was
+outis STORED
+shot out_stored.png
+wait 2650
+expect outcome 1
+wait 300
+expect outcome 0
+outis -
+shot after_store.png
+# no: another button (not done, and not played), a key, a knob; 30 s unanswered
+setsend 4 build/scenarios/setwire/set3.dub1
+tap PLAY
+wait 100
+setstate no
+expect playing 0
+said STORE SET 5 NOT STORED
+outis NOT STORED
+shot out_not_stored.png
+sethas 4 -
+# a button within its first 400 ms does nothing (the answer's knob, still turning, doesn't take it away); after it,
+# takes it away and does nothing else (PLAY: not played)
+tap PLAY
+wait 100
+outis NOT STORED
+wait 300
+tap PLAY
+wait 100
+expect outcome 0
+expect playing 0
+msgis -
+setsend 4 build/scenarios/setwire/set3.dub1
+tapkey w3
+wait 100
+setstate no
+setsend 4 build/scenarios/setwire/set3.dub1
+turn K1 1
+wait 100
+setstate no
+sethas 4 -
+setsend 4 build/scenarios/setwire/set3.dub1
+wait 31000
+setstate timeout
+said NOT DONE: NO ANSWER
+outis NOT DONE
+shot out_not_done.png
+sethas 4 -
+# the three kept in set 5 (slot 4); CANCEL withdraws a question
+setsend 4 build/scenarios/setwire/set3.dub1
+wait 100
+setstate asking
+sxreq 24 - 24
+wait 100
+setstate no
+outis NOT DONE
+shot out_cancelled.png
+setsend 4 build/scenarios/setwire/set3.dub1
+tap GLO
+wait 100
+sethas 4 Three
+sethas 1 Echo Set
+# both read back over the wire as stored, and WORK as it is now
+setread 2 1 build/scenarios/setwire/back5.dub1
+setread 2 4 build/scenarios/setwire/back3.dub1
+setread 1 0 build/scenarios/setwire/work.dub1
+dub1in build/scenarios/setwire/work.dub1
+workcheck
+wait 3000
+expect outcome 0
+# (step 5, Decisions 3) a whole backup while the music plays (the web page's): LIST, WORK and both sets read, each whole
+# and its CRC good; the flash read in main.c's 256-byte IRQ-off windows, at the device's measured times (the host's
+# model): none longer than a page's (1.7 ms, which missed no block on the FM-1), no audio block missed
+tap PLAY
+wait 300
+expect playing 1
+irqreset
+sxreq 02 - 02
+setread 1 0 build/scenarios/setwire/work_playing.dub1
+setread 2 1 build/scenarios/setwire/back5_playing.dub1
+setread 2 4 build/scenarios/setwire/back3_playing.dub1
+sethas 1 Echo Set
+expect flashxruns 0
+expect irqlong 0
+expect irqmax 3
+expect playing 1
+tap PLAY
+wait 300
+expect playing 0
+# the pieces changed, then set 2 loaded into the slots: its five in 1 to 5, its names, Haze's piece in slot 3, its
+# Song mode; slots 6 to 8 as they were; its first piece playing; WORK saved with it
+name 0 -
+name 1 -
+slotrecipe 2 2
+turn PRESET 6
+wait 600
+expect piece 6
+spin K2 -100
+spin K2 7
+expect par111 7
+turn PRESET -6
+wait 600
+expect piece 0
+spin K2 -100
+spin K2 12
+sxreq 30 0201 30
+wait 100
+setstate asking
+said LOAD SET 2? Echo Set
+shot ask_load.png
+tap GLO
+wait 600
+setstate yes
+said LOAD SET 2 LOADED
+outis LOADED
+shot out_loaded.png
+expect piece 0
+expect setlen 5
+expect recipe2 7
+expect recipe5 5
+expectname 0 Winter
+expectname 1 Night Drive
+expectname 2 Haze
+expectname 6 Pressure
+expect dirty 0
+workcheck
+# a key takes the outcome away, and does nothing else (the key's piece not chosen, nothing played)
+wait 300
+tapkey w5
+wait 100
+expect outcome 0
+expect piece 0
+expect playing 0
+# (step 5, Decisions 3) the set's name on the Set page (GLO again), where Set mode is chosen, and its pieces; said with the page
+tap GLO
+wait 200
+tap GLO
+wait 600
+expect view 28
+said Set page, Echo Set, 1 of 5, Winter: Mode Endless
+shot smode_set.png
+tap HOME
+wait 300
+turn PRESET 6
+wait 600
+expect par111 7
+turn PRESET -6
+wait 600
+reboot
+wait 300
+expect setlen 5
+expect recipe2 7
+expectname 1 Night Drive
+expect par111 31
+workcheck
+tap PLAY
+wait 300
+expect playing 0
+# a set of three without GLOB: Song mode and the rest the device's
+sxreq 30 0204 30
+tap GLO
+wait 600
+setstate yes
+expect setlen 3
+expectname 0 Winter
+expectname 2 Haze
+expectname 3 Fog
+expectname 4 Concrete
+# DELETE: asked, then gone (and LIST says so)
+sxreq 31 0204 31
+wait 100
+said DELETE SET 5? Three
+shot ask_delete.png
+tap GLO
+wait 100
+setstate yes
+outis DELETED
+shot out_deleted.png
+wait 3000
+sethas 4 -
+sethas 1 Echo Set
+# NAKs: no transfer, an unknown command, a set past 8, none stored, a WORK sent as a set, a short COMMIT, a DATA out of
+# order, too long
+sxreq 21 0000AA 7F 0A
+sxreq 22 - 7F 0A
+sxreq 55 - 7F 02
+sxreq 30 0209 7F 01
+sxreq 30 0206 7F 03
+sxreq 31 0206 7F 03
+sxreq 10 0209000000 7F 01
+setsend 3 tests/host/work-1.5.0.dub1 6
+sxreq 20 02030010FFFFFFFF 20
+sxreq 21 0002AABB 7F 09
+sxreq 22 - 7F 09
+sxreq 24 - 24
+sxreq 20 0203013FFFFFFFFF 7F 04
+# a save while a set comes in waits (the store held): NOT SAVED YET; then the transfer dropped after 10 s quiet, and
+# autosave saves it
+sxreq 20 02030010FFFFFFFF 20
+tap ENV
+spin K2 2
+press GLO
+wait 600
+release GLO
+said NOT SAVED YET A SET COMING IN
+expect dirty 1
+wait 15000
+expect dirty 0
+workcheck
+sethas 3 -
+# (Decisions 4) restore everything: one question (RESTORE BACKUP? sets 2 and 3 + the pieces), its yes keeps those sets
+# and the pieces as they come, not asked again; a set it didn't name (set 1) asked as ever; the pieces (work.dub1, read
+# above: Winter, Night Drive, Haze's in slot 3) taken into the slots and saved; then it's over (set 5 asked again)
+tap PLAY
+wait 300
+expect playing 1
+sxreq 32 0601 7E 01
+tap PLAY
+wait 300
+expect playing 0
+worksend 0 build/scenarios/setwire/work.dub1 01
+name 0 Changed
+name 1 Also
+expectname 0 Changed
+sxreq 32 0601 32
+wait 100
+setstate asking
+said RESTORE BACKUP? 2 sets + the pieces. GLO yes, anything else no
+shot ask_restore.png
+tap GLO
+wait 100
+setstate yes
+said RESTORE BACKUP YES, RESTORING
+outis RESTORING
+shot out_restoring.png
+setsend 1 build/scenarios/setwire/back5.dub1 200
+wait 100
+said RESTORED SET 2 Echo Set
+outis RESTORED SET 2
+setsend 0 build/scenarios/setwire/set3.dub1
+wait 100
+setstate asking
+tap HOME
+wait 100
+setstate no
+sethas 0 -
+setsend 2 build/scenarios/setwire/back3.dub1 200
+worksend 0 build/scenarios/setwire/work.dub1 200
+wait 600
+said RESTORE DONE 3 kept
+outis RESTORE DONE
+shot after_restore.png
+sethas 1 Echo Set
+sethas 2 Three
+expectname 0 Winter
+expectname 1 Night Drive
+expectname 2 Haze
+expect dirty 0
+workcheck
+reboot
+wait 300
+expectname 0 Winter
+workcheck
+tap PLAY
+wait 300
+expect playing 0
+setsend 2 build/scenarios/setwire/back3.dub1
+setstate asking
+tap HOME
+wait 100
+# a restore gone quiet: ended short, said so
+sxreq 32 8000 32
+tap GLO
+wait 100
+setstate yes
+wait 11000
+said RESTORE NOT ALL CAME
+outis NOT ALL CAME
+shot out_not_all_came.png
+setsend 7 build/scenarios/setwire/back3.dub1
+setstate asking
+tap HOME
+wait 100
+sethas 7 -
+# (Decisions 5) a restore stops at the first set that fails on the flash (the flash's power lost from there, as powercut
+# models it: set 6's BEGIN or DATA refused), and says which failed and which were kept, on the screen and to the reader;
+# set 7, which it named, then asked as ever
+sxreq 32 7000 32
+tap GLO
+wait 100
+setstate yes
+setsend 4 build/scenarios/setwire/back3.dub1 200
+powercut 1
+setsend 5 build/scenarios/setwire/back5.dub1 8
+wait 100
+said RESTORE STOPPED. SET 6 FAILED ON THE FLASH. kept: set 5
+outis RESTORE STOPPED
+shot restore_stopped.png
+reboot
+wait 300
+sethas 4 Three
+sethas 5 -
+tap PLAY
+wait 300
+expect playing 0
+setsend 6 build/scenarios/setwire/back3.dub1
+setstate asking
+tap HOME
+wait 100
+sethas 6 -

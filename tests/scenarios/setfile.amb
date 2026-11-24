@@ -1,0 +1,24 @@
+# (1.5.0, step 6) amb_host writes a set from a scenario: `include` runs a scenario up to its film; `setfile` writes
+# the pieces it names, in its order, as a SET (slots 1..n, read back at once); `setin` loads it as the FM-1 loads one;
+# `piece` chooses one at once
+wait 600
+tap PLAY
+wait 300
+expect playing 0
+include tests/host/setfile_part.amb splash
+expectname 2 Dawn
+setfile build/scenarios/setfile/two.dub1 2,0 Two Of Them
+piece 5
+expect piece 5
+setin build/scenarios/setfile/two.dub1
+expect setlen 2
+expect piece 0
+expectname 0 Dawn
+expect recipe0 7
+expectname 1 Basic
+expect recipe1 0
+workcheck
+reboot
+wait 300
+expectname 0 Dawn
+expect setlen 2

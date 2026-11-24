@@ -86,6 +86,36 @@ void en_midi_out(uint32_t st, uint32_t d1, uint32_t d2) { plat_midi_out(st >> 4 
 
 int plat_store_load(uint32_t obj, void *dst, uint32_t max) { return flash_ok ? st_load(obj, dst, max) : -1; }
 int plat_store_save(uint32_t obj, const void *src, uint32_t len) { return flash_ok ? st_save(obj, src, len) : -9; }
+uint32_t plat_store_seq(uint32_t obj) { return flash_ok ? st_seq(obj) : 0u; }
+/* (1.5.0) the frame store (storage.c's fs_*): nothing without the expected flash part (RAM only, as the objects) */
+_Static_assert(PLAT_FS_BUSY == FS_BUSY && PLAT_FS_MAX == FS_MAX, "plat.h's frame store is storage.c's");
+void plat_fs_scan(void)
+{
+    if (flash_ok)
+        fs_scan();
+}
+int plat_fs_find(uint32_t kind, uint32_t index, uint32_t nth, uint32_t *len) { return flash_ok ? fs_find(kind, index, nth, len) : -1; }
+int plat_fs_has(uint32_t kind, uint32_t index) { return flash_ok ? fs_has(kind, index) : 0; }
+int plat_fs_read(int frame, uint32_t off, void *dst, uint32_t n) { return flash_ok ? fs_read(frame, off, dst, n) : -1; }
+int plat_fs_begin(uint32_t kind, uint32_t index, uint32_t len, int may_erase)
+{
+    return flash_ok ? fs_begin(kind, index, len, may_erase) : -9;
+}
+int plat_fs_put(const void *src, uint32_t n) { return flash_ok ? fs_put(src, n) : -9; }
+int plat_fs_commit(void) { return flash_ok ? fs_commit() : -9; }
+int plat_fs_finish(void) { return flash_ok ? fs_finish() : -9; }
+int plat_fs_seal(void) { return flash_ok ? fs_seal() : -9; }
+int plat_fs_open(void) { return fs_open_frame(); }
+void plat_fs_abort(void) { fs_abort(); }
+void plat_fs_keep(int f) { fs_keep(f); }
+int plat_fs_prepare(void)                        /* (stopped: erases; the watchdog fed after, ~70 ms a frame) */
+{
+    int n = flash_ok ? fs_prepare() : 0;
+    fm1_wdt_feed();
+    return n;
+}
+int plat_fs_delete(uint32_t kind, uint32_t index) { return flash_ok ? fs_delete(kind, index) : -9; }
+int plat_boot_failed(void) { return bootguard.failed >= 1u; }   /* (the boot before crashed or hung: main_fm1.c's guard) */
 
 static volatile uint32_t audio_cpu_pct, audio_xruns, audio_cpu_peak;
 uint32_t plat_cpu_pct(void) { return audio_cpu_pct; }

@@ -241,7 +241,7 @@ enum { EN_SG_OFF, EN_SG_INTRO, EN_SG_MAIN, EN_SG_OUTRO, EN_SG_END };
 #define EN_NSKIND 2
 extern const char *const EN_SMODE_NAME[EN_NSMODE], *const EN_SKIND_NAME[EN_NSKIND];
 void en_outro(void);
-/* (1.4.0, the user's: Transition, the Song mode page's KNOB 2, Set mode alone; build/design/SET2.md) how a Set goes
+/* (1.4.0, the user's: Transition, the Set page's KNOB 2, Set mode alone; build/design/SET2.md) how a Set goes
  * from one piece to the next: LP as ever (the song ends, PLAY stops, the tails ring out, the next piece after a wait);
  * Segue (no stop: the next piece from the bar after the outro, the echo and the plate ringing on into it); Mix (over
  * the last phrase the tempo and the echo's time glide to the next piece's; on the downbeat its pulse, the kick and the

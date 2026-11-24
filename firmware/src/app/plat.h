@@ -43,6 +43,35 @@ int plat_store_save(uint32_t obj, const void *src, uint32_t len);   /* 0 = ok */
 #define PLAT_STORE_MAX 3840u           /* bytes per object */
 enum { OBJ_PROJ, OBJ_PANEL, OBJ_NOBJ };
 /* flash: OBJ_PROJ 0xFC000, OBJ_PANEL 0xDC000 (2 sectors each, inside Felucca's data area) */
+uint32_t plat_store_seq(uint32_t obj);   /* (1.5.0) its current copy's sequence (each save one more); 0: none */
+
+/* (1.5.0, format 37) the frame store (storage.c's fs_*, STORAGE-1.5.0.md): 17 frames of 16 KB at 0x97000..0xDAFFF,
+ * each one version of one object (kind, index), its header programmed last; the newest valid version wins, the one
+ * before stays readable until its frame is reused. The working project is the WORK object (OBJ_PROJ: 1.4's save,
+ * read once to migrate) */
+enum { FS_WORK = 1, FS_SET, FS_SONG, FS_SOUNDS, FS_INBOX };
+#define PLAT_FS_MAX 16128u               /* bytes a version */
+#define PLAT_FS_SETS 8u                  /* sets on the device, 0..7 (the decision; setwire.c's SXW_NSETS) */
+#define PLAT_FS_BUSY (-11)               /* plat_fs_begin while playing: no frame erased ahead (stop, then save) */
+#define PLAT_FS_HELD (-13)               /* (project_save) a set coming in holds the store (saved after) */
+void plat_fs_scan(void);                 /* the frames' headers read (boot) */
+int plat_fs_find(uint32_t kind, uint32_t index, uint32_t nth, uint32_t *len);   /* the nth newest good version's
+                                          * frame (0: the current, 1: the one before), its length; < 0 none */
+int plat_fs_has(uint32_t kind, uint32_t index);   /* (the Set page's Load) a version there, by its header: 1 */
+int plat_fs_read(int frame, uint32_t off, void *dst, uint32_t n);   /* 0 = read (inside the payload) */
+int plat_fs_begin(uint32_t kind, uint32_t index, uint32_t len, int may_erase);   /* a new version open: 0; may_erase
+                                          * 0 (playing): only a frame erased ahead, else PLAT_FS_BUSY */
+int plat_fs_put(const void *src, uint32_t n);   /* its next bytes (src in RAM) */
+int plat_fs_commit(void);                /* read back, CRC, the header last: 0 = committed */
+int plat_fs_finish(void);                /* (1.5.0, a set sent in) commit's first half: the bytes read back, the frame
+                                          * (>= 0) still open and headerless, to be looked at (plat_fs_read) */
+int plat_fs_seal(void);                  /* and its second: the header, last: 0 = committed */
+int plat_fs_open(void);                  /* the frame open for writing, -1 none (plat_fs_begin would drop it) */
+void plat_fs_abort(void);
+void plat_fs_keep(int frame);              /* (1.5.0, step 7) frame never taken for a save till plat_fs_keep(-1) */
+int plat_fs_prepare(void);               /* (stopped only: erases) frames erased ahead for saves while playing */
+int plat_fs_delete(uint32_t kind, uint32_t index);   /* (stopped only: erases) every version gone */
+int plat_boot_failed(void);              /* (1.5.0) the boot before this one crashed or hung (the boot guard's count) */
 
 /* audio load in % of the render budget, and xruns since boot (device: from the ISR) */
 uint32_t plat_cpu_pct(void);

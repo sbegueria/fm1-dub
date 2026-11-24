@@ -204,4 +204,30 @@ DevTools protocol: no packages), a fake Web MIDI controller put in it: switched 
 `tests/run_tests.sh` runs it after the emulator's build when it finds a Chromium, or Chrome where macOS installs it
 (`CHROME=` names another).
 
+**Hear a set** (1.5.0). Under MIDI in, a `.dub1` file (a set, the pieces of a backup, or one of a whole backup's
+sets, picked) is shown (its name and pieces) and, switched on, *Load into the pieces* takes it as the FM-1 takes a set
+it loads: its pieces into pieces 1 onwards, its Mode and Transition, the first piece playing, WORK saved, "SET
+LOADED" said. The page reads the file with `web/dub1sets.js` and `web/dub1container.js` (copied beside it by
+`web/emu/build.sh`); the firmware's own decoder takes it (`web_set_load` in `web/emu/amb_web.c`). The Sets page itself
+(`web/dub1_sets.html`) can be tried against the real FM-1 from a local server: `tools/serve_beta.sh` serves `web/`
+on <http://127.0.0.1:8000/dub1_sets.html> and the emulator (`build/emu`, built first if missing) on
+<http://127.0.0.1:8001/>, in Chrome (Web MIDI with SysEx works on 127.0.0.1 and localhost; it still asks). By hand:
+`cd web && python3 -m http.server 8000 --bind 127.0.0.1` (macOS's own python3 may be too old for `-d`).
+
+**Ready-made sets** (1.5.0, step 6). On the site, *Hear a set* also offers the ready-made sets (`sets/` in the repo,
+published beside the Sets page by `tools/make_pages.py` with their list, `sets.json`): one chosen is read as a file
+chosen is. Served alone (`build/emu`), there is no list and the choice stays hidden. The sets are made by
+`tools/make_sets.sh` from the videos' scripts (the host simulator's `include`, `setfile`; checked with `setin`, see
+`sets/README.md`).
+
+**Its memory.** The emulator keeps what the firmware saves (the frame store's 272 KB: the pieces and the sets) in the
+browser's IndexedDB (`dub-emu`, `objects`). What an older page kept in localStorage is moved there at the first start,
+once, and removed from localStorage; without IndexedDB (some private windows) localStorage is used as before. Factory
+reset forgets both.
+
+`tests/host/emu_browser_test.mjs` checks these too (an older page's store moved over, a set heard, a ready-made one
+heard: it serves the emulator as the site lays it out);
+`tests/host/sets_browser_test.mjs [chrome] [SHOTDIR]` runs the Sets page in a headless Chrome, its Web MIDI a fake
+port wired to the host simulator (`sxpipe`), and `tests/host/dub1_sets_test.mjs` its protocol in Node.
+
 `web/app/build.sh` builds the engine alone into the phone/desktop web app, the same way.

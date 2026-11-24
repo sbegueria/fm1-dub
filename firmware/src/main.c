@@ -136,5 +136,9 @@ static int ann_wire_send(const uint8_t *p, uint32_t n)   /* never waits: no room
 #include "app/panel.c"
 #include "app/plat_fm1.c"
 #include "app/project.c"
+#define SXW_DEC ota_dec                    /* (1.5.0) the set protocol decodes into the updater's buffer: the same thread,
+                                           * never at once (ota_session runs alone) */
+static int sxw_wire(const uint8_t *p, uint32_t n) { return ota_wire_send(p, n); }
+#include "app/setwire.c"                  /* (1.5.0) the sets over SysEx (F0 7D 44 31 ...) */
 #include "app/ui.c"
 #include "app/main_fm1.c"

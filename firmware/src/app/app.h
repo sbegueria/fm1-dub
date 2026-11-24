@@ -16,7 +16,16 @@
 #define PROJ_WAVE_MARK 0xB1u           /* (format 30, the LFO pages' layout B) proj.rsv[0] in a save whose LFOs
                                          * have a Wave (P_CLWAVE, P_NLWAVE: 0..100); a format 30 save without it is
                                          * the step 2 test builds' (zzo, zzp), those slots their Shape (0..4) */
-#define PROJ_FORMAT 36u                  /* 36: the stab's filter envelope (REPORT-stabenv): Env decay (P_CEDEC),
+#define PROJ_FORMAT 37u                  /* 37 (1.5.0, STORAGE-1.5.0.md): the project in the frame store, the WORK object
+                                         * (storage.c's frames, container.c's chunks), no longer OBJ_PROJ: a new global
+                                         * a new chunk, no 44 bytes to squeeze into; each piece's name and the set's
+                                         * (up to 12 characters and NAME_PX wide, names.h; empty: the recipe's); each
+                                         * piece's recipe (PIEC's, a set may move a piece: slot_t.recipe), the set's
+                                         * length (GLOB's setlen); the values as 36's. OBJ_PROJ
+                                         * (8 to 36: project36_t and older layouts) read and migrated at the first boot,
+                                         * and again if a 1.4.x saved it since; never written: a return to 1.4.x finds
+                                         * the pieces as they were at the upgrade;
+                                         * 36: the stab's filter envelope (REPORT-stabenv): Env decay (P_CEDEC),
                                          * how quickly each stab's filter closes, around its tie to Decay, in the
                                          * bass's old LFO's slot (P_BFDEC, unread since 1.4.0): no byte more; 35's
                                          * (and older) read with it 0, as they sounded; the pieces' recipes their
@@ -97,6 +106,8 @@
                                          * slot a gap); 9: each piece's ping loops (8, DUB-1 1.0.0's, read and kept;
                                          * older projects give the recipes) */
 #define NPIECES EN_NPIECES
+#define PROJ_NAME 12                     /* (format 37) a name's characters at most (the user's: letters, digits, space
+                                          * and a few marks, project.c's name_ok) */
 
 typedef struct {
     int16_t par[P_NPARAMS];
@@ -104,7 +115,37 @@ typedef struct {
     uint8_t pings[EN_PINGS_N];           /* its ping loops as they were left (en_pings_get) */
     uint8_t pings_ok;                    /* 0: none kept (a recipe, or a project from 1.0.0): grown afresh */
     uint8_t screen;                      /* its screen view: 0 ripples, 1 scope, 2 spectrum, 5 tape (3, 4: 1.4.0's echo trail and fifths, gone: ripples; before 1.2.0: 0) */
+    char name[PROJ_NAME + 1];            /* (format 37) its name, as a set gave it; empty: its recipe's (piece_name) */
+    uint8_t recipe;                      /* (format 37, the user's) the recipe it came from (0..7): a set may put any piece
+                                          * in any slot; its reset, its name by default and "never changed" go by it.
+                                          * (Older saves: slot i recipe i) */
 } slot_t;
+
+/* (1.5.0, step 7) a cue's op (container.c's CUES chunk; project.c's cue_ok checks each; ui.c's player plays them as
+ * PERFORM's keys and knobs do). arg, val and len as each takes them:
+ *   CUE_MUTE   part (0..5: EN_M_*'s order), 1 muted / 0 on; len 0           (white 1-6 tapped)
+ *   CUE_SOLO   part, 1 soloed / 0 not; len 0                                 (black 1-5 tapped)
+ *   CUE_MOVE   EN_PF_*'s bit (0..8: the throws, Open, Shut, Drop, Echo), held len semicorcheas (16ths), >= 1
+ *   CUE_FX     EN_FX_* (0..15: the grid's, PERFORM's four among them), held len, >= 1
+ *   CUE_SIREN  EN_SIR_* (0..3); len 0 a tap (the short one); else held len (the slow one after 2), then let go
+ *   CUE_SIRK   siren x 4 + EN_SK_* (its Pitch, Rate, Depth, Echo), to val (its range) over len
+ *   CUE_MACRO  EN_MAC_* (0 the DJ filter, SELECT; Energy; Wet; Duck), to val (-50..50) over len
+ *   CUE_KNOB   a parameter of the piece (amb.h's P_*, not Tune, MIDI out or Song mode), to val (its range) over len
+ *   CUE_OUTRO  the outro from the next phrase (HOME held + PLAY), if not in it already; CUE_NEXT the next chord (EDIT held)
+ *   CUE_LOCK   Lock (SEL held) 1 on / 0 off; CUE_HOLD dub hold (REC) 1 on / 0 off
+ * A cue's place: CUE_P_* (container.c's pos), its bar in that part and the semicorchea (16th) in the bar */
+enum { CUE_MUTE, CUE_SOLO, CUE_MOVE, CUE_FX, CUE_SIREN, CUE_SIRK, CUE_MACRO, CUE_KNOB, CUE_OUTRO, CUE_NEXT, CUE_LOCK,
+       CUE_HOLD, CUE_NOPS };
+enum { CUE_P_INTRO, CUE_P_MAIN, CUE_P_OUTRO, CUE_P_BAR };
+#define CUE_NMOVE 9                      /* EN_PF_*'s bits */
+#define CUE_MAX 64                       /* a piece's cues at most (container.c's D1C_MAXCUE) */
+typedef struct {                         /* (step 7) where a piece's cue list is (only the playing one's is in RAM, ui.c's
+                                          * player): src 0 none, 1..17 a frame + 1 (the WORK or set it was read from;
+                                          * a save copies it into the new WORK and points here again), 0x80 | n (the
+                                          * host's) a container read from memory; n its cues; off where they start */
+    uint8_t src, n;
+    uint16_t off;
+} cuesrc_t;
 
 typedef struct {
     uint32_t magic, format;
@@ -117,28 +158,68 @@ typedef struct {
                                           * (was rsv0, 0 in older saves: Peek) */
     slot_t slot[NPIECES];                /* every piece as it was left (Tune and MIDI out are global) */
     uint8_t rsv[15];                     /* room to grow (rsv[0]: PROJ_WAVE_MARK) */
-    uint8_t trans;                       /* (format 33/34, the user's) a Set's Transition, the Song mode page's KNOB 2:
+    uint8_t trans;                       /* (format 33/34, the user's) a Set's Transition, the Set page's KNOB 2:
                                           * EN_TR_* (0 LP, 1 Segue, 2 Mix); global as Song mode (was rsv[15], 0 in
                                           * older saves: LP) */
     int8_t sir[EN_NSIR][EN_NSK];         /* (format 34, the user's) each dub siren's knobs (EN_SK_*: Pitch, Rate, Depth,
                                           * Echo), global: as they were left, its next tap or hold from them */
+    char name[PROJ_NAME + 1];            /* (format 37) the set's name (META's); empty: none */
+    uint8_t setlen;                      /* (format 37, step 4) the set's pieces, slots 0 to setlen - 1 (a set of fewer
+                                          * than eight: Set mode ends at its last); 0: all eight */
+    uint8_t cues_off;                    /* (step 7) the player's: a set's cues not played (the Set page's Cues;
+                                          * WORK's header flag D1C_F_NOCUES) */
+    cuesrc_t cues[NPIECES];              /* (step 7) each piece's cue list, where it is (not a copy: 32 bytes) */
 } project_t;
+
+/* (1.5.0) 1.4's last layout (formats 35 and 36), as OBJ_PROJ holds it: frozen here (project.c reads it once, to migrate),
+ * project_t free to grow */
+#define NPAR36 (P_SWEEP + 1)
+typedef struct {
+    int16_t par[NPAR36];
+    uint16_t pool;
+    uint8_t pings[EN_PINGS_N];
+    uint8_t pings_ok, screen;
+} slot36_t;
+typedef struct {
+    uint32_t magic, format;
+    int16_t par[NPAR36];
+    uint16_t pool;
+    uint8_t leds, piece, screen, values;
+    slot36_t slot[NPIECES];
+    uint8_t rsv[15];
+    uint8_t trans;
+    int8_t sir[EN_NSIR][EN_NSK];
+} project36_t;
 
 extern project_t proj;
 /* (1.4.0, the variety plan's step 3: RAM) one scratch the UI's thread lends out in turn, never two at once: the boot's
  * project_load (a saved project read and converted, once, before the UI runs) and the spectrum's FFT (draw_spec: a
  * frame's work, nothing kept from one frame to the next). Before, each its own (3,760 + 4,096 B) */
 typedef union {
-    project_t load;
+    project_t load;                      /* (1.5.0) a saved project decoded here, checked, then taken */
+    project36_t old;                     /* (1.5.0) 1.4's save (OBJ_PROJ), read here to migrate */
     float fft[2][EN_SPEC_N];
 } app_scratch_t;
 extern app_scratch_t app_scratch;
 
 void project_defaults(void);
 int project_load(void);                  /* 0 = loaded; else defaults are in place */
-int project_save(void);                  /* 0 = saved and verified */
+int project_save(void);                  /* 0 = saved and verified; PLAT_FS_BUSY: playing and no frame erased ahead
+                                          * (an erase only while stopped: saved then) */
+void project_idle(void);
+int project_set_check(int frame, uint32_t len, char *name, uint32_t *npieces);   /* (1.5.0, step 4: setwire.c's) */
+int project_set_info(int frame, uint32_t len, char *name, uint32_t *npieces);
+int project_set_take(int frame, uint32_t len);
+int project_set_name(int frame, uint32_t len, char *name);   /* (the Set page's Store) META's name, no CRC */
+int project_set_write(uint32_t ix, uint32_t n, const char *name, uint32_t *len);   /* (its question) the pieces as a
+                                          * set, headerless: the frame */
+int project_work_check(int frame, uint32_t len, char *name);   /* (Decisions 4: a restore's pieces) then */
+int project_work_take(void);
+uint32_t project_work_bytes(uint32_t off, uint8_t *dst, uint32_t n);                 /* (1.5.0) stopped and quiet: the frame store erases ahead (plat_fs_prepare) */
+const char *project_note(void);          /* (1.5.0) once, after the boot: what to say of the save it loaded (0: nothing) */
 void project_apply(void);                /* every value to the engine (boot, load) */
 const char *piece_name(int i);
+int piece_recipe(int i);                 /* (format 37) the recipe piece i came from */
 void project_piece(int i);               /* the playing piece kept, piece i taken up as it was left */
 void project_piece_reset(void);          /* the playing piece back to its recipe */
 

@@ -70,6 +70,10 @@ static int32_t cv_text(int32_t x, int32_t y, const felucca_font_t *f, const char
 #include "../firmware/src/app/app.h"
 static int ann_wire_send(const uint8_t *p, uint32_t n) { (void)p, (void)n; return 0; }
 #include "../firmware/src/announce.c"
+#include "../firmware/src/app/container.c"        /* (1.5.0: the set protocol's, its question never asked here) */
+static int sxw_wire(const uint8_t *p, uint32_t n) { (void)p, (void)n; return 0; }
+#include "../firmware/src/app/setwire.c"
+#define EN_NO_CUES 1                                 /* (1.5.0, step 7: the cues played by the screen's UI only) */
 #include "../firmware/src/app/ui.c"
 
 volatile float stems_echo_pk, stems_meter[EN_NMETER], stems_duck_lo[2];

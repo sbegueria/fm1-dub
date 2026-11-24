@@ -12,6 +12,8 @@
  *                        (the SPL then runs the staged update loader)
  *   fm1_core_reset()     PWR_CON core reset
  *   fm1_updata_parm_clear()  zero the record (CRC 0: ignored on a warm reset)
+ *   fm1_updata_parm_set(p)   write the record, no reset (the update loader re-arms it)
+ *   fm1_ldr_count()      the update loader's start counter: 2 words after the record
  *   fm1_mailbox_clear()  zero 0x01C7FD80..0x01C7FDFF (boot info, mailbox) at cold start
  *   fm1_mem_readable(a, n) / fm1_peek8(a)   debug reads of RAM / XIP only
  */
@@ -26,6 +28,8 @@
 #define FM1_PWR_CON (*(volatile uint32_t *)0x10000u)
 #define FM1_UPDATA_PARM ((volatile uint8_t *)0x01C7FD88u)
 #define FM1_UPDATA_PARM_LEN 112u
+#define FM1_LDR_COUNT ((volatile uint32_t *)0x01C7FDF8u)   /* the tail of the SDK's 128-byte update area
+                                                            * (UPDATA_BEG 0x01C7FD80); fm1_mailbox_clear zeroes it */
 
 static uint32_t fm1_p33_timeouts;
 
@@ -155,6 +159,14 @@ FM1_INLINE void fm1_updata_parm_clear(void)
     for (i = 0; i < FM1_UPDATA_PARM_LEN; i++)
         FM1_UPDATA_PARM[i] = 0;
 }
+
+FM1_INLINE void fm1_updata_parm_set(const uint8_t *parm)
+{
+    uint32_t i;
+    for (i = 0; i < FM1_UPDATA_PARM_LEN; i++)
+        FM1_UPDATA_PARM[i] = parm[i];
+}
+FM1_INLINE volatile uint32_t *fm1_ldr_count(void) { return FM1_LDR_COUNT; }
 
 FM1_INLINE void fm1_mailbox_clear(void)   /* before fm1_guard_enable (it write-protects the top) */
 {

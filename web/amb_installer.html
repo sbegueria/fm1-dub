@@ -24,6 +24,8 @@
   #alert:empty { display: none; }
   #alert { font-weight: 600; }
   #alert::before { content: "⚠ "; }
+  p.first { border-left: 3px solid var(--river-2); padding-left: 10px; }   /* (1.5.0: back up first) */
+  button.small { font-size: 13px; padding: 2px 10px; margin: 6px 8px 0 0; }   /* (Decisions 4: what to back up, by version) */
   a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   label.bar { display: block; font-size: 13px; color: var(--dim); margin-top: 16px; }
@@ -45,11 +47,14 @@
 </head>
 <body>
 <main>
-  <header class="site"><a class="home" href="../">DUB-1</a><nav aria-label="DUB-1"><a href="../emu/">Emulator</a><a href="../install/" aria-current="page">Install</a><a href="../manual/">Manual</a><a href="https://github.com/sbegueria/fm1-dub">Source</a></nav></header>
+  <header class="site"><a class="home" href="../">DUB-1</a><nav aria-label="DUB-1"><a href="../emu/">Emulator</a><a href="../install/" aria-current="page">Install</a><a href="../sets/">Sets</a><a href="../manual/">Manual</a><a href="https://github.com/sbegueria/fm1-dub">Source</a></nav></header>
   <button class="lang" id="lang" type="button"></button>
   <h1>Install DUB-1</h1>
   <p data-t="intro"></p>
   <p class="small" data-t="perm"></p>
+  <p class="first"><span data-t="backup"></span> <a href="../sets/" id="setslink" style="color:inherit" data-t="backuplink"></a>
+    <br><button id="check" type="button" class="small" data-t="checkbtn"></button>
+    <span id="checkres" class="small" aria-live="polite"></span></p>
   <p data-t="warn"></p>
   <p class="small" data-t="direct"></p>
   <p class="small" data-t="beta"></p>
@@ -62,6 +67,10 @@
     <progress id="bar" max="100" value="0"></progress></label>
   <p id="status" role="status"></p>
   <p id="alert" role="alert"></p>
+  <p id="help" class="small" hidden><a id="helprescue" href="../manual/#recovering-an-fm-1-that-won-t-start" style="color:inherit" data-t="helprescue"></a><br>
+    <a href="https://github.com/jvitkauskas/m-flasher" target="_blank" rel="noopener" style="color:inherit"><span data-t="helpmf"></span><span class="sr" data-t="newtab"></span></a></p>
+  <p id="logbox" class="small" hidden><span data-t="logwhy"></span><br>
+    <button id="copylog" type="button" class="small" data-t="copylog"></button> <span id="copied" aria-live="polite"></span></p>
   <pre id="log"></pre>
   <h2 data-t="stockh"></h2>
   <p class="small" data-t="stockwhy"></p>
@@ -87,15 +96,26 @@ const TEXT = {
     newtab: "（新しいタブで開きます）", progress: "進み具合", ready: "インストールできます: DUB-1 ",
     percent: "%",
     warn: "書き込み中は USB を抜かないでください。",
+    backup: "まずバックアップ: DUB-1 1.5 以降なら、インストールの前にピースとセットをファイルに保存してください（アップデートではそのまま残りますが、ほかのファームウェアでは残らないことがあります）。",
+    backuplink: "セットのページ",
+    checkbtn: "この FM-1 を確認",
+    checking: "FM-1 を確認しています。",
+    chknotfound: "FM-1 が見つかりません。USB ケーブル（データ通信用か）を確かめ、MIDI を使う他のアプリを閉じてから、もう一度押してください。",
+    chkold: (v) => `この FM-1 は DUB-1 ${v} です。セットはまだなく、この方法でバックアップするものはありません。アップデートしてもピースはそのまま残ります（1.5 の最初の起動で引き継がれます）。念のため控えておくなら、各ピースの名前と画面をメモか写真で残してください。`,
+    chknew: (v, f) => `この FM-1 は DUB-1 ${f ? f.text : v} です` + (!f ? "（正確なバージョンは読めませんでした。テスト版と正式版はこの方法では区別できません）" :
+      f.test ? `（${f.release} のテスト版で、正式版ではありません）` : "（正式版）") +
+      "。インストールの前に、セットのページでピースとセットをバックアップしてください: ",
+    chkdev: (f) => `この FM-1 は DUB-1 の開発版です${f ? "（" + f.text + "）" : ""}。1.5 以降なら、セットのページでバックアップしてください: `,
+    chkother: (t) => `この FM-1 は DUB-1 ではなく ${t} です。DUB-1 のピースやセットはないので、バックアップするものはありません。`,
     install: "インストール", other: "English",
     manual: "DUB-1 のページへ",
-    direct: "USB ケーブルはパソコンに直接つないでください。Probe や Transporter などの機材は不要です。",
+    direct: "USB ケーブルはハブを通さず、パソコンに直接つないでください（Probe や Transporter などの機材は不要です）。書き込みが終わるまで、FM-1 の電源は入れたままにしてください（充電しておくか、USB から給電）。",
     brick: "万一 FM-1 が起動しなくなった場合は、Mac から標準ファームウェアに戻せます:",
     bricklink: "起動しない FM-1 の復旧（英語）",
     beta: "このカスタムファームウェアを使ったことで FM-1 が壊れたり不具合が起きたりしても、作者は一切の責任を負いません。自己責任でお使いください。",
     back: "公式ファームウェアに戻すには、このページ下の「純正ファームウェアに戻す」か、M-VAVE 公式のアップデーター M-UPGRADE（Downloads → PC Software → M-UPGRADE）を使います。",
     stockh: "純正ファームウェアに戻す",
-    stockwhy: "M-VAVE の FM-1 V15 を、DUB-1（またはそのセーフモード）から同じ USB ケーブルで書き込みます。DUB-1 で保存した曲の設定は消えることがあります。",
+    stockwhy: "M-VAVE の FM-1 V15 を、DUB-1（またはそのセーフモード、X0X、Felucca）から同じ USB ケーブルで書き込みます。DUB-1 に保存したピースとセットは消えることがあります。先にバックアップしてください（セットのページ）。",
     stock1: "M-VAVE の FM-1 V15 をダウンロード:",
     stock2: "ダウンロードしたファイルを選ぶ:",
     stock3: "FM-1 を USB で接続し、下のボタンを押す。",
@@ -105,14 +125,22 @@ const TEXT = {
     stockdone: "完了。FM-1 は純正ファームウェアで起動しました。",
     nomidi: "このブラウザでは使えません。Chrome か Edge で開いてください。", loadfail: "読み込めませんでした: ",
     start: "開始します", verify: "確認中", loader: "書き込みモードに切り替え中", write: "書き込み中",
-    reboot: "再起動中", done: "完了しました", stopped: "途中で止まりました。USB を挿し直してもう一度押してください。",
+    reboot: "再起動中", done: "完了しました",
+    stopped: "途中で止まりました。USB ケーブルをハブを通さずパソコンに直接挿し直して、もう一度インストールを押してください。",
     error: "エラー: ",
     denied: "MIDI（SysEx）の使用が許可されませんでした。アドレスバーのサイト設定で MIDI を許可して、もう一度押してください。",
     notfound: "FM-1 が見つかりません。USB ケーブル（データ通信用か）を確かめ、MIDI を使う他のアプリを閉じてから、もう一度押してください。",
     model: "接続されている機器は FM-1 ではありません。",
-    lost: "USB の接続が切れました。挿し直してもう一度押してください。",
-    noloader: "書き込みモードの FM-1 が見つかりません。USB を挿し直してもう一度押してください（終わるまで書き込みモードのままです）。",
-    noreturn: "FM-1 が戻ってきません。電源を入れ直してください。",
+    lost: "書き込みの前に USB の接続が切れました（何も書き込まれていません）。ハブを通さずパソコンに直接挿し直して、もう一度インストールを押してください。",
+    noloader: "書き込みモードの FM-1 が見つかりません。USB ケーブルを抜き、ハブを通さずパソコンに直接挿し直して、もう一度インストールを押してください。FM-1 がまったく見つからず、画面が暗いままなら、チップ自体のダウンロードモードに入っているかもしれません。下の復旧の手順か、M-Flasher の FLASH FIRMWARE（ブートローダーはそのまま残ります）で戻してから、もう一度インストールしてください。",
+    stall: "書き込みの途中で FM-1 が応答しなくなり、戻ってきませんでした。USB ケーブルを抜き、ハブを通さずパソコンに直接挿し直してください。FM-1 の電源は切らずに、もう一度インストールを押してください。まだ書き込みモードなら、書き込みを最後まで終えます。FM-1 がまったく見つからず、画面が暗いままなら、チップ自体のダウンロードモードに入っているかもしれません。下の復旧の手順か、M-Flasher の FLASH FIRMWARE（ブートローダーはそのまま残ります）で戻してから、もう一度インストールしてください。",
+    stallwait: "FM-1 の応答が止まりました。待っています: ", sec: " 秒…",
+    resumed: "FM-1 が戻りました。書き込みを再開します（書き込み済みの部分は確かめるだけです）。",
+    helprescue: "起動しない FM-1 の復旧（英語）",
+    helpmf: "M-Flasher（FLASH FIRMWARE はブートローダーをそのまま残します）",
+    logwhy: "このインストールのログ（各リクエストとその時刻）は、止まった原因を調べる助けになります。",
+    copylog: "ログをコピー", copied: "コピーしました。問題の報告に貼り付けてください。",
+    noreturn: "FM-1 が戻ってきません。電源を入れ直してください。それでも画面が暗いままなら、下の復旧の手順を見てください。",
     mismatch: "書き込みは終わりましたが、FM-1 が別のバージョンを報告しています: ",
     badpkg: "インストールするファイルが壊れています。ページを再読み込みしてください。",
     leave: "書き込み中です。ページを閉じないでください。",
@@ -124,15 +152,26 @@ const TEXT = {
     newtab: " (opens in a new tab)", progress: "Progress", ready: "Ready to install DUB-1 ",
     percent: " percent",
     warn: "Do not unplug the USB cable while writing.",
+    backup: "First, back up: on DUB-1 1.5 or later, save your pieces and sets to a file before installing (an update keeps them; another firmware may not).",
+    backuplink: "Back up on the Sets page",
+    checkbtn: "Check this FM-1",
+    checking: "Checking the FM-1.",
+    chknotfound: "FM-1 not found. Check the USB cable (a data cable), close other apps that use MIDI, and press Check again.",
+    chkold: (v) => `This FM-1 runs DUB-1 ${v}: it has no sets yet, and there is nothing to back up this way. The update keeps its pieces (1.5 takes them over at its first start). To keep a note of them anyway, write down each piece's name, or take photos of its screens.`,
+    chknew: (v, f) => `This FM-1 runs DUB-1 ${f ? f.text : v}` + (!f ? " (its full version not read: a test build and the release look the same this way)" :
+      f.test ? `, a test build of ${f.release}, not the release` : ", the release") +
+      `: back up its pieces and sets on the Sets page before installing: `,
+    chkdev: (f) => `This FM-1 runs a development build of DUB-1${f ? " (" + f.text + ")" : ""}: if it is 1.5 or later, back up on the Sets page: `,
+    chkother: (t) => `This FM-1 runs ${t}, not DUB-1: it holds no DUB-1 pieces or sets, so there is nothing to back up.`,
     install: "Install", other: "日本語",
     manual: "Back to DUB-1",
-    direct: "Connect the USB cable directly to the computer. No probe or Transporter is needed.",
+    direct: "Plug the USB cable straight into the computer, not through a hub (no probe or Transporter is needed), and keep the FM-1 switched on (charged, or on USB power) until the install has finished.",
     brick: "If the FM-1 no longer starts, a Mac can put the stock firmware back:",
     bricklink: "recovering an FM-1 that won't start",
     beta: "The author accepts no responsibility if your FM-1 is damaged or misbehaves because of this custom firmware. Use it at your own risk.",
     back: "To go back to the official firmware, use \"Back to the stock firmware\" below, or M-VAVE's own updater, M-UPGRADE (Downloads → PC Software → M-UPGRADE).",
     stockh: "Back to the stock firmware",
-    stockwhy: "This writes M-VAVE's own FM-1 V15 back, from DUB-1 (or its safe mode, X0X or Felucca) over the same USB cable. The pieces saved in DUB-1 may be lost.",
+    stockwhy: "This writes M-VAVE's own FM-1 V15 back, from DUB-1 (or its safe mode, X0X or Felucca) over the same USB cable. The pieces and sets saved in DUB-1 may be lost: back them up first (the Sets page).",
     stock1: "Download M-VAVE's FM-1 V15:",
     stock2: "Choose the file you downloaded:",
     stock3: "Connect the FM-1 by USB and press the button below.",
@@ -142,26 +181,37 @@ const TEXT = {
     stockdone: "Done. The FM-1 has restarted with its original firmware.",
     nomidi: "This browser cannot do it. Open the page in Chrome or Edge.", loadfail: "Could not load: ",
     start: "Starting", verify: "Verifying", loader: "Switching to update mode", write: "Writing",
-    reboot: "Restarting", done: "Done", stopped: "Stopped. Replug the USB cable and press Install again.",
+    reboot: "Restarting", done: "Done",
+    stopped: "Stopped. Unplug the USB cable, plug it straight into the computer (not through a hub) and press Install again.",
     error: "Error: ",
     denied: "MIDI (SysEx) access was not allowed. Allow MIDI in the site settings (address bar) and press Install again.",
     notfound: "FM-1 not found. Check the USB cable (a data cable), close other apps that use MIDI, and press Install again.",
     model: "The connected device is not an FM-1.",
-    lost: "The USB connection was lost. Replug it and press Install again.",
-    noloader: "The FM-1 in update mode was not found. Replug the USB cable and press Install again (it stays in update mode until it is finished).",
-    noreturn: "The FM-1 did not come back. Power-cycle it.",
+    lost: "The USB connection was lost before anything was written. Plug the cable straight into the computer (not through a hub) and press Install again.",
+    noloader: "The FM-1 in update mode was not found. Unplug the USB cable, plug it straight into the computer (not through a hub) and press Install again. If the FM-1 is not found at all and its screen stays blank, it may have dropped into the chip's own download mode: recover it with the rescue or with M-Flasher's FLASH FIRMWARE (it keeps the bootloader), both linked below, then install again.",
+    stall: "The FM-1 stopped answering during the write and did not come back. Unplug the USB cable, plug it straight into the computer (not through a hub), leave the FM-1 switched on, and press Install again: if it is still in update mode, the install finishes the write. If the FM-1 is not found at all and its screen stays blank, it may have dropped into the chip's own download mode: recover it with the rescue or with M-Flasher's FLASH FIRMWARE (it keeps the bootloader), both linked below, then install again.",
+    stallwait: "The FM-1 stopped answering; waiting for it: ", sec: " s...",
+    resumed: "The FM-1 is back: the write starts again (what is already written is only checked).",
+    helprescue: "Recovering an FM-1 that won't start (the rescue)",
+    helpmf: "M-Flasher (its FLASH FIRMWARE keeps the bootloader)",
+    logwhy: "The install's log (each request and its timing) helps find out why it stopped.",
+    copylog: "Copy the log", copied: "Copied: paste it into your report of the problem.",
+    noreturn: "The FM-1 did not come back. Switch it off and on. If its screen then stays blank, see the recovery below.",
     mismatch: "Written, but the FM-1 reports another version: ",
     badpkg: "The file to install is damaged. Reload the page.",
     leave: "Writing. Do not close the page.",
     license: "GPL-3.0, no warranty. Source:",
   },
 };
+let checked = null;                              /* (Decisions 4) the version check's outcome */
 let lang = "en";                                 /* English first; 日本語 is a click away */
 const t = (k) => TEXT[lang][k];
 let lastKey = null, lastArg = "";
 /* what went wrong goes to the alert (read at once), the rest to the status (read when the reader is free) */
 const FAIL = new Set(["nomidi", "loadfail", "stopped", "error", "denied", "notfound", "model", "lost", "noloader", "noreturn",
-                      "mismatch", "badpkg", "stockbad"]);
+                      "mismatch", "badpkg", "stockbad", "stall"]);
+/* the failures after which the FM-1 may be stuck: the recovery links under the alert */
+const RECOVER = new Set(["stall", "noloader", "noreturn"]);
 function show(k, txt) {
   $(FAIL.has(k) ? "alert" : "status").textContent = txt;
   $(FAIL.has(k) ? "status" : "alert").textContent = "";
@@ -171,7 +221,9 @@ function applyLang() {
   document.querySelectorAll("[data-t]").forEach((e) => { e.textContent = t(e.dataset.t); });
   $("lang").textContent = t("other");
   $("lang").lang = lang === "ja" ? "en" : "ja";
+  $("setslink").href = lang === "ja" ? "../sets/?lang=ja" : "../sets/";
   if (lastKey) show(lastKey, t(lastKey) + lastArg);
+  if (checked) checkSay();
 }
 $("lang").addEventListener("click", () => { lang = lang === "ja" ? "en" : "ja"; applyLang(); });
 applyLang();
@@ -231,35 +283,119 @@ async function run(img, product, isStock) {
   catch (e) { sayK("denied"); return; }
   writing = true;
   $("go").disabled = $("stockgo").disabled = true;
+  $("help").hidden = $("logbox").hidden = true;
+  $("copied").textContent = "";
+  let failed = null;
+  const up = new Updater(midi, log);
+  lastUp = up;
   try {
-    const up = new Updater(midi, log);
-    const total = 74 + 1167;
+    const total = 74 + 1167;                     /* requests: step 1, step 2 */
+    let stallSaid = -100;
     const step = (k, a) => {
-      log(`${k} ${a ?? ""}`);
+      if (k !== "stall") log(`${k} ${a ?? ""}`);
       if (k === "start") sayK("start");
       if (k === "verify") progress("verify", (a / total) * 100);
       if (k === "loader") sayK("loader");
-      if (k === "write") progress("write", ((74 + a) / total) * 100);
+      if (k === "write") { stallSaid = -100; progress("write", (74 + (a / 100) * 1167) / total * 100); }
+      if (k === "stall" && (a - stallSaid >= 5 || a < stallSaid)) {   /* every 5 s: a screen reader isn't flooded */
+        stallSaid = a;
+        sayK("stallwait", a + t("sec"));
+      }
+      if (k === "resume") sayK("resumed");
       if (k === "reboot") sayK("reboot");
       if (k === "done") { $("bar").value = 100; sayK(isStock ? "stockdone" : "done"); }
     };
     const ota = await up.find((id) => /^ota-/i.test(id.model));
     if (ota) {
       ota.link.close();
-      sayK((await up.resume(img, step)) ? (isStock ? "stockdone" : "done") : "stopped");
+      if (await up.resume(img, step, product)) sayK(isStock ? "stockdone" : "done");
+      else { failed = "noloader"; sayK("noloader"); }   /* (it was there a moment ago) */
     } else {
       await up.install(img, product, step);
     }
   } catch (e) {
     if (isStock && e && e.code === "mismatch") { $("bar").value = 100; sayK("stockdone"); }   /* stock names itself its own way */
-    else if (e && e.code && TEXT[lang][e.code]) sayK(e.code, e.detail || "");
-    else sayK("error", e && e.message);
+    else if (e && e.code && TEXT[lang][e.code]) { failed = e.code; sayK(e.code, e.code === "stall" ? "" : e.detail || ""); }
+    else { failed = "error"; sayK("error", e && e.message); }
+    up.ev(`error (${e && e.code}): ${e && e.message}`);
     log(String(e && e.stack || e));
+  }
+  up.ev("end");
+  if (failed) {                                  /* the session's log, to copy into a report; the way out */
+    $("logbox").hidden = false;
+    $("help").hidden = !RECOVER.has(failed);
   }
   writing = false;
   $("go").disabled = !image;
   $("stockgo").disabled = !stock;
 }
+
+/* (Decisions 4) the back-up step by version: the FM-1's identity (FM-1_8XXYYZZ: DUB-1 X.Y.Z; FM-1_800 a development
+   build); 1.4.x or older has no sets and nothing to back up this way (the update keeps its pieces), 1.5 or later is
+   offered the Sets page. (Decisions 5) A 1.5 or later (or a development build) is then asked its full version by the
+   set protocol's HELLO (the Sets page's dub1sets.js, beside it in the site): "DUB-1 1.5.0-BETA1" tells a test build from the
+   release, which the identity can't (FM-1_8010500 both); not answered: the digits alone, said so */
+function checkSay() {
+  const r = $("checkres"), c = checked;
+  r.textContent = "";
+  if (c.err) { r.textContent = t(c.err); return; }
+  const v = c.id.version, m = c.id.model === "FM-1" && v >= 8000000 && v < 9000000;
+  const ver = `${Math.floor(v / 10000) % 100}.${Math.floor(v / 100) % 100}.${v % 100}`;
+  const link = () => {
+    const a = document.createElement("a");
+    a.href = $("setslink").href; a.style.color = "inherit"; a.textContent = t("backuplink");
+    return a;
+  };
+  if (c.id.model === "FM-1" && v === 800) r.append(TEXT[lang].chkdev(c.full), link());
+  else if (!m) r.textContent = TEXT[lang].chkother(c.id.text);
+  else if (v < 8010500) r.textContent = TEXT[lang].chkold(ver);
+  else r.append(TEXT[lang].chknew(ver, c.full), link());
+}
+/* (Decisions 5) the full version a 1.5+ FM-1 says in HELLO (versionOf: { text, release, pre, test, dev }), or null */
+async function fullVersion(midi) {
+  let d = null;
+  try {
+    const S = await import(meta.sets);
+    d = await S.findDevice(midi);
+    return S.versionOf(d.info.version);
+  } catch (_) {
+    return null;
+  } finally {
+    if (d) d.link.close();
+  }
+}
+$("check").addEventListener("click", async () => {
+  let midi;
+  $("check").disabled = true;
+  $("checkres").textContent = t("checking");
+  try {
+    try { midi = await navigator.requestMIDIAccess({ sysex: true }); } catch (_) { checked = { err: "denied" }; return; }
+    const dev = await new Updater(midi, log).find((id) => !/^ota-/i.test(id.model));
+    if (dev) dev.link.close();
+    checked = dev ? { id: dev.id, full: null } : { err: "chknotfound" };
+    if (dev && dev.id.model === "FM-1" && (dev.id.version === 800 || (dev.id.version >= 8010500 && dev.id.version < 9000000)))
+      checked.full = await fullVersion(midi);
+  } catch (e) {
+    checked = { err: "chknotfound" };
+  } finally {
+    if (checked) checkSay();
+    $("check").disabled = writing;
+  }
+});
+
+/* "Copy the log": the last install's log (fm1ota.js keeps it in memory); if the clipboard is refused, the log is
+   shown under the button to select by hand */
+let lastUp = null;
+$("copylog").addEventListener("click", async () => {
+  if (!lastUp) return;
+  const text = lastUp.logText();
+  try {
+    await navigator.clipboard.writeText(text);
+    $("copied").textContent = t("copied");
+  } catch (_) {
+    $("log").textContent += "\n" + text;
+  }
+});
 
 $("go").addEventListener("click", () => run(image, meta.product, false));
 $("stockgo").addEventListener("click", () => { if (stock) run(stock.image, stock.product, true); });

@@ -22,6 +22,14 @@
  *   GLO held       saves (it also saves by itself a few seconds after a change, while resting);
  *                  held on 1.5 s: the piece back to its recipe */
 #include "../dsp/fastmath.h"
+#include "names.h"                              /* (1.5.0: NAME_PX_BATT, the header's room) */
+
+/* (1.5.0, the user's, 2026-11-22) the cues (step 7, cues.c) kept but off: none played, none shown, no Cues knob on the
+ * Set page (KNOB 3 empty, Load still KNOB 4); a set's or WORK's CUES still read, kept and saved as ever. 1: as they
+ * were (the tests' builds: host/build_host.sh's amb_host_cues; later, cues recorded live) */
+#ifndef DUB1_CUES
+#define DUB1_CUES 0
+#endif
 
 /* the pages, one a layer (a button each, NPAGES; the Noise page, V_NSND, SAVE's); SELECT steps through them in the
  * panel's order, PAGE_ORDER below (the view numbers stay as they were: the tests use them) */
@@ -32,7 +40,8 @@ enum { V_DUB, V_CHORD, V_TEXTURE, V_BASS, V_DRUMS, V_SPACE, V_SETUP, NPAGES, V_M
        V_STRIP, V_SONG, V_SMODE, V_WALK, V_SIREN, V_CFILT, NVIEWS };
 /* (V_PERF: PERFORM's knobs, the Arrangement page; V_STRIP a part's white key held (V_MIX, white 6 held, gone).
  * V_SONG (1.4.0, the user's: song structure): HOME again, the piece's song (its Intro, Main, Outro, Kind), HOME's
- * second; V_SMODE: GLO again, Song mode (Endless, Song, Set), the Setup page's second (the player's, as Tune).
+ * second; V_SMODE: GLO again, the Set page (Song mode till 1.5.0: Mode, Endless, Song, Set; the pieces by name),
+ * the Setup page's second (the player's, as Tune).
  * V_WALK (1.4.0, the user's): EDIT again, the Chords page's second: the circle of fifths, the walk's character and
  * Change. V_SIREN (format 34, the user's): a siren's key held in the Arrangement page, that siren's knobs (sir_page),
  * till it's let go. V_KEY: HOME again, the key and the tempo, the Form page's second. V_CLFO, V_NLFO (1.4.0): the chord's LFO, ENV a fourth time (after its FM page), and
@@ -46,7 +55,7 @@ static const char *const VIEW_NAME[NVIEWS] = {"Form", "Chord", "Pings", "Bass", 
                                               "Chord voice", "Pings voice", "Bass voice", "Kick",
                                               "Chord FM", "Pings FM", "Bass FM", "Chords", "Pattern", "Arrangement", "Key", "Noise",
                                               "Echo", "Noise space", "Chord LFO", "Noise LFO", "Hats", "Noise voice",
-                                              "Strip", "Song", "Song mode", "Walk", "Siren", "Chord filter"};
+                                              "Strip", "Song", "Set", "Walk", "Siren", "Chord filter"};
 #define B_NONE 0xFFu
 static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_ENV, B_ARP, B_LFO, B_SEQ, B_FX, B_GLO, B_NONE, B_NONE, B_NONE, B_NONE,
                                          B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_SAVE, B_NONE, B_NONE,
@@ -78,8 +87,9 @@ static int fm_knob_off(int v, int i)             /* a knob there doing nothing: 
                                                   * Ratio (the pings' Upper) on a two-operator algorithm (1.4.0: the LFO
                                                   * its own page) */
 {
-    if (v == V_SMODE)                            /* (the user's: Transition, Set mode alone) */
-        return i == 1 && proj.par[P_SMODE] != 2;
+    if (v == V_SMODE)                            /* (the user's: Transition, Set mode alone; Load, stopped alone) */
+        return i == 1 ? proj.par[P_SMODE] != 2 : (i == 3 || (i == 2 && !DUB1_CUES)) && en_playing;   /* (Store,
+                                                  * 2026-11-23: stopped alone, as Load) */
     if (v < V_CFM || v > V_BFM || ((v == V_CFM || v == V_BFM) && i == 3))
         return 0;                                /* (1.4.0, the user's: the chord's Colour, the bass's Bite: every voice's) */
     if (!en_voice_fm(v - V_CFM))
@@ -159,14 +169,21 @@ enum { K_LEDS = 200, K_CPU, K_NONE, K_SLOT, K_CQ, K_CX,    /* (the Chords page: 
        K_PLAY,                                               /* (the Chords page: Endless or Loop, P_PMODE's bit 2) */
        K_WALK,                                               /* (1.4.0, the Walk page: the walk's character, P_PMODE's
                                                               * bits 0-1: Home, Wander, Free) */
-       K_SAVE,                                               /* (Setup: a turn saves; it shows whether it's saved) */
+       K_LOAD,                                               /* (the user's, 2026-11-22: the Set page's KNOB 4, a stored
+                                                              * set loaded from the FM-1 itself (Setup's Save was here:
+                                                              * GLO held saves, the header's disk shows what isn't) */
        K_VALUES,                                             /* (1.4.0, the user's: the knobs' numbers, Peek or Always:
                                                               * proj.values, global) */
        K_SPITCH, K_SRATE, K_SDEPTH, K_SECHO,                /* (format 34, the user's) the siren page's: the siren held's
                                                               * (sir_page) Pitch, Rate, Depth, Echo (EN_SK_*'s order;
                                                               * proj.sir, global) */
-       K_TRANS };                                            /* (1.4.0, the user's: a Set's Transition, LP, Segue, Mix:
+       K_TRANS,                                              /* (1.4.0, the user's: a Set's Transition, LP, Segue, Mix:
                                                               * proj.trans, global; Set mode alone) */
+       K_CUES,                                               /* (1.5.0, step 7) a set's cues played, or not:
+                                                              * !proj.cues_off, the player's, global */
+       K_STORE };                                            /* (the user's, 2026-11-23: the Set page's KNOB 3, the
+                                                              * cues' off) the pieces now stored as a set, from the
+                                                              * FM-1 itself: the set it goes into (store_turn) */
 static const char *const LANE_NAME[EN_NDRUM] = {"Kick", "Shaker", "Open", "Rim", "Clap"};
 _Static_assert(P_NPARAMS <= K_LEDS, "the knobs' own codes must come after the parameters");
 static const uint16_t VIEW_KNOB[NVIEWS][4] = {
@@ -182,7 +199,8 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
     {K_KSHAPE, P_HITS, P_DVARY, K_NONE},         /* (Duck: the Arrangement page's; the kick a switch, 1.4.0; the hats'
                                                   * level and tone on the Hats page) */
     {P_ECHO, P_ETIME, P_FEEDBACK, P_REVERB},
-    {P_TUNE, P_MIDI, K_LEDS, K_SAVE},
+    {P_TUNE, P_MIDI, K_LEDS, K_VALUES},          /* (the user's, 2026-11-22: Values here from the Set page; Save
+                                                  * gone: GLO held saves all eight) */
     {P_CHORD, P_PINGS, P_BASS, P_DRUMS},
     {P_CATT, P_DECAY, P_CCOL, K_NONE},           /* (1.4.0, the user's: the chord's voice; Colour on the FM page.
                                                   * Format 36, the user's: the filter its own page, V_CFILT, its Cutoff,
@@ -218,9 +236,10 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
     {P_CHORD, P_CECHO, P_CPLATE, P_CLOW},        /* (1.4.0) a strip: the chord's here; vknob() the part's (STRIP_PAR) */
     {P_SINTRO, P_SMAIN, P_SOUTRO, P_SKIND},      /* (1.4.0, the user's) the Song page: the song's lengths in its order,
                                                   * in bars (a phrase a click), and which parts come first */
-    {P_SMODE, K_TRANS, K_NONE, K_VALUES},        /* (the Song mode page: GLO again; the player's, global; 1.4.0, the
-                                                  * knobs' numbers, Values; the user's: KNOB 2 a Set's Transition,
-                                                  * Set mode alone, Values on KNOB 4, KNOB 3 free) */
+    {P_SMODE, K_TRANS, DUB1_CUES ? K_CUES : K_STORE, K_LOAD},   /* (the Set page: GLO again; the player's, global; the
+                                                  * user's: KNOB 2 a Set's Transition, Set mode alone; (1.5.0, step 7)
+                                                  * KNOB 3 Cues, DUB1_CUES only: else (2026-11-23) Store;
+                                                  * (2026-11-22) KNOB 4 Load, a stored set, Values to Setup) */
     {K_WALK, P_DRIFT, K_NONE, K_NONE},           /* (1.4.0, the user's) the Walk page: EDIT again; the walk's character
                                                   * (also on ALGORITHM, as ever) and Change, the Chord page's too */
     {K_SPITCH, K_SRATE, K_SDEPTH, K_SECHO},      /* (format 34, the user's) a siren's page: its key held */
@@ -243,7 +262,7 @@ static void page_pos(int v, int *n, int *m)     /* (1.4.0, the user's) a page's 
     static const uint8_t SEQ[9][5] = {{V_DUB, V_SONG, V_KEY}, {V_CHORD, V_CSND, V_CFILT, V_CFM, V_CLFO}, {V_TEXTURE, V_PSND, V_PFM},
                                       {V_BASS, V_BSND, V_BFM}, {V_DRUMS, V_DSND, V_HATS, V_PAT}, {V_SPACE, V_ESND},
                                       {V_NSND, V_NVOX, V_NLFO}, {V_SETUP, V_SMODE}, {V_CHORDS, V_WALK}};
-    static const uint8_t LEN[9] = {3, 5, 3, 3, 4, 2, 3, 2, 2};   /* (1.4.0: HOME's Song page, GLO's Song mode, EDIT's Walk;
+    static const uint8_t LEN[9] = {3, 5, 3, 3, 4, 2, 3, 2, 2};   /* (1.4.0: HOME's Song page, GLO's Set page, EDIT's Walk;
                                                   * format 36: ENV's Chord filter) */
     int s, i;
     for (s = 0; s < 9; s++)
@@ -269,7 +288,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Groove", "Vary", "Density", "Fifth"},
     {"Kick", "Hits", "Vary", ""},
     {"Echo", "Echo time", "Feedback", "Reverb"},
-    {"Tune", "MIDI out", "Lights", "Save"},
+    {"Tune", "MIDI out", "Lights", "Values"},
     {"Chord", "Pings", "Bass", "Drums"},
     {"Attack", "Decay", "Colour", ""},
     {"Octave", "Tone", "Length", "Bend"},
@@ -291,7 +310,11 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Air", "Tone", "Decay", "Width"},
     {"Level", "Echo", "Plate", "Filter"},   /* (1.4.0, format 28, KellyOffski's: the Low cut a centred filter) */
     {"Intro", "Main", "Outro", "Kind"},
-    {"Mode", "Transition", "", "Values"},
+#if DUB1_CUES
+    {"Mode", "Transition", "Cues", "Load"},
+#else
+    {"Mode", "Transition", "Store", "Load"},     /* (KNOB 3: the cues' off: Store) */
+#endif
     {"Walk", "Change", "", ""},
     {"Pitch", "Rate", "Depth", "Echo"},
     {"Cutoff", "Reso", "Env", "Env decay"},
@@ -310,7 +333,7 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
     {"How much goes into the echo", "The tape loop's length, in beats", "How long the repeats go on",
      "How much goes into the plate"},
     {"Fine tuning, in cents", "Notes and clock out over MIDI", "The keys' and buttons' lights",
-     "A turn saves all eight pieces"},
+     "The knobs' numbers: shown a moment, or always"},
     {"The chord's level", "The pings' level", "The bass's level", "The drums' level"},
     {"The strike: a snap, to a swell", "How long each stab rings", "The voice's own colour", ""},
     {"The pings two octaves down to two up", "The ping, round to metallic", "How long each ping rings",
@@ -347,8 +370,8 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
      "Left darker, right thinner, before the sends"},
     {"The parts coming in, a phrase a click", "The piece itself, before the outro", "The parts leaving, then silence",
      "Ambient first, or the kick and the bass"},
-    {"Endless, a song, or a set of the pieces", "A set's hand-over: LP, Segue or Mix", "",
-     "The knobs' numbers: shown a moment, or always"},
+    {"Endless, a song, or a set of the pieces", "A set's hand-over: LP, Segue or Mix", DUB1_CUES ? "A set's moves: played, or not" : "Your pieces as a set: rest on one to store",
+     "A stored set: rest on it to load it"},
     {"Home, Wander or Free: how far it roams", "How long a chord lasts", "", ""},
     {"Up or down an octave", "How fast it goes round", "How far its pitch swings", "Into the echo; past half, repeats stack"},
     {"Darker, or brighter, than the piece's own", "The filter's resonance", "How far each stab opens it; left: not at all",
@@ -457,7 +480,53 @@ static struct {
     uint32_t peek_until;                         /* (1.4.0) the knobs' numbers shown till then (a page opened) */
     uint32_t frame;
     uint32_t sig[3];                   /* what each band shows: redrawn when it changes */
+    uint8_t ask_op;                    /* (1.5.0, step 4) the set protocol's question on the screen (setwire.c's op), 0 none */
+    uint8_t ask_swallow;               /* answered: nothing more till every button and key is let go */
+    uint16_t out_col, out_scol;        /* (1.5.0, the user's) the question's outcome on the whole screen (out_show):
+                                        * its word's colour, its line's */
+    uint32_t out_t0, out_until;        /* when it came, till when it stays (0: not up) */
+    char out_head[16], out_word[20], out_sub[24], out_name[28];   /* what was asked, the outcome, a line under it,
+                                        * the set's name (or the restore's what, what was kept) */
+    uint8_t ld;                        /* (the Set page's Load) the stored set chosen last: its number (1..8), 0 none */
+    uint32_t ld_t;                     /* its knob's last click while choosing (0: nothing to ask) */
+    uint8_t st;                        /* (2026-11-23, the Set page's Store) the set being chosen to store into (1..8),
+                                        * 0: none (the knob shows store_def's) */
+    uint32_t st_t;                     /* its knob's last click while choosing (0: nothing to ask) */
+    uint8_t again;                     /* (beta2, the user's) a set just stored into the set loaded: its number (1..8),
+                                        * LOAD IT NOW? asked once its outcome is over (again_tick); 0 none */
 } ui;
+
+/* (1.5.0, step 7) the cue player's state (cues.c): about 700 bytes, the list 512 of them */
+#define CUE_NACT 8                       /* things due at a step: a hold's end, a siren's slow one */
+#define CUE_NRIDE 4                      /* rides at once (a master action's, a siren's knob, a knob's) */
+static struct {
+    d1c_cue_t q[CUE_MAX];                /* the playing piece's cues (read from where they are as it comes) */
+    uint64_t done;                       /* each fired, or dropped (its part over first) */
+    uint32_t moves, fx;                  /* the moves (EN_PF_*) and effects (EN_FX_*) the cues hold, sent with the keys' */
+    uint32_t bars;                       /* en_bars as last seen */
+    uint32_t knobs[(P_NPARAMS + 31) / 32];   /* the parameters a cue rode: the piece's own sent again at the end */
+    uint16_t sirk;                       /* the sirens' knobs a cue rode (siren x 4 + knob) */
+    struct {
+        uint32_t at;
+        uint8_t what, arg;
+    } act[CUE_NACT];
+    struct {
+        uint32_t t0;                     /* its first step */
+        uint16_t len;                    /* its steps (0: the slot free) */
+        int16_t from, to, now;
+        uint8_t op, arg, on;             /* (on 0, len not: done, its last value kept for the next ride on it) */
+    } ride[CUE_NRIDE];
+    cuesrc_t src;                        /* where the list was read from */
+    uint8_t n;                           /* its cues */
+    int8_t slot;                         /* whose they are (-1: none read yet) */
+    uint8_t live;                        /* armed: playing, cues on, this run's */
+    uint8_t siren, sheld;                /* a siren a cue holds (its number + 1), its slow one begun */
+    uint8_t mset, mwas, sset, swas;      /* (Decisions 7) the parts whose mute (solo) a cue changed last, and how each
+                                          * was before the cues touched it: put back when the music stops (a key's own
+                                          * tap on one makes it yours again: its bit cleared) */
+    uint8_t played;                      /* en_playing as last seen (a stop: its fall) */
+} cue;
+static void cue_touch(int k);
 
 /* the screen reader (announce.c; speak() below): a message went to it this frame, so speak() leaves what it
  * changed be; and the transport as last said (PLAY says its own: the engine takes it a block later) */
@@ -615,6 +684,48 @@ static void slot_write(int i)                    /* a walk slot about to be edit
     knob_set(P_CX0 + i, x);
     knob_set(P_CQ0 + i, q);
 }
+/* (the user's, 2026-11-22) the Set page's Load: the sets stored, by their headers (plat_fs_has: no payload read, so
+ * cheap enough for the knob's picture each time it's drawn); bit n set n + 1 */
+static uint32_t load_mask(void)
+{
+    uint32_t m = 0, i;
+    for (i = 0; i < SXW_NSETS; i++)
+        if (plat_fs_has(FS_SET, i))
+            m |= 1u << i;
+    return m;
+}
+static uint32_t load_count(void)
+{
+    uint32_t m = load_mask(), n = 0;
+    for (; m; m &= m - 1u)
+        n++;
+    return n;
+}
+/* (the user's, 2026-11-23: the Set page's KNOB 3, Store) the set Store offers first, 0..7: the set loaded, as far as it
+ * is still known (setwire.c's sxw_live_find: the player's main case, the set loaded changed and kept into it again),
+ * else the first empty one, else set 1. Found again only when what it hangs on may have changed (the sets stored, the
+ * set loaded, the pieces' name, the computer's requests, a question): the knob's picture asks every frame */
+static uint32_t hash(uint32_t h, uint32_t v);
+static int store_def(void)
+{
+    static uint32_t key;
+    static uint8_t have;
+    static int8_t def;
+    const uint32_t m = load_mask();
+    uint32_t k = hash(hash(hash(0x53544F52u, m), (uint32_t)(sxw_live + 1)), sxw.in), i;
+    k = hash(k, (uint32_t)sxw.state | (uint32_t)sxw.op << 8 | (uint32_t)sxw.index << 16);
+    for (i = 0; i < PROJ_NAME && proj.name[i]; i++)
+        k = hash(k, (uint8_t)proj.name[i]);
+    if (have && k == key)
+        return def;
+    have = 1, key = k;
+    if ((def = (int8_t)sxw_live_find()) < 0)
+        for (def = 0; def < (int)SXW_NSETS && (m >> def & 1u); def++)
+            ;
+    if (def >= (int)SXW_NSETS)
+        def = 0;
+    return def;
+}
 static int knob_get(int k)
 {
     if (k < P_NPARAMS)
@@ -651,14 +762,19 @@ static int knob_get(int k)
         return proj.par[P_PMODE] & EN_PLOOP ? 1 : 0;
     if (k == K_WALK)
         return (proj.par[P_PMODE] & 3) % EN_NWALK;
-    if (k == K_SAVE)
-        return ui.dirty ? 1 : 0;
+    if (k == K_LOAD)                             /* (the set chosen last, 0..7: its place on the big ring) */
+        return ui.ld ? ui.ld - 1 : 0;
+    if (k == K_STORE)                            /* (the set it would store into, 0..7: the one being chosen, else
+                                                  * store_def's) */
+        return ui.st ? ui.st - 1 : store_def();
     if (k == K_VALUES)
         return proj.values ? 1 : 0;
     if (k >= K_SPITCH && k <= K_SECHO)          /* (format 34: as it plays: the tuned ones on the key's notes) */
         return en_sir_eff(sir_page, k - K_SPITCH, proj.sir[sir_page % EN_NSIR][k - K_SPITCH]);
     if (k == K_TRANS)
         return proj.trans < EN_NTRANS ? proj.trans : 0;
+    if (k == K_CUES)
+        return !proj.cues_off;
     return 0;
 }
 static void knob_range(int k, int *lo, int *hi)
@@ -673,7 +789,7 @@ static void knob_range(int k, int *lo, int *hi)
         *hi = 50;
     } else {
         *lo = 0;
-        *hi = k == K_PLAY || k == K_VALUES ? 1 : k == K_TRANS ? EN_NTRANS - 1 : k == K_WALK ? EN_NWALK - 1 : k == K_KSHAPE ? 3 : k == K_MODE ? EN_NMODES - 1 : k == K_LEDS ? 2 : k == K_CPU ? 100 : k == K_SLOT ? EN_NPROG - 1 : k == K_CQ ? EN_NCQ - 1 : k == K_CX ? EN_NCX - 1
+        *hi = k == K_PLAY || k == K_VALUES || k == K_CUES ? 1 : k == K_LOAD || k == K_STORE ? SXW_NSETS - 1 : k == K_TRANS ? EN_NTRANS - 1 : k == K_WALK ? EN_NWALK - 1 : k == K_KSHAPE ? 3 : k == K_MODE ? EN_NMODES - 1 : k == K_LEDS ? 2 : k == K_CPU ? 100 : k == K_SLOT ? EN_NPROG - 1 : k == K_CQ ? EN_NCQ - 1 : k == K_CX ? EN_NCX - 1
             : k == K_LANE ? EN_NDRUM - 1 : k == K_LCH ? 100 : 0;
     }
 }
@@ -683,8 +799,8 @@ static const char *knob_name(int k)
         return en_param_info(k)->name;
     return k == K_LEDS ? "Lights" : k == K_CPU ? "CPU" : k == K_SLOT ? "Slot" : k == K_CQ ? "Chord" : k == K_CX ? "Type"
          : k == K_LANE ? "Lane" : k == K_LCH ? "Chance" : k == K_FILTER ? "Filter" : k == K_DUB ? "Wet"
-         : k == K_ENERGY ? "Energy" : k == K_SPACE ? "Duck" : k == K_MODE ? "Mode" : k == K_KSHAPE ? "Kick" : k == K_PLAY ? "Play" : k == K_WALK ? "Walk" : k == K_SAVE ? "Save" : k == K_VALUES ? "Values"
-         : k == K_SPITCH ? "Pitch" : k == K_SRATE ? "Rate" : k == K_SDEPTH ? "Depth" : k == K_SECHO ? "Echo" : k == K_TRANS ? "Transition" : "";
+         : k == K_ENERGY ? "Energy" : k == K_SPACE ? "Duck" : k == K_MODE ? "Mode" : k == K_KSHAPE ? "Kick" : k == K_PLAY ? "Play" : k == K_WALK ? "Walk" : k == K_LOAD ? "Load" : k == K_STORE ? "Store" : k == K_VALUES ? "Values"
+         : k == K_SPITCH ? "Pitch" : k == K_SRATE ? "Rate" : k == K_SDEPTH ? "Depth" : k == K_SECHO ? "Echo" : k == K_TRANS ? "Transition" : k == K_CUES ? "Cues" : "";
 }
 static void knob_text(int k, char *b)
 {
@@ -747,12 +863,30 @@ static void knob_text(int k, char *b)
         const char *n = v ? "Loop" : "Endless";
         while ((*b++ = *n++))
             ;
-    } else if (k == K_SAVE) {                    /* changed since the last save: "Save" (turn it); else "Saved" */
-        const char *n = v ? "Save" : "Saved";
-        while ((*b++ = *n++))
-            ;
+    } else if (k == K_LOAD) {                    /* (at rest: the sets stored, "3 sets"; "None") */
+        const uint32_t n = load_count();
+        if (!n) {
+            const char *z = "None";
+            while ((*b++ = *z++))
+                ;
+            return;
+        }
+        itoa_u(n, b);
+        while (*b)
+            b++;
+        {
+            const char *z = n == 1u ? " set" : " sets";
+            while ((*b++ = *z++))
+                ;
+        }
+    } else if (k == K_STORE) {                   /* ("Set 3": the set it would store into) */
+        b[0] = 'S', b[1] = 'e', b[2] = 't', b[3] = ' ', b[4] = (char)('1' + v), b[5] = 0;
     } else if (k == K_VALUES) {
         const char *n = v ? "Always" : "Peek";
+        while ((*b++ = *n++))
+            ;
+    } else if (k == K_CUES) {                    /* (step 7) */
+        const char *n = v ? "On" : "Off";
         while ((*b++ = *n++))
             ;
     } else if (k >= K_SPITCH && k <= K_SECHO) {   /* (format 34: "+3", "1/8", "2.5 Hz", "12 st", "70") */
@@ -767,11 +901,17 @@ static void knob_text(int k, char *b)
 }
 
 static void set_mode(int m);
-static void do_save(void)                       /* GLO held, or Setup's KNOB 4 turned */
+static void do_save(void)                       /* GLO held (Setup's KNOB 4, Save, till 1.5.0: the user's, gone) */
 {
-    if (project_save() == 0) {
+    const int rc = project_save();
+    if (rc == 0) {
         ui.dirty = 0;
         say("SAVED", 0);
+    } else if (rc == PLAT_FS_BUSY) {             /* (1.5.0: playing, no frame erased ahead; an erase only while stopped:
+                                                  * autosave saves it then, still dirty) */
+        warn("NOT SAVED YET", "SAVES WHEN STOPPED");
+    } else if (rc == PLAT_FS_HELD) {             /* (1.5.0, step 4: a set coming in holds the store; autosave after) */
+        warn("NOT SAVED YET", "A SET COMING IN");
     } else {
         warn("NOT SAVED", "FLASH ERROR");
     }
@@ -779,8 +919,9 @@ static void do_save(void)                       /* GLO held, or Setup's KNOB 4 t
 static void knob_set(int k, int v)
 {
     int lo, hi;
-    if (k == K_CPU || k == K_NONE)
+    if (k == K_CPU || k == K_NONE || k == K_LOAD || k == K_STORE)   /* (Load: load_turn's; Store: store_turn's) */
         return;
+    cue_touch(k);                                /* (step 7) a cue riding it: yours from here */
     knob_range(k, &lo, &hi);
     v = v < lo ? lo : v > hi ? hi : v;
     if (v == knob_get(k))
@@ -810,6 +951,8 @@ static void knob_set(int k, int v)
         }
         proj.sir[sir_page % EN_NSIR][sk] = (int8_t)n;
         en_sir_set(sir_page, sk, n);
+    } else if (k == K_CUES) {
+        proj.cues_off = (uint8_t)!v;             /* (step 7: the player follows, cue_tick) */
     } else if (k == K_TRANS) {
         proj.trans = (uint8_t)v;                 /* (the engine told by set_tick) */
     } else if (k == K_SLOT) {
@@ -875,12 +1018,8 @@ static int32_t accel(int role, int32_t s, int range)
 static void turn(int role, int k, int32_t e)
 {
     int lo, hi;
-    if (!e || k == K_NONE || k == K_CPU)
+    if (!e || k == K_NONE || k == K_CPU || k == K_LOAD || k == K_STORE)
         return;
-    if (k == K_SAVE) {                           /* a turn, either way: saved */
-        do_save();
-        return;
-    }
     knob_range(k, &lo, &hi);
     if (hi - lo < 10 && !accel_off) {            /* (1.4.0, the user's) a switch: one position a click, the encoder's
                                                   * double counts (a click read as two) within 35 ms as one */
@@ -1061,12 +1200,15 @@ static const uint16_t PERF_COL[PERF_NP] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_TEX
 static const char *const PERF_WHAT[PERF_NM] = {"the filter pushed open", "the filter pushed shut",
                                                "the kick and the bass out", "the echo pushed, feeding back"};
 static const char *const PERF_LOW[PERF_NP] = {"chord", "pings", "bass", "kick", "hats", "noise"};
-static void perf_fx_send(void) { en_fx(ui.fx | ui.pfx); }   /* (the grid's and PERFORM's effects together) */
+static void perf_fx_send(void) { en_fx(ui.fx | ui.pfx | cue.fx); }   /* (the grid's and PERFORM's effects together; (step 7)
+                                                  * and the cues') */
+static void perf_send(void) { en_perf(ui.moves | cue.moves); }   /* (step 7) the keys' moves and the cues' together */
 static void perf_solo(int b)                     /* a black key tapped: its part soloed, or not */
 {
     const int p = PERF_BPART[b];
     const uint32_t m = 1u << p;
     ui.solo ^= m;
+    cue.sset &= (uint8_t)~m;                     /* (Decisions 7: yours now, kept at a stop) */
     perf_mutes();
     if (ui.solo & m) {
         say("SOLO", PERF_NAME[PERF_B0 + b]);
@@ -1085,7 +1227,7 @@ static void perf_throw(int b, int on)            /* a black key held: its part t
         ui.moves |= PERF_BTHR[b];
     else
         ui.moves &= ~(uint32_t)PERF_BTHR[b];
-    en_perf(ui.moves);
+    perf_send();
     if (on) {
         say(PERF_THRNAME[b], 0);
         card_show(PERF_THRNAME[b], PERF_THRWHAT[b], K_FROST, 0);
@@ -1162,6 +1304,7 @@ static void perf_key(uint32_t key, int down)
             return;
         }
         ui.mutes ^= 1u << i;                     /* (bit i: EN_M_CHORD .. EN_M_NOISE, in this order) */
+        cue.mset &= (uint8_t)~(1u << i);         /* (Decisions 7: yours now, kept at a stop) */
         perf_mutes();
         say(PERF_NAME[i], ui.mutes >> i & 1u ? "OFF" : "ON");
         card_show(PERF_NAME[i], ui.mutes >> i & 1u ? "muted" : "on", ui.mutes >> i & 1u ? K_DIM : PERF_COL[i], 0);
@@ -1185,7 +1328,7 @@ static void perf_key(uint32_t key, int down)
         ui.moves |= PERF_MBIT[i];
     else
         ui.moves &= ~(uint32_t)PERF_MBIT[i];
-    en_perf(ui.moves);
+    perf_send();
     if (down) {
         say(PERF_NAME[PERF_NP + i], 0);
         card_show(PERF_NAME[PERF_NP + i], PERF_WHAT[i], K_FROST, 0);
@@ -1235,7 +1378,7 @@ static void perf_set(int on)                     /* on: the mixer on the knobs; 
     } else {
         if (ui.moves) {                          /* the moves and throws let go; the mutes stay */
             ui.moves = 0;
-            en_perf(0);
+            perf_send();
         }
         if (ui.pfx) {                            /* (its effects too; the grid's held on) */
             ui.pfx = 0;
@@ -1281,9 +1424,11 @@ static int fx_key(uint32_t key, int down)        /* 1: the key was an effect's *
     } else {
         ui.fx &= ~(1u << e);
     }
-    en_fx(ui.fx | ui.pfx);
+    perf_fx_send();
     return 1;
 }
+
+#include "cues.c"                                /* (1.5.0, step 7) the cue player */
 
 /* ----------------------------------------------------------- the chords --- */
 /* EDIT tapped: the Chords page, the eight coming: the walk's (teal: degrees, they follow the key), yours (white)
@@ -1486,7 +1631,7 @@ static void button(int b)
         set_view(ui.view == V_DUB ? V_SONG : V_KEY);
         return;
     }
-    if (b == B_GLO && ui.view == V_SETUP) {      /* (1.4.0) GLO again: Song mode; again: back */
+    if (b == B_GLO && ui.view == V_SETUP) {      /* (1.4.0) GLO again: the Set page; again: back */
         set_view(V_SMODE);
         return;
     }
@@ -1641,6 +1786,7 @@ static void oct_mute(void)
         ui.mutes &= ~m;
     else
         ui.mutes |= m;
+    cue.mset &= (uint8_t)~m;                     /* (Decisions 7: yours now, kept at a stop) */
     perf_mutes();
     say(LAYER_NAME[l], (ui.mutes & m) == m ? "MUTED" : "ON");
     oct_show(l);
@@ -1804,7 +1950,7 @@ static void nudge(int layer, int how)
         en_param_text(VOICE[layer], proj.par[VOICE[layer]], vn);
     }
     fm = layer < 3 && en_voice_fm(layer);
-    en_piece(proj.piece, rec, &pool);
+    en_piece(piece_recipe(proj.piece), rec, &pool);
     if (how == NUDGE_SHAKE && layer == 2) {      /* the bass's shake: a new groove too, a neighbour */
         int k = 0;
         groove_step(rec[P_GROOVE], 50);
@@ -1922,14 +2068,320 @@ static void groove_tick(void)                    /* (1.4.0, format 29) the bass'
                                                   * minutes, as Evolve 100 had it; 50: a quarter of that; 0 never) */
         int16_t rec[P_NPARAMS];
         uint16_t pool;
-        en_piece(proj.piece, rec, &pool);
+        en_piece(piece_recipe(proj.piece), rec, &pool);
         groove_step(rec[P_GROOVE], 70);
     }
+}
+static void ask_done(int st);
+/* (1.5.0, the user's: a header message for 1.3 s couldn't be read) the question's outcome, on the whole screen in the
+ * question's style (draw_out): OUT_SHOW, or till a button, key or knob after OUT_GRACE (that press doing nothing
+ * else: the answer's knob, still turning, doesn't take it away at once) */
+#define OUT_SHOW 3000u
+#define OUT_GRACE 400u
+#define K_WARN K_PULSE                   /* (not done, not stored: the warning's amber; an error, a delete: K_FROST) */
+static int out_on(uint32_t now) { return ui.out_until && (int32_t)(ui.out_until - now) > 0; }
+static void out_cpy(char *d, const char *s, uint32_t n)
+{
+    uint32_t i = 0;
+    while (s && s[i] && i + 1u < n)
+        d[i] = s[i], i++;
+    d[i] = 0;
+}
+static void out_show(const char *head, const char *word, uint16_t col, const char *sub, uint16_t scol, const char *name)
+{
+    out_cpy(ui.out_head, head, sizeof ui.out_head);
+    out_cpy(ui.out_word, word, sizeof ui.out_word);
+    out_cpy(ui.out_sub, sub, sizeof ui.out_sub);
+    out_cpy(ui.out_name, name, sizeof ui.out_name);
+    ui.out_col = col, ui.out_scol = scol;
+    ui.out_t0 = plat_ms();
+    ui.out_until = (ui.out_t0 + OUT_SHOW) | 1u;
+    ui.sig[0] = ui.sig[1] = ui.sig[2] = 0;
+}
+static void out_end(int early)                   /* gone (early: a press took it away; the header's copy too) */
+{
+    ui.out_until = 0;
+    ui.sig[0] = ui.sig[1] = ui.sig[2] = 0;
+    if (early)
+        ui.msg_until = 0;
+}
+/* (1.5.0, step 4) the set protocol's question up (setwire.c): GLO alone yes; any other button, key or knob no; then
+ * nothing more till every button and key is let go (their releases and holds do nothing). The outcome up after it:
+ * any button, key or knob takes it away, and does nothing else */
+static void ask_input(void)
+{
+    const uint32_t btn = plat_buttons(), keys = plat_keys(), press = btn & ~ui.btn, kp = keys & ~ui.keys;
+    int e, turned = 0;
+    for (e = 0; e < NE; e++)
+        turned |= plat_enc(e) != 0;
+    ui.btn = btn, ui.keys = keys;
+    ui.btn_used |= btn;
+    ui.reset_done = 1;                           /* (GLO held on: no reset after it) */
+    midi_in();
+    if (btn || keys || turned)
+        ui.act_t = plat_ms();
+    if (turned && (ui.ask_swallow || sxw_asking() || ui.out_until))
+        ui.turn_t = plat_ms();                   /* (a knob still turning after it answered or took the outcome away:
+                                                  * its detents swallowed too, till it rests) */
+    if (sxw_asking() && (press || kp || turned)) {
+        ui.ask_swallow = 1;
+        ask_done(sxw_answer(press == 1u << B_GLO && !kp && !turned));
+    } else if (ui.out_until && (press || kp || turned)) {
+        ui.ask_swallow = 1;
+        if (plat_ms() - ui.out_t0 >= OUT_GRACE)
+            out_end(1);
+    }
+    if (!btn && !keys && plat_ms() - ui.turn_t >= 250u)
+        ui.ask_swallow = 0;
+}
+/* (the user's, 2026-11-22) the Set page's KNOB 4, Load: a stored set loaded from the FM-1 itself. A click a stored set
+ * (the empty numbers skipped; it stops at the first and the last), the big ring showing the one chosen: its number in
+ * the ring, its place among the eight round it, its name and pieces under it. Resting on it LOAD_REST, the FM-1 asks
+ * LOAD SET n? <name>, the question a load from the computer asks (setwire.c's sxw_load: the same screen, answer,
+ * outcome and STATUS; GLO yes, anything else no, 30 s), and its yes loads it as APPLY's does (ask_done). Only while
+ * stopped, as the computer's; while playing, or with no set stored, a turn only says so */
+#define LOAD_REST 1200u                          /* (the big ring's own time, OCT_SHOW: the question comes as the ring
+                                                  * would start to fade, so the set last shown is the set asked; a slow
+                                                  * turn, a click a second, still moves on before it) */
+static void sp_int(uint32_t v);
+static void ask_cat(char *t, uint32_t *k, const char *s, uint32_t max);
+static char ld_help[PROJ_NAME + 16];             /* (the big ring's line: "Echospace 12, 5 pieces") */
+static uint8_t ld_nlen;                          /* (its name's length: the outcome's name) */
+static void load_said(const char *head, const char *line)   /* the header's word, and the reader's whole line */
+{
+    say_as(head, 0, 0);
+    if (ann_on()) {
+        ann_say(line, 0, ANN_NOW);
+        sp_said = 1;
+    }
+}
+static void load_turn(int i, int32_t e)
+{
+    const uint32_t now = plat_ms(), m = load_mask();
+    const char *lb = KNOB_LABEL[ui.view][i];
+    int ix = ui.ld ? ui.ld - 1 : -1, n, j;
+    char nm[PROJ_NAME + 1], d[4];
+    uint32_t len, np = 0;
+    int f;
+    ui.ld_t = 0;
+    if (en_playing) {                            /* (as the computer's: sets load only while stopped) */
+        big_show_text(lb, "Stop", 0.0f, K_DIM);
+        ui.big_help = "Stop first: sets load only while stopped";
+        load_said("STOP FIRST", "Load, stop first: sets load only while stopped");
+        return;
+    }
+    if (!m) {
+        big_show_text(lb, "None", 0.0f, K_DIM);
+        ui.big_help = "No sets stored: send one from the Sets page";
+        load_said("NO SETS STORED", "Load, no sets stored");
+        return;
+    }
+    if (!accel_off) {                            /* (a switch's: the encoder's double counts within 35 ms as one) */
+        static uint32_t t0;
+        if (now - t0 < 35u)
+            return;
+        t0 = now;
+    }
+    for (n = accel_off ? (e < 0 ? (int)-e : (int)e) : 1; n > 0; n--) {   /* (the next stored, that way) */
+        j = ix < 0 ? (e > 0 ? -1 : (int)SXW_NSETS) : ix;
+        do
+            j += e > 0 ? 1 : -1;
+        while (j >= 0 && j < (int)SXW_NSETS && !(m >> j & 1u));
+        if (j < 0 || j >= (int)SXW_NSETS)
+            break;                               /* (the first or the last: it stays) */
+        ix = j;
+    }
+    if (ix < 0 || !(m >> ix & 1u))               /* (the one chosen before gone since: the nearest end, that way) */
+        for (ix = e > 0 ? (int)SXW_NSETS - 1 : 0; !(m >> ix & 1u); ix += e > 0 ? -1 : 1)
+            ;
+    ui.ld = (uint8_t)(ix + 1);
+    ui.ld_t = now | 1u;
+    nm[0] = 0;
+    if ((f = plat_fs_find(FS_SET, (uint32_t)ix, 0, &len)) < 0 || project_set_info(f, len, nm, &np))
+        nm[0] = 0, np = 0;                       /* (not one this DUB-1 reads: asked, its answer says so) */
+    {
+        uint32_t k = 0;
+        ask_cat(ld_help, &k, nm[0] ? nm : "no name", sizeof ld_help - 1u);
+        ld_nlen = (uint8_t)k;
+        if (np) {
+            char t[4];
+            itoa_u(np, t);
+            ask_cat(ld_help, &k, ", ", sizeof ld_help - 1u);
+            ask_cat(ld_help, &k, t, sizeof ld_help - 1u);
+            ask_cat(ld_help, &k, np == 1u ? " piece" : " pieces", sizeof ld_help - 1u);
+        }
+    }
+    d[0] = (char)('1' + ix), d[1] = 0;
+    big_show_text(lb, d, (float)ix / (float)(SXW_NSETS - 1u), K_ACC);
+    ui.big_help = ld_help;
+    if (ann_on()) {                              /* ("Load, set 3, Echospace 12", once the knob rests a moment) */
+        sp_n = 0;
+        sp_cat("Load, set ");
+        sp_int((uint32_t)ix + 1u);
+        sp_cat(", ");
+        sp_cat(nm[0] ? nm : "no name");
+        ann_later(sp_buf, ANN_NOW, 120u, now);
+        sp_said = 1;
+    }
+}
+static void load_tick(void)                      /* (every frame) the knob rested on a set: its question */
+{
+    const uint32_t now = plat_ms();
+    char t[16], why[24];
+    int rc;
+    uint32_t k = 0;
+    if (!ui.ld_t || now - ui.ld_t < LOAD_REST)
+        return;
+    ui.ld_t = 0;
+    if (ui.view != V_SMODE || ui.touched != 3 || !ui.ld || sxw_asking() || ui.out_until || grid_up())
+        return;                                  /* (moved on: another page, another knob, the grid; a question up) */
+    if ((rc = sxw_load(ui.ld - 1u, now)) == 0) {
+        ui.big_until = 0;                        /* (asked: ask_watch says it, draw_ask shows it) */
+        return;
+    }
+    ask_cat(t, &k, "LOAD SET ", sizeof t - 1u);
+    t[k++] = (char)('0' + ui.ld), t[k] = 0;
+    k = 0;
+    ask_cat(why, &k, rc == -1 ? "only while stopped" : rc == -2 ? "the computer is busy"   /* (the outcome's line: 23
+                                                  * characters at most) */
+                     : rc == SXW_E_NONE ? "no longer stored" : rc == SXW_E_NEWER ? "made by a newer DUB-1"
+                     : "a set it can't read", sizeof why - 1u);
+    say(t, rc == -1 ? "STOP FIRST" : "NOT LOADED");
+    ld_help[ld_nlen < sizeof ld_help ? ld_nlen : 0] = 0;   /* (the name alone, as every outcome shows it) */
+    out_show(t, rc == -1 ? "STOP FIRST" : "NOT LOADED", K_WARN, why, K_TEXT, ld_help);
+}
+/* (the user's, 2026-11-23) the Set page's KNOB 3, Store: the pieces as they are now kept as a stored set, from the
+ * FM-1 itself. At rest the knob shows the set it would store into (store_def: the set loaded, else the first empty);
+ * the first click wakes it on that one, each click after it the next set number, used or empty (1 to 8, stopping at
+ * the ends), the big ring showing the number and what is there ("empty", "replaces Night Set"). Resting on it
+ * LOAD_REST (Load's), the FM-1 saves the pieces (as GLO held does), writes them as a set and asks STORE SET n? <name>,
+ * the question a set sent from the computer asks (setwire.c's sxw_store: the same screen, answer, outcome and STATUS;
+ * GLO yes, anything else no, 30 s). The set: the set loaded's pieces (1 to its last; all eight with none loaded) and its
+ * name ("SET n" with none), its Mode, Transition, sirens and Tune the player's now. Its yes makes it the set loaded
+ * (no LOAD IT NOW?: the pieces are it). Only while stopped, as Load; while playing a turn only says so */
+static char st_help[PROJ_NAME + 16];             /* (the big ring's line: "empty", "replaces Night Set") */
+static void store_turn(int i, int32_t e)
+{
+    const uint32_t now = plat_ms();
+    const char *lb = KNOB_LABEL[ui.view][i];
+    int ix = ui.st ? ui.st - 1 : store_def(), n = accel_off ? (e < 0 ? (int)-e : (int)e) : 1;
+    char nm[PROJ_NAME + 1], d[2];
+    uint32_t len, np, k = 0;
+    int f;
+    ui.st_t = 0;
+    if (en_playing) {                            /* (as Load: the erases interrupt the sound) */
+        ui.st = 0;
+        big_show_text(lb, "Stop", 0.0f, K_DIM);
+        ui.big_help = "Stop first: sets store only while stopped";
+        load_said("STOP FIRST", "Store, stop first: sets store only while stopped");
+        return;
+    }
+    if (!accel_off) {                            /* (a switch's: the encoder's double counts within 35 ms as one) */
+        static uint32_t t0;
+        if (now - t0 < 35u)
+            return;
+        t0 = now;
+    }
+    if (!ui.st)                                  /* (the first click: the set it offers, not moved yet) */
+        n--;
+    ix += e > 0 ? n : -n;
+    ix = ix < 0 ? 0 : ix >= (int)SXW_NSETS ? (int)SXW_NSETS - 1 : ix;
+    ui.st = (uint8_t)(ix + 1);
+    ui.st_t = now | 1u;
+    nm[0] = 0;
+    if ((f = plat_fs_find(FS_SET, (uint32_t)ix, 0, &len)) >= 0 && project_set_info(f, len, nm, &np))
+        nm[0] = 0;                               /* (there, not one this DUB-1 reads: replaced all the same) */
+    if (f < 0) {
+        ask_cat(st_help, &k, "empty", sizeof st_help - 1u);
+    } else {
+        ask_cat(st_help, &k, "replaces ", sizeof st_help - 1u);
+        ask_cat(st_help, &k, nm[0] ? nm : "a set without a name", sizeof st_help - 1u);
+    }
+    d[0] = (char)('1' + ix), d[1] = 0;
+    big_show_text(lb, d, (float)ix / (float)(SXW_NSETS - 1u), K_ACC);
+    ui.big_help = st_help;
+    if (ann_on()) {                              /* ("Store, set 3, replaces Night Set", once the knob rests a moment) */
+        sp_n = 0;
+        sp_cat("Store, set ");
+        sp_int((uint32_t)ix + 1u);
+        sp_cat(", ");
+        sp_cat(st_help);
+        ann_later(sp_buf, ANN_NOW, 120u, now);
+        sp_said = 1;
+    }
+}
+static void store_tick(void)                     /* (every frame) the knob rested on a set: saved, written, asked */
+{
+    const uint32_t now = plat_ms();
+    char t[16], nm[PROJ_NAME + 1];
+    uint32_t k = 0, ix;
+    int rc;
+    if (!ui.st_t || now - ui.st_t < LOAD_REST)
+        return;
+    ui.st_t = 0;
+    ix = ui.st - 1u;
+    ui.st = 0;                                   /* (at rest again: the knob shows the set it offers) */
+    if (ui.view != V_SMODE || ui.touched != 2 || sxw_asking() || ui.out_until || grid_up())
+        return;                                  /* (moved on: another page, another knob, the grid; a question up) */
+    if (proj.name[0]) {                          /* (the set's name: the set loaded's, else "SET n") */
+        ask_cat(nm, &k, proj.name, PROJ_NAME);
+    } else {
+        ask_cat(nm, &k, "SET ", PROJ_NAME);
+        nm[k++] = (char)('1' + ix), nm[k] = 0;
+    }
+    rc = sxw_store(ix, nm, proj.setlen ? proj.setlen : NPIECES, now);
+    if (rc == 0 || rc == -4)
+        ui.dirty = 0;                            /* (the pieces saved first) */
+    if (rc == 0) {
+        ui.big_until = 0;                        /* (asked: ask_watch says it, draw_ask shows it) */
+        return;
+    }
+    k = 0;
+    ask_cat(t, &k, "STORE SET ", sizeof t - 1u);
+    t[k++] = (char)('1' + ix), t[k] = 0;
+    if (rc == -3 || rc == -4) {
+        warn(t, "FLASH ERROR");
+        out_show(t, "FLASH ERROR", K_FROST, rc == -3 ? "not stored, not saved" : "not stored", K_TEXT, nm);
+        return;
+    }
+    say(t, rc == -1 ? "STOP FIRST" : "NOT STORED");
+    out_show(t, rc == -1 ? "STOP FIRST" : "NOT STORED", K_WARN, rc == -1 ? "only while stopped" : rc == -2 ?
+             "the computer is busy" : "not a set it can store", K_TEXT, nm);
+}
+
+/* (beta2, the user's: a set stored from the computer into the set loaded didn't change what played: loading copies a
+ * set into the pieces) its STORED outcome over (or taken away), LOAD IT NOW? (sxw_load's question: GLO yes, anything
+ * else no, 30 s; its yes LOADED as the Load knob's). Not askable then (the music started, the computer busy): the
+ * outcome again, saying so (STORED, load it to hear it) */
+static void again_tick(void)
+{
+    char t[16], nm[PROJ_NAME + 1];
+    uint32_t k = 0, i;
+    if (!ui.again || ui.out_until || sxw_asking())
+        return;
+    i = ui.again - 1u;
+    ui.again = 0;
+    for (k = 0; sxw.name[k] && k < PROJ_NAME; k++)   /* (the set's name: the question's, which a refusal leaves) */
+        nm[k] = sxw.name[k];
+    nm[k] = 0;
+    if (sxw_load_again(i, plat_ms()) == 0)
+        return;                                  /* (asked: ask_watch says it, draw_ask shows it) */
+    k = 0;
+    ask_cat(t, &k, "STORE SET ", sizeof t - 1u);
+    t[k++] = (char)('1' + i), t[k] = 0;
+    say(t, "LOAD IT TO HEAR IT");
+    out_show(t, "STORED", K_ACC, "load it to hear it", K_TEXT, nm);
 }
 static void input(void)
 {
     uint32_t btn = plat_buttons(), keys = plat_keys(), ch, i;
     int32_t e;
+    if (ui.out_until && !out_on(plat_ms()))
+        out_end(0);
+    if (sxw_asking() || ui.ask_swallow || ui.out_until) {
+        ask_input();
+        return;
+    }
     ch = btn ^ ui.btn;
     ui.btn = btn;
     for (i = 0; i < NB; i++) {
@@ -2127,6 +2579,14 @@ static void input(void)
                 strip_open();                    /* (a part's key down and a knob turned: its strip at once) */
             if (ui.view == V_STRIP)
                 ui.strip_used = 1;
+            if (vknob(ui.view, i) == K_LOAD) {   /* (the Set page's Load: its own turn, ring and words) */
+                load_turn((int)i, e);
+                goto shown;
+            }
+            if (vknob(ui.view, i) == K_STORE) {   /* (2026-11-23: Store, the same) */
+                store_turn((int)i, e);
+                goto shown;
+            }
             if (fm_knob_off(ui.view, (int)i) && vknob(ui.view, i) == K_TRANS) {
                 big_show_help(K_TRANS, KNOB_LABEL[ui.view][i], K_DIM, TRANS_OFF);   /* (the user's: Set mode alone;
                                                   * the turn says so, the value kept) */
@@ -2142,10 +2602,10 @@ static void input(void)
             /* (1.4.0, the user's: no more the knob's name in the header: the big ring names it, over it; the header
              * the piece's) */
             {   /* (1.4.0) the big ring: the knob's value large over the middle (not where the page itself is the
-                 * picture: the Chords and the Pattern pages; nor Save and the CPU) */
+                 * picture: the Chords and the Pattern pages; nor the CPU) */
                 static const uint16_t LC[NOCT] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE, K_PULSE, K_TEXT};
                 const int k = vknob(ui.view, i), l = oct_layer(ui.view);
-                if (ui.view != V_CHORDS && ui.view != V_PAT && k != K_SAVE && k != K_CPU && k != K_NONE)
+                if (ui.view != V_CHORDS && ui.view != V_PAT && k != K_CPU && k != K_NONE)
                 {
                     char sn[24];                 /* (a strip's: its part's name first, "CHORD ECHO") */
                     const char *nm = KNOB_LABEL[ui.view][i];
@@ -2587,11 +3047,35 @@ static void draw_battery(int32_t bx)
  * page, and the big ring shows it as HOME held + SELECT turns it.) Messages take its place for a moment. */
 static int clip_on(uint32_t now);
 static int hdr_song(void) { return en_song_ph != EN_SG_OFF && en_song_be > 0u; }
-static int hdr_batt(void)                        /* the battery shown: on Setup, or low (under 20%), or charging (USB) */
+static int batt_low(void) { return plat_battery() >= 0 && !plat_usb_power() && batt_pct() < 20; }
+static int hdr_batt(int32_t name_w)              /* the battery shown: on Setup, or low (under 20%), or charging (USB) */
 {
     if (plat_battery() < 0 && !plat_usb_power())
         return 0;
+    if (ui.view != V_SETUP && name_w > NAME_PX_BATT && !batt_low())
+        return 0;                                /* (1.5.0, Decisions 3: a wide name takes its room, names.h; Decisions 4:
+                                                  * never a low battery's warning, the name cut then) */
     return ui.view == V_SETUP || plat_usb_power() || batt_pct() < 20;
+}
+/* (Decisions 4) the tag's name cut to max px with an ellipsis (three dots after it, ELL_W px): beside a low battery */
+#define ELL_W 10
+static uint8_t hdr_cut;                          /* (the host's "expect hdrcut") the last header's name cut */
+static int32_t name_cut(char *t, const char *s, int32_t max)   /* s's start that fits max - ELL_W into t: its width */
+{
+    int32_t k = 0, w = 0;
+    t[0] = 0;
+    while (s[k] && k < PROJ_NAME) {
+        t[k] = s[k], t[k + 1] = 0;
+        if (text_w(&FONT_B, t) > max - ELL_W) {
+            t[k] = 0;
+            break;
+        }
+        k++;
+    }
+    while (k > 0 && t[k - 1] == ' ')             /* ("Woodward…", not "Woodward …") */
+        t[--k] = 0;
+    w = text_w(&FONT_B, t);
+    return w;
 }
 static void hdr_phrase(int32_t x0, int32_t x1, uint32_t now)   /* the word and the cells, between x0 and x1 */
 {
@@ -2653,7 +3137,8 @@ static void draw_header(void)
     int msg = now < ui.msg_until && !big_on(now) && !oct_ring_on(now), clip = clip_on(now);
                                                  /* (1.4.0, the user's: a ring names itself; the header keeps the
                                                   * piece) */
-    const int song = hdr_song(), batt = hdr_batt();
+    const char *pn = piece_name(en_tr_cue && ui.cue_from >= 0 ? ui.cue_from : proj.piece);   /* (the tag's) */
+    const int song = hdr_song(), batt = hdr_batt(text_w(&FONT_B, pn));
     uint32_t h = hash(hash(hash(2166136261u, proj.piece | (uint32_t)ui.view << 8 | (uint32_t)batt << 16),
                            en_playing | ui.dirty << 4 | (uint32_t)msg << 5 | (uint32_t)en_ext << 6 | (uint32_t)ui.lock << 7),
                       (uint32_t)(ui.view == V_SETUP ? batt_pct() : 0) << 22 | (uint32_t)batt_bars() << 29 | (uint32_t)plat_usb_power() << 31 |
@@ -2744,9 +3229,19 @@ static void draw_header(void)
             cv_text(x - 2 - cw + 3, 6, &FONT_B, "!", K_TEXT);
             x -= cw + 6;
         }
-        {                                        /* the piece, in a coral tag (a Set's Transition cued: the one
+        hdr_cut = batt && ui.view != V_SETUP && text_w(&FONT_B, pn) > NAME_PX_BATT;
+        if (hdr_cut) {                           /* (Decisions 4) a low battery beside a wide name: the name cut,
+                                                  * "Woodwar…" */
+            char t[PROJ_NAME + 1];
+            const int32_t tw = name_cut(t, pn, NAME_PX_BATT);
+            int32_t d;
+            w = tw + ELL_W + 12;
+            cv_round(4, 4, w, 20, 6, K_TEXT);
+            cv_text(10, 6, &FONT_B, t, K_BG);
+            for (d = 0; d < 3; d++)              /* (the ellipsis: three dots on the baseline) */
+                cv_rect(10 + tw + 2 + d * 3, 19, 2, 2, K_BG);
+        } else {                                 /* the piece, in a coral tag (a Set's Transition cued: the one
                                                   * ending, its OUTRO, till the downbeat) */
-            const char *pn = piece_name(en_tr_cue && ui.cue_from >= 0 ? ui.cue_from : proj.piece);
             w = text_w(&FONT_B, pn) + 12;
             cv_round(4, 4, w, 20, 6, K_TEXT);
             cv_text(10, 6, &FONT_B, pn, K_BG);
@@ -4021,7 +4516,8 @@ static void draw_song_lane(void)
 static void draw_lanes(void)
 {
     draw_lmeters();                              /* (1.4.0, the user's: the meters at the left, on every page with lanes) */
-    if (ui.view == V_SONG || ui.view == V_SMODE) {   /* (1.4.0) the Song pages: the song's shape */
+    if (ui.view == V_SONG) {                     /* (1.4.0) the Song page: the song's shape (1.5.0: the Set page its
+                                                  * own screen, the pieces) */
         draw_song_lane();
         return;
     }
@@ -4159,6 +4655,362 @@ static void draw_grid(void)                      /* REC held: the effects, the w
     grid_band(120);
 }
 
+/* (1.5.0, step 4) the set protocol's question (setwire.c), the whole screen till it's answered: STORE SET n? (one sent
+ * from the computer, to keep), LOAD SET n? (into the slots) or DELETE SET n?, the set's name, GLO yes, anything else
+ * no, and the time left (30 s, then no) */
+#define ASK_SIG 0x41534B21u                      /* ("ASK!") */
+static void ask_cat(char *t, uint32_t *k, const char *s, uint32_t max)   /* s after t's *k characters (max at most) */
+{
+    while (s && *s && *k < max)
+        t[(*k)++] = *s++;
+    t[*k] = 0;
+}
+static void ask_title(char *t, int op, int q)    /* "LOAD SET 3" (q: and "?") */
+{
+    uint32_t k = 0;
+    const char n[2] = {(char)('1' + sxw.index), 0};
+    if (op == SXW_RESTORE) {                     /* (Decisions 4: a whole backup, one question) */
+        ask_cat(t, &k, "RESTORE BACKUP", 30);
+    } else {
+        if (op == SXW_APPLY && sxw_again && q) { /* (beta2: the set just stored into the set loaded) */
+            ask_cat(t, &k, "LOAD IT NOW", 30);
+        } else {
+            ask_cat(t, &k, op == SXW_COMMIT ? "STORE SET " : op == SXW_APPLY ? "LOAD SET " : "DELETE SET ", 30);
+            ask_cat(t, &k, n, 30);
+        }
+    }
+    ask_cat(t, &k, q ? "?" : 0, 30);
+}
+/* (Decisions 4) RESTORE's what: "3 sets + the pieces" (w 0), "into sets 1 3 5, the pieces replaced" (w 1) */
+static void ask_restore(char *t, int w, uint32_t max)
+{
+    uint32_t k = 0, i;
+    const char n[2] = {(char)('0' + sxw.npieces), 0};
+    t[0] = 0;
+    if (!w) {
+        if (sxw.npieces) {
+            ask_cat(t, &k, n, max);
+            ask_cat(t, &k, sxw.npieces == 1 ? " set" : " sets", max);
+        }
+        if (sxw.kind == FS_WORK)
+            ask_cat(t, &k, sxw.npieces ? " + the pieces" : "the pieces", max);
+        return;
+    }
+    if (sxw.npieces) {
+        ask_cat(t, &k, sxw.npieces == 1 ? "into set" : "into sets", max);
+        for (i = 0; i < SXW_NSETS; i++)
+            if (sxw.index >> i & 1u) {
+                const char d[3] = {' ', (char)('1' + i), 0};
+                ask_cat(t, &k, d, max);
+            }
+    }
+    if (sxw.kind == FS_WORK)
+        ask_cat(t, &k, sxw.npieces ? ", the pieces replaced" : "the pieces now replaced", max);
+}
+/* (the user's, 1.5.0-beta1: bigger) the largest face s fits 228 px in: FONT_L, else f */
+static const felucca_font_t *ask_face(const char *s, const felucca_font_t *f)
+{
+    return text_w(&FONT_L, s) <= 228 ? &FONT_L : f;
+}
+/* a time bar: 10 px, rounded, the accent on a visible track; frac of w lit */
+static void ask_bar(int32_t x, int32_t y, int32_t w, uint32_t lit, uint32_t of, uint16_t c)
+{
+    const int32_t f = (int32_t)((uint32_t)w * lit / of);
+    cv_round(x, y, w, 10, 5, K_LINE);
+    if (f > 0)
+        cv_round(x, y, f, 10, f / 2 < 5 ? f / 2 : 5, c);
+}
+/* the question, one 120-px band of it: the title (FONT_L, or FONT_M if wider: RESTORE BACKUP?), the set's name
+ * (FONT_L: the widest name, 87 px in the header's face, is under 200 here), its pieces (FONT_C), GLO: YES on its
+ * button (FONT_L), the rest's no (FONT_S), the time bar and its seconds */
+static void ask_band(int32_t oy, uint32_t left)
+{
+    char t[48];
+    const int op = sxw.op;
+    uint32_t k = 0;
+    char n[2] = {(char)('0' + sxw.npieces), 0};
+    cv_begin(240, 120, K_BG);
+    ask_title(t, op, 1);
+    text_c(120, 8 - oy, text_w(&FONT_L, t) <= 228 ? &FONT_L : &FONT_M, t, op == SXW_DELETE ? K_FROST : K_ACC);
+    if (op == SXW_RESTORE) {
+        char *b = 0;
+        uint32_t i;
+        ask_restore(t, 0, 46);
+        text_c(120, 46 - oy, ask_face(t, &FONT_C), t, K_TEXT);
+        ask_restore(t, 1, 46);
+        if (text_w(&FONT_C, t) > 228)            /* ("into sets 1 2 3 4 5 6 7 8" / "the pieces replaced") */
+            for (i = 0; t[i] && !b; i++)
+                if (t[i] == ',' && t[i + 1] == ' ')
+                    t[i] = 0, b = t + i + 2;
+        text_c(120, b ? 82 - oy : 86 - oy, &FONT_C, t, K_TEXT);
+        if (b)
+            text_c(120, 103 - oy, &FONT_C, b, K_TEXT);
+    } else {
+        if (sxw.name[0])
+            text_c(120, 46 - oy, ask_face(sxw.name, &FONT_C), sxw.name, K_TEXT);
+        else
+            text_c(120, 52 - oy, &FONT_C, "no name", K_DIM);
+        t[0] = 0;
+        if (sxw.npieces) {                       /* "8 pieces, into slots 1 to 8" */
+            ask_cat(t, &k, n, 38);
+            ask_cat(t, &k, sxw.npieces == 1 ? " piece" : " pieces", 38);
+            if (op == SXW_APPLY)
+                ask_cat(t, &k, sxw.npieces == 1 ? ", into slot 1" : ", into slots 1 to ", 38);
+            if (op == SXW_APPLY && sxw.npieces > 1)
+                ask_cat(t, &k, n, 38);
+        }
+        if (op == SXW_COMMIT && sxw_local && sxw_repl) {   /* (2026-11-23, the Set page's Store, into a set used:
+                                                  * "8 pieces, replaces Night Set"; smaller if it's wider) */
+            ask_cat(t, &k, ", replaces ", 46);
+            ask_cat(t, &k, sxw_rname[0] ? sxw_rname : "a set", 46);
+        }
+        text_c(120, 86 - oy, text_w(&FONT_C, t) <= 228 ? &FONT_C : &FONT_S, t, K_TEXT);
+    }
+    cv_round(55, 132 - oy, 130, 42, 6, K_ACC);
+    text_c(120, 137 - oy, &FONT_L, "GLO: YES", K_BG);
+    text_c(120, 184 - oy, &FONT_S, "any other button, key or knob: no", K_TEXT);
+    ask_bar(20, 214 - oy, 168, left, SXW_ASK_MS, K_ACC);   /* (the time left, and its seconds) */
+    itoa_u((left + 999u) / 1000u, t);
+    for (k = 0; t[k]; k++)
+        ;
+    ask_cat(t, &k, " s", 8);
+    cv_text(196, 211 - oy, &FONT_B, t, K_TEXT);
+    cv_blit(0, (uint32_t)oy);
+}
+static void draw_ask(void)
+{
+    const uint32_t now = plat_ms(), gone = now - sxw.t, left = gone < SXW_ASK_MS ? SXW_ASK_MS - gone : 0u;
+    const uint32_t h = hash(hash(ASK_SIG, (uint32_t)sxw.op | (uint32_t)sxw.index << 8), left / 500u);
+    if (h == ui.sig[1] && ui.sig[0] == ASK_SIG)
+        return;
+    ui.sig[0] = ui.sig[2] = ASK_SIG;             /* (the header and the knobs drawn again after) */
+    ui.sig[1] = h;
+    ask_band(0, left);
+    ask_band(120, left);
+}
+
+/* (the user's: the header's 1.3 s couldn't be read) the outcome, the whole screen for OUT_SHOW: what was asked (FONT_C),
+ * the outcome big in its colour (FONT_L, or FONT_M if wider), a line under it (FONT_C: why not, or what more), the
+ * set's name (FONT_L, or FONT_C if wider), and its time going (out_show; ask_input takes it away early) */
+#define OUT_SIG 0x4F555421u                      /* ("OUT!") */
+static void out_band(int32_t oy, uint32_t left)
+{
+    int32_t y = 112;
+    cv_begin(240, 120, K_BG);
+    text_c(120, 26 - oy, &FONT_C, ui.out_head, K_DIM);
+    text_c(120, 64 - oy, text_w(&FONT_L, ui.out_word) <= 228 ? &FONT_L : &FONT_M, ui.out_word, ui.out_col);
+    if (ui.out_sub[0]) {
+        text_c(120, y - oy, &FONT_C, ui.out_sub, ui.out_scol);
+        y += 32;
+    }
+    if (ui.out_name[0])
+        text_c(120, y + 2 - oy, ask_face(ui.out_name, &FONT_C), ui.out_name, K_TEXT);
+    ask_bar(40, 214 - oy, 160, left, OUT_SHOW, ui.out_col);
+    cv_blit(0, (uint32_t)oy);
+}
+static void draw_out(void)
+{
+    const uint32_t now = plat_ms(), left = out_on(now) ? ui.out_until - now : 0u;
+    const uint32_t h = hash(hash(OUT_SIG, ui.out_t0), left / 100u);
+    if (h == ui.sig[1] && ui.sig[0] == OUT_SIG)
+        return;
+    ui.sig[0] = ui.sig[2] = OUT_SIG;
+    ui.sig[1] = h;
+    out_band(0, left);
+    out_band(120, left);
+}
+
+/* the question come or gone (every frame): said when it comes; gone without an answer (30 s, or the music started from
+ * MIDI): said so, and shown (NOT DONE, why); the screen drawn again after */
+static void ask_watch(void)
+{
+    const int op = sxw_asking();
+    char t[48];
+    if (op && !ui.ask_op) {                      /* (to a screen reader, whole: "LOAD SET 3? Winter. GLO yes, anything
+                                                  * else no") */
+        char q[ANN_MAX + 1];
+        uint32_t k = 0;
+        ui.ask_op = (uint8_t)op;
+        ui.out_until = 0;                        /* (an outcome still up: the question over it) */
+        ui.again = 0;                            /* (another question first: LOAD IT NOW? not asked after it) */
+        ask_title(t, op, 1);
+        ask_cat(q, &k, t, ANN_MAX);
+        ask_cat(q, &k, " ", ANN_MAX);
+        if (op == SXW_RESTORE) {                 /* ("RESTORE BACKUP? 3 sets + the pieces. GLO yes, ...") */
+            char w[48];
+            ask_restore(w, 0, 46);
+            ask_cat(q, &k, w, ANN_MAX);
+        } else
+            ask_cat(q, &k, sxw.name[0] ? sxw.name : "no name", ANN_MAX);
+        if (op == SXW_COMMIT && sxw_local && sxw_repl) {   /* (the Set page's Store: "STORE SET 3? Winter Set, replaces
+                                                  * Night Set. GLO yes, ...") */
+            ask_cat(q, &k, ", replaces ", ANN_MAX);
+            ask_cat(q, &k, sxw_rname[0] ? sxw_rname : "a set without a name", ANN_MAX);
+        }
+        ask_cat(q, &k, ". GLO yes, anything else no", ANN_MAX);
+        if (ann_on()) {
+            ann_say(q, 0, ANN_NOW | ANN_KEEP);
+            sp_said = 1;
+        }
+    } else if (!op && ui.ask_op) {
+        char w[48];
+        const int playing = sxw.state == SXW_S_PLAYING;
+        ui.ask_op = 0;
+        ui.sig[0] = ui.sig[1] = ui.sig[2] = 0;
+        ask_title(t, sxw.op, 0);
+        warn(t, playing ? "NOT DONE: PLAYING" : "NOT DONE: NO ANSWER");
+        if (sxw.op == SXW_RESTORE)
+            ask_restore(w, 0, 46);
+        out_show(t, "NOT DONE", K_WARN, playing ? "the music started" : sxw.state == SXW_S_TIMEOUT ? "no answer in 30 s" :
+                 "the computer cancelled", K_TEXT,
+                 sxw.op == SXW_RESTORE ? w : sxw.name);
+    }
+}
+/* answered (ask_input): done or not, said and shown; a set loaded: the engine takes the new piece */
+static void ask_done(int st)
+{
+    char t[40], w[48];
+    const int op = sxw.op;
+    ui.ask_op = 0;
+    ui.sig[0] = ui.sig[1] = ui.sig[2] = 0;
+    ask_title(t, op, 0);
+    if (st == SXW_S_YES && op == SXW_APPLY) {
+        project_apply();
+        en_regrow();
+        ui.prog_from = en_queue_w();
+        ui.cue_from = -1;
+        if (sxw.unsaved)
+            mark_dirty();
+        else
+            ui.dirty = 0;
+    }
+    if (op == SXW_RESTORE) {                     /* (yes: the computer sends them now, kept as they come) */
+        ask_restore(w, 0, 46);
+        if (st == SXW_S_YES) {
+            say(t, "YES, RESTORING");
+            out_show(t, "RESTORING", K_ACC, "from the computer", K_TEXT, w);
+        } else {
+            say(t, "NOT RESTORED");
+            out_show(t, "NOT RESTORED", K_WARN, 0, 0, w);
+        }
+    } else if (st == SXW_S_YES) {
+        static const char *const W[3] = {"STORED", "LOADED", "DELETED"};
+        const char *s = W[op == SXW_COMMIT ? 0 : op == SXW_APPLY ? 1 : 2];
+        const int unsaved = op == SXW_APPLY && sxw.unsaved;
+        say(t, s);
+        out_show(t, s, op == SXW_DELETE ? K_FROST : K_ACC, unsaved ? "NOT SAVED: FLASH ERROR" : 0, K_FROST, sxw.name);
+        if (unsaved)
+            warn("NOT SAVED", "FLASH ERROR");
+        if (op == SXW_COMMIT && sxw_stlive)      /* (the set loaded: LOAD IT NOW? once this is over) */
+            ui.again = (uint8_t)(sxw.index + 1u);
+        if (op == SXW_COMMIT && sxw_local) {     /* (2026-11-23, the Set page's Store: the set loaded now; the pieces
+                                                  * take its name, "SET 3" with none loaded before, and are saved) */
+            uint32_t i;
+            for (i = 0; sxw.name[i] && sxw.name[i] == proj.name[i]; i++)
+                ;
+            if (sxw.name[i] != proj.name[i]) {
+                for (i = 0; i < PROJ_NAME && sxw.name[i]; i++)
+                    proj.name[i] = sxw.name[i];
+                proj.name[i] = 0;
+                if (project_save() == 0)
+                    ui.dirty = 0;
+                else
+                    mark_dirty();
+            }
+        }
+    } else if (st == SXW_S_NO) {
+        const char *s = op == SXW_COMMIT ? "NOT STORED" : op == SXW_APPLY ? "NOT LOADED" : "NOT DELETED";
+        say(t, s);
+        out_show(t, s, K_WARN, op == SXW_APPLY && sxw_again ? "the pieces as they were" : 0, K_TEXT, sxw.name);
+    } else {
+        warn(t, "FLASH ERROR");
+        out_show(t, "FLASH ERROR", K_FROST, op == SXW_COMMIT ? "not stored" : op == SXW_APPLY ? "not loaded" : "not deleted",
+                 K_TEXT, sxw.name);
+    }
+}
+
+/* (Decisions 4) a restore's yes, then each set or the pieces kept as it comes: said, and the outcome's screen
+ * (RESTORE BACKUP: RESTORED SET 3, its name) for OUT_SHOW from it; the pieces taken by the engine; its end said and
+ * shown (all came, or not) */
+static void restore_watch(void)
+{
+    char t[32];
+    uint32_t k = 0;
+    const uint32_t note = sxw.rs_note, end = sxw.rs_end;
+    if (sxw.took) {
+        sxw.took = 0;
+        project_apply();
+        en_regrow();
+        ui.prog_from = en_queue_w();
+        ui.cue_from = -1;
+        if (sxw.unsaved)
+            mark_dirty();
+        else
+            ui.dirty = 0;
+    }
+    sxw.rs_note = sxw.rs_end = 0;
+    if (note == 1u) {
+        const char n[2] = {(char)('1' + sxw.index), 0};
+        ask_cat(t, &k, "RESTORED SET ", 22);
+        ask_cat(t, &k, n, 22);
+    } else if (note == 2u || note == 3u) {
+        ask_cat(t, &k, "RESTORED THE PIECES", 22);
+    }
+    if (note >= 1u && note <= 3u) {
+        out_show("RESTORE BACKUP", t, K_ACC, note == 3u ? "NOT SAVED: FLASH ERROR" : 0, K_FROST, sxw.name);
+        if (!end)
+            say(t, sxw.name);
+    }
+    if (note == 3u) {
+        warn("NOT SAVED", "FLASH ERROR");
+    } else if (note == 4u && end != 3u) {
+        warn("RESTORE", "FLASH ERROR");
+        out_show("RESTORE BACKUP", "FLASH ERROR", K_FROST, 0, 0, 0);
+    }
+    if (end == 1u || end == 2u) {                /* ("RESTORE DONE", "4 kept") */
+        itoa_u(sxw.rs_done, t);
+        k = 0;
+        while (t[k])
+            k++;
+        ask_cat(t, &k, " kept", 22);
+        if (end == 1u)
+            say("RESTORE DONE", t);
+        else
+            warn("RESTORE", "NOT ALL CAME");
+        out_show("RESTORE BACKUP", end == 1u ? "RESTORE DONE" : "NOT ALL CAME", end == 1u ? K_ACC : K_WARN, t, K_TEXT, 0);
+    } else if (end == 3u) {                      /* (Decisions 5: stopped at the first that failed on the flash; which
+                                                  * failed and which were kept on the screen, both said:
+                                                  * "RESTORE STOPPED. SET 3 FAILED ON THE FLASH. KEPT: SETS 1 2") */
+        char f[24], q[ANN_MAX + 1];
+        uint32_t i, m = 0, kq = 0;
+        const char n[2] = {(char)('1' + sxw.rs_fix), 0};
+        k = 0;
+        ask_cat(f, &k, sxw.rs_fkind == FS_WORK ? "THE PIECES" : "SET ", 22);
+        ask_cat(f, &k, sxw.rs_fkind == FS_WORK ? 0 : n, 22);
+        ask_cat(f, &k, " FAILED", 22);
+        k = 0;
+        t[0] = 0;
+        for (i = 0; i < SXW_NSETS; i++)
+            m += sxw.rs_kept >> i & 1u;
+        ask_cat(t, &k, m ? (m == 1u ? "kept: set" : "kept: sets") : "nothing kept", 30);
+        for (i = 0; i < SXW_NSETS; i++)
+            if (sxw.rs_kept >> i & 1u) {
+                const char d[3] = {' ', (char)('1' + i), 0};
+                ask_cat(t, &k, d, 30);
+            }
+        say_as("RESTORE STOPPED", f, 0);
+        out_show("RESTORE BACKUP", "RESTORE STOPPED", K_FROST, f, K_TEXT, t);
+        if (ann_on()) {
+            ask_cat(q, &kq, "RESTORE STOPPED. ", ANN_MAX);
+            ask_cat(q, &kq, f, ANN_MAX);
+            ask_cat(q, &kq, " ON THE FLASH. ", ANN_MAX);
+            ask_cat(q, &kq, t, ANN_MAX);
+            ann_say(q, 0, ANN_NOW | ANN_KEEP);
+            sp_said = 1;
+        }
+    }
+}
+
 /* the Pattern page: the four lanes, sixteen steps each, the lane edited lit, the accents taller, the step
  * playing a column */
 static void draw_pattern(void)
@@ -4195,6 +5047,56 @@ static void draw_pattern(void)
         }
     }
     text_c(120, 104, &FONT_XS, "WHITE: STEPS   BLACK + WHITE: ACCENT", K_DIM);
+}
+
+/* (1.5.0, the user's: "info on the current set, such as the list of songs") the Set page (GLO again): the eight pieces
+ * by name, 1-4 and 5-8 in two columns of 120 px, each row: the next mark (Set mode alone: the piece Set mode goes to
+ * next, an arrow), its number, its name in the header's face (FONT_B: names.h's NAME_PX, 87 px at most, fits from
+ * SL_NAME to the column's edge with SL_PAD to spare). The piece playing (or chosen, resting) lit: a panel behind it, in
+ * the accent; the pieces past the set's end (setlen: Set mode stops before them) dimmed. The song's shape is the
+ * Song page's (HOME again) */
+#define SL_Y0 15                                 /* the first row's top (the canvas's: shown from MAIN_SHIFT) */
+#define SL_ROW 31                                /* rows apart */
+#define SL_H 25                                  /* a row's panel */
+#define SL_MARK 6                                /* the next mark's x in the column (4 px wide) */
+#define SL_NUM 14                                /* the number's */
+#define SL_NAME 27                               /* the name's: 27 + 87 = 114, the column 120 */
+#define SL_PAD 3                                 /* the panel's inset from the column's sides */
+static int set_last(void) { return proj.setlen ? proj.setlen : NPIECES; }   /* (the set's pieces: 0 .. it - 1) */
+static int set_next(void)                        /* the piece Set mode goes to next (-1: none, or not Set mode) */
+{
+    return proj.par[P_SMODE] == 2 && proj.piece + 1 < set_last() ? proj.piece + 1 : -1;
+}
+static uint32_t setlist_sig(uint32_t h)
+{
+    int i;
+    const char *n;
+    h = hash(h, proj.piece | (uint32_t)proj.setlen << 4 | (uint32_t)proj.par[P_SMODE] << 8 | (uint32_t)en_playing << 10);
+    for (i = 0; i < NPIECES; i++)
+        for (n = piece_name(i); *n; n++)
+            h = hash(h, (uint8_t)*n);
+    return h;
+}
+static void draw_setlist(void)
+{
+    const int last = set_last(), nx = set_next();
+    int i;
+    for (i = 0; i < NPIECES; i++) {
+        const int32_t x = (i / 4) * 120, y = SL_Y0 + (i % 4) * SL_ROW, ty = y + (SL_H - 16) / 2;
+        const int cur = i == proj.piece, out = i >= last;
+        const uint16_t cn = cur ? K_ACC : out ? K_LINE : K_TEXT, cd = cur ? K_ACC : out ? K_LINE : K_DIM;
+        char d[2];
+        if (cur)
+            cv_round(x + SL_PAD, y, 120 - 2 * SL_PAD, SL_H, 5, K_PANEL);
+        if (i == nx) {                           /* (next: a small arrow, pointing at the number) */
+            int32_t j;
+            for (j = 0; j < 4; j++)
+                cv_rect(x + SL_MARK + j, y + SL_H / 2 - 3 + j, 1, 7 - 2 * j, K_ACC);
+        }
+        d[0] = (char)('1' + i), d[1] = 0;
+        cv_text(x + SL_NUM, y + (SL_H - 15) / 2, &FONT_XS, d, cd);
+        cv_text(x + SL_NAME, ty, &FONT_B, piece_name(i), cn);
+    }
 }
 
 /* the Chords page: the eight slots, the one edited outlined, the one playing lit; an empty slot inside the
@@ -4838,6 +5740,18 @@ static void draw_main(void)
         }
         return;
     }
+    if (ui.view == V_SMODE) {                    /* (1.5.0, the user's) the Set page: the pieces by name */
+        h = hash(setlist_sig(0x53455420u), (uint32_t)big_on(now));   /* (once more as the big ring goes: the list
+                                                  * whole again) */
+        if (h != ui.sig[1] || big_on(now)) {
+            ui.sig[1] = h;
+            main_begin(K_BG);
+            draw_setlist();
+            draw_big(now);
+            cv_blit(0, MAIN_Y);
+        }
+        return;
+    }
     if (ui.view == V_WALK) {                     /* (1.4.0) the Walk page: the circle of fifths, the slots' path */
         h = hash(hash(0x57414C4Bu, ui.slot | (uint32_t)proj.par[P_PMODE] << 4), (uint32_t)en_prog_pos + 1u);
         for (i = 0; i < EN_NPROG; i++)
@@ -5170,6 +6084,12 @@ static void draw_knobs(void)
         h = hash(h, strip_part);
     if (ui.view == V_SIREN)
         h = hash(h, sir_page);
+    if (ui.view == V_SMODE) {                    /* (1.5.0: the set's name, at the rule's right; Load: the sets stored,
+                                                  * grey while playing) */
+        for (i = 0; i < PROJ_NAME && proj.name[i]; i++)
+            h = hash(h, (uint8_t)proj.name[i]);
+        h = hash(h, load_mask() | (uint32_t)en_playing << 8 | (uint32_t)ui.ld << 9);
+    }
     int now_touch = plat_ms() < ui.touch_until;
     for (i = 0; i < 4; i++) {
         h = hash(h, (uint32_t)knob_get(vknob(ui.view, i)));
@@ -5191,8 +6111,9 @@ static void draw_knobs(void)
     cv_begin(240, KNB_H, K_BG);
     {   /* the rule (1.4.0, the user's): at its left, where you are: the page's name in the accent and its place in
          * grey ("CHORD VOICE 2/4"); at its right, the page's voice (the kit, the noise's character, the walk, the
-         * LFO's destination); always (the user's: a knob's help line is the big ring's, in the middle) */
-        char t[12], pn[20];
+         * LFO's destination; 1.5.0, Decisions 3: the Set page's, the set loaded, its name); always (the user's: a knob's help
+         * line is the big ring's, in the middle) */
+        char t[PROJ_NAME + 1], pn[20];
         int32_t xl, xr = 234;
         int n, m;
         caps(pn, view_name(ui.view), sizeof pn);
@@ -5231,6 +6152,14 @@ static void draw_knobs(void)
                 char d[6];
                 d[0] = (char)('0' + n), d[1] = '/', d[2] = (char)('0' + m), d[3] = 0;
                 xl = cv_text(xl + 5, 1, &FONT_XS, d, K_DIM);
+            }
+            if (ui.view == V_SMODE) {             /* (1.5.0, the user's: "SET 2/2 · ECHOSPACE 12", the set loaded beside
+                                                  * the page's name, as the siren's; none loaded: THE PIECES, grey. The
+                                                  * widest name (NAME_PX, 87 px in FONT_B) is under 110 here: room) */
+                caps(t, proj.name[0] ? proj.name : "The pieces", sizeof t);
+                cv_rect(xl + 4, 6, 2, 2, K_DIM);
+                xl = cv_text(xl + 10, 1, &FONT_XS, t, proj.name[0] ? K_TEXT : K_DIM);
+                t[0] = 0;
             }
             xl += 5;
             if (t[0]) {                           /* (the voice at the right, if it fits: else left out) */
@@ -5276,10 +6205,38 @@ static void draw_knobs(void)
             en_param_text(k, 0, t);
         else
             knob_text(k, t);
-        kind = k == K_SAVE ? KK_SEL : knob_kind(k, lo, hi);
-        if (k == K_SAVE) {                       /* (Save: its word, a dot under it lit while there's something to save) */
-            text_c(cx, KNB_CY - 12, &FONT_B, t, off ? K_DIM : hot ? K_ACC : K_TEXT);
-            cv_disc(cx, KNB_CY + 12, 3, v ? K_ACC : K_LINE);
+        kind = k == K_LOAD || k == K_STORE ? KK_SEL : knob_kind(k, lo, hi);
+        if (k == K_LOAD) {                       /* (the Set page's Load: the sets stored, "3 sets", and the eight numbers
+                                                  * as dots under it: a stored one lit, the one chosen last its mark;
+                                                  * grey while playing) */
+            const uint32_t m = load_mask();
+            int j;
+            text_c(cx, KNB_CY - 12, knob_font(t, 56), t, off || !m ? K_DIM : hot ? K_ACC : K_TEXT);
+            for (j = 0; j < (int)SXW_NSETS; j++) {
+                const int32_t dx = cx - 21 + j * 6;
+                if (ui.ld == j + 1 && (m >> j & 1u))
+                    cv_round(dx - 2, KNB_CY + 9, 5, 5, 2, fill);
+                else if (m >> j & 1u)
+                    cv_rect(dx - 1, KNB_CY + 10, 3, 3, off ? K_LINE : K_DIM);
+                else
+                    cv_rect(dx, KNB_CY + 11, 1, 1, K_LINE);
+            }
+        } else if (k == K_STORE) {               /* (2026-11-23, the Set page's Store: the set it would store into,
+                                                  * "Set 3", and the eight numbers as dots under it: a stored one lit,
+                                                  * that one its mark; grey while playing) */
+            const uint32_t m = load_mask();
+            const int at = knob_get(k);
+            int j;
+            text_c(cx, KNB_CY - 12, knob_font(t, 56), t, off ? K_DIM : hot ? K_ACC : K_TEXT);
+            for (j = 0; j < (int)SXW_NSETS; j++) {
+                const int32_t dx = cx - 21 + j * 6;
+                if (j == at)
+                    cv_round(dx - 2, KNB_CY + 9, 5, 5, 2, off ? K_DIM : fill);
+                else if (m >> j & 1u)
+                    cv_rect(dx - 1, KNB_CY + 10, 3, 3, off ? K_LINE : K_DIM);
+                else
+                    cv_rect(dx, KNB_CY + 11, 1, 1, K_LINE);
+            }
         } else if (kind == KK_SEL) {             /* a selector: the word large, where a ring would be; its options as dots
                                                   * under it (a thin bar with its place, past twelve) */
             const int n = hi - lo + 1, at = v - lo;
@@ -5387,14 +6344,14 @@ static void leds(void)
         for (i = 0; i < PERF_NP; i++)            /* (white 7-8, the gap: dark) */
             if (perf_sounds((int)i))
                 k |= 1u << PERF_KEY[i];
-        for (i = 0; i < PERF_NM; i++)
-            if (!(ui.moves & PERF_MBIT[i]))
+        for (i = 0; i < PERF_NM; i++)            /* ((step 7) a cue's held too) */
+            if (!((ui.moves | cue.moves) & PERF_MBIT[i]))
                 k |= 1u << PERF_KEY[PERF_NP + i];
         for (i = 0; i < PERF_NF; i++)
-            if (!(ui.pfx >> PERF_FX[i] & 1u))
+            if (!((ui.pfx | cue.fx) >> PERF_FX[i] & 1u))
                 k |= 1u << PERF_KEY[PERF_F0 + i];
         for (i = 0; i < PERF_NB; i++)            /* (a throw: dark while held; a solo: blinking) */
-            if (!(ui.moves & PERF_BTHR[i]) && (!(ui.solo >> PERF_BPART[i] & 1u) || blink))
+            if (!((ui.moves | cue.moves) & PERF_BTHR[i]) && (!(ui.solo >> PERF_BPART[i] & 1u) || blink))
                 k |= 1u << PERF_KEY[PERF_B0 + i];
         for (i = 0; i < PERF_NS; i++)            /* (a siren: dark while it sounds) */
             if (en_sir_on != i + 1)
@@ -5415,8 +6372,13 @@ static void leds(void)
 static void autosave(void)
 {
     uint32_t now = plat_ms();
-    if (!ui.dirty || en_playing || ui.btn || ui.keys || now - ui.act_t < AUTOSAVE_QUIET || en_pad_level > 0.01f)
+    if (en_playing || ui.btn || ui.keys || now - ui.act_t < AUTOSAVE_QUIET || en_pad_level > 0.01f)
         return;
+    if (!ui.dirty) {                             /* (1.5.0) resting, saved: the frame store erases ahead, for saves while
+                                                  * playing (nothing once two frames are ready) */
+        project_idle();
+        return;
+    }
     if (project_save() == 0) {
         ui.dirty = 0;
         ui.saved_t = now;
@@ -5479,6 +6441,19 @@ static void sp_knob(int view, int i)           /* "Stabs 30": the name the page 
     const zone_t *z;
     const int k = vknob(view, i);
     sp_cat(KNOB_LABEL[view][i]);
+    if (k == K_LOAD) {                           /* ("Load, 3 sets stored"; its turns say the set: load_turn) */
+        const uint32_t n = load_count();
+        sp_cat(", ");
+        if (n)
+            sp_int(n);
+        sp_cat(!n ? "no sets stored" : n == 1u ? " set stored" : " sets stored");
+        return;
+    }
+    if (k == K_STORE) {                          /* ("Store, set 3"; its turns say what is there: store_turn) */
+        sp_cat(", set ");
+        sp_int((uint32_t)knob_get(k) + 1u);
+        return;
+    }
     sp_cat(" ");
     sp_value(k);
     if (k < P_NPARAMS && knob_zones(k, &z)) {
@@ -5538,6 +6513,26 @@ static void sp_page(int all)
         sp_cat(", ");
         sp_cat(EN_SMODE_NAME[proj.par[P_SMODE] % EN_NSMODE]);
     }
+    if (ui.view == V_SMODE) {                    /* (1.5.0, Decisions 3: the set loaded, as the page shows it; the user's:
+                                                  * its pieces, "Set page, Echo Set, playing 3 of 5, Haze, next Fog") */
+        const int last = set_last(), nx = set_next();
+        sp_cat(", ");
+        sp_cat(proj.name[0] ? proj.name : "the pieces");
+        sp_cat(sp_tp.playing ? ", playing " : ", ");
+        sp_int((uint32_t)proj.piece + 1u);
+        if (proj.piece < last) {
+            sp_cat(" of ");
+            sp_int((uint32_t)last);
+        } else {
+            sp_cat(", after the set");
+        }
+        sp_cat(", ");
+        sp_cat(piece_name(proj.piece));
+        if (nx >= 0) {
+            sp_cat(", next ");
+            sp_cat(piece_name(nx));
+        }
+    }
     if (ui.view == V_CHORDS || ui.view == V_WALK) {
         sp_cat(", walk ");
         sp_cat(EN_WALK_NAME[(proj.par[P_PMODE] & 3) % EN_NWALK]);
@@ -5545,14 +6540,15 @@ static void sp_page(int all)
     {
         int first = 1;
         for (i = 0; i < 4; i++) {
-            const int toff = vknob(ui.view, i) == K_TRANS && fm_knob_off(ui.view, i);
+            const int toff = (vknob(ui.view, i) == K_TRANS || vknob(ui.view, i) == K_LOAD || vknob(ui.view, i) == K_STORE) &&
+                             fm_knob_off(ui.view, i);
             if (vknob(ui.view, i) == K_NONE || (fm_knob_off(ui.view, i) && !toff))
                 continue;
             sp_cat(first ? ": " : ", ");
             first = 0;
             sp_knob(ui.view, i);
             if (toff)
-                sp_cat(", only in Set mode");
+                sp_cat(vknob(ui.view, i) == K_TRANS ? ", only in Set mode" : ", only when stopped");
         }
     }
     if (!all)
@@ -5749,7 +6745,8 @@ static void speak_dump(void)
                                          {"PLAYING", 0}, {"DUB HOLD", "ON"}, {"DUB HOLD", "OFF"}, {"SAVED", 0},
                                          {"ARRANGEMENT", "ON"}, {"ARRANGEMENT", "OFF"}};
     static const char *const WARN[][2] = {{"THE ROOT STAYS", "(SETUP)"}, {"3 NOTES", "AT LEAST"},
-                                          {"NOT SAVED", "FLASH ERROR"}};
+                                          {"NOT SAVED", "FLASH ERROR"}, {"NOT SAVED YET", "SAVES WHEN STOPPED"},
+                                          {"OLDER SAVE LOADED", 0}, {"SAVE NOT LOADED", 0}};
     project_t keep = proj;
     uint8_t keep_view = ui.view, keep_dirty = ui.dirty, keep_play = sp_tp.playing;
     uint8_t keep_ext = en_ext, keep_frozen = en_frozen, keep_rest = en_pulse_rest, keep_sec = en_section;
@@ -5765,8 +6762,12 @@ static void speak_dump(void)
             if (k == K_NONE)
                 continue;
             knob_range(k, &lo, &hi);
+            if (k == K_LOAD || k == K_STORE)     /* (said as the sets stored, the set offered: once) */
+                hi = lo;
             for (x = lo; x <= hi; x++) {
-                if (k >= K_SPITCH && k <= K_SECHO)
+                if (k == K_LOAD || k == K_STORE)
+                    ;
+                else if (k >= K_SPITCH && k <= K_SECHO)
                     proj.sir[sir_page][k - K_SPITCH] = (int8_t)x;
                 else if (k < P_NPARAMS)
                     proj.par[k] = (int16_t)x;
@@ -5782,6 +6783,8 @@ static void speak_dump(void)
                     proj.values = (uint8_t)x;
                 else if (k == K_TRANS)
                     proj.trans = (uint8_t)x;
+                else if (k == K_CUES)
+                    proj.cues_off = (uint8_t)!x;
                 else
                     proj.leds = (uint8_t)x;
                 sp_n = 0;
@@ -5895,26 +6898,35 @@ void ui_init(void)
 {
     memset(&ui, 0, sizeof ui);
     ui.cue_from = -1;
+    memset(&cue, 0, sizeof cue);                 /* (step 7) the player: the playing piece's list read at its first pass */
+    cue.slot = -1;
     ui.touched = -1;
     lcd_fill(0, 0, 240, 240, K_BG);
     if (!en_playing)
         en_play(1);                              /* it plays from the start */
     sp_tp.playing = 1;
     sp_tp.play_t = plat_ms();
+    {
+        const char *n = project_note();          /* (1.5.0) the boot took an older save (after a failed boot): said once */
+        if (n)
+            warn(n, 0);
+    }
 }
 
 /* (1.4.0, the user's) Set: a song over, the next piece from its intro as the tails die (6 s on); after the last
- * piece, it rests. Transition (the Song mode page's KNOB 2): LP that; Segue and Mix the engine's, told the next
+ * piece, it rests. Transition (the Set page's KNOB 2): LP that; Segue and Mix the engine's, told the next
  * piece's tempo and echo time; at its cue (the outro's last bar, the old parts gone) the next piece set, and the go:
- * it starts on the next downbeat, without a stop */
+ * it starts on the next downbeat, without a stop. (1.5.0) A set of fewer than eight (proj.setlen) ends at its last;
+ * a piece after it, chosen by hand, plays alone */
 static void set_tick(void)
 {
     static uint32_t end_t;
     static uint8_t cued, end_p, by_hand;
     static int16_t sent = -1;
     const uint32_t now = plat_ms();
+    const int last = proj.setlen ? proj.setlen : NPIECES;   /* (1.5.0, step 4) a set of fewer than eight: its last */
     {
-        const int nx = proj.piece + 1 < NPIECES && proj.par[P_SMODE] == 2 && proj.trans < EN_NTRANS && proj.trans;
+        const int nx = proj.piece + 1 < last && proj.par[P_SMODE] == 2 && proj.trans < EN_NTRANS && proj.trans;
         const int m = nx ? proj.trans : 0, tp = nx ? proj.slot[proj.piece + 1].par[P_TEMPO] : 0,
                   et = nx ? proj.slot[proj.piece + 1].par[P_ETIME] : 0, sig = m | tp << 2 | et << 10;
         if (!en_tr_cue) {
@@ -5948,7 +6960,7 @@ static void set_tick(void)
         return;
     if (!end_t) {
         end_t = now | 1u;
-    } else if (now - end_t >= 6000u && proj.piece + 1 < NPIECES) {
+    } else if (now - end_t >= 6000u && proj.piece + 1 < last) {
         end_t = 0;
         set_piece(proj.piece + 1);
         sp_tp.playing = 1;
@@ -5971,10 +6983,23 @@ void ui_frame(void)
     prog_take();
     groove_tick();
     input();
+    load_tick();                                 /* (the Set page's Load: rested on a set, its question) */
+    store_tick();                                /* (2026-11-23: its Store, the same) */
+    again_tick();                                /* (beta2) a set stored into the set loaded: LOAD IT NOW? */
     set_tick();
+    cue_tick();                                  /* (1.5.0, step 7) the cues, after the Set's next piece is set */
     tape_clock(plat_ms());
+    sxw_tick(plat_ms());                         /* (1.5.0, step 4) the set protocol's question: its time */
+    ask_watch();
+    restore_watch();                             /* (Decisions 4) a restore's sets and pieces as they come */
     autosave();
-    if (grid_up()) {                             /* REC held: the effects, the whole screen */
+    if (ui.out_until && !out_on(plat_ms()))
+        out_end(0);
+    if (sxw_asking()) {                          /* (a set's question: the whole screen) */
+        draw_ask();
+    } else if (ui.out_until) {                   /* (its outcome after it: the whole screen, 3 s) */
+        draw_out();
+    } else if (grid_up()) {                      /* REC held: the effects, the whole screen */
         if (!(ui.frame % 3u))
             draw_grid();
         draw_main();                             /* (it says the grid to a screen reader) */
@@ -5989,7 +7014,11 @@ void ui_frame(void)
     ui.frame++;
 }
 
-void ui_input_only(void) { input(); }
+void ui_input_only(void)
+{
+    input();
+    cue_tick();                                  /* (step 7: between the frames too, so a cue lands on its step) */
+}
 
 /* the launch screen, while the FM-1 starts, as a delay throw: the name struck (a ring spreads from it),
  * then, every four frames as an echo's time, a repeat thrown out of it to its place along the line, each

@@ -8,7 +8,9 @@ then "device asks, host answers" reads of the logical image. Run from the repo r
 Also checks logical_image/product_of against web/fm1pkg.js (needs node and
 build/amb.fwsc, skipped otherwise)."""
 import io
+import os
 import queue
+import re
 import shutil
 import subprocess
 import sys
@@ -22,7 +24,10 @@ sys.path.insert(0, str(ROOT / "tools"))
 import fm1_install as I  # noqa: E402
 
 I.DELAY.update(open=0, start=0.01, reply=0, loader=0.01, reboot=0.01, retry=0.02, poll=0.05, hs=0.1,
-               idle_check=0.4, idle_write=0.4, wait_loader=2, wait_reboot=2)
+               idle_check=0.4, idle_write=0.4, wait_loader=2, wait_reboot=2,
+               resend=0.15, quiet=0.4, reconnect=1.0, gap=0.1)
+LOGS = Path(tempfile.mkdtemp(prefix="felucca-install-logs-"))
+os.environ["FM1_INSTALL_LOGS"] = str(LOGS)       # the session logs go here, not to ~/fm1-install-logs
 failed = 0
 
 
@@ -66,10 +71,19 @@ class FakeLink:
 class FakeFM1:
     """a MIDI backend with one FM-1 on it"""
 
+    """the write's stalls, as the loader (firmware/loader) would show them; each once, at that many answers:
+      drop_at      an answer lost on the way (the device keeps waiting for it: the host's resend gets through)
+      quiet_at     the loader gives its session up (as after its 3 x 5 s) and waits for a handshake and the
+                   upgrade command in its main loop
+      replug_at    drops off USB and comes back as the loader (a new port) replug_delay s later
+      unplug_after gone for good; stall_after: the loader stops asking for good, still on USB"""
+
     def __init__(self, image, identity="FM-1_015", name="FM-1", unplug_after=None, after_write="FM-1_900",
-                 stall_after=None, bad_addr=None):
+                 stall_after=None, bad_addr=None, drop_at=None, quiet_at=None, replug_at=None, replug_delay=0.3):
         self.image, self.unplug_after, self.after_write = image, unplug_after, after_write
         self.stall_after, self.bad_addr = stall_after, bad_addr
+        self.drop_at, self.quiet_at, self.replug_at, self.replug_delay = drop_at, quiet_at, replug_at, replug_delay
+        self.dropped = 0
         self.served = self.bad = self.upgrades = 0
         self.sent, self.links, self.gen, self.lock = [], [], 0, threading.Lock()
         self.boot(identity, name)
@@ -111,6 +125,10 @@ class FakeFM1:
         elif self.waiting:
             u = I.unpack7(d[1:-1])
             addr, n = self.waiting
+            if self.drop_at is not None and self.served == self.drop_at:
+                self.drop_at = None                 # this answer never arrived
+                self.dropped += 1
+                return
             fin = addr >= I.FINISH_CHECK
             want = b"success\0" if fin else self.image[addr:addr + n]
             if u[14:14 + len(want)] != want or len(u) != 15 + len(want):
@@ -119,6 +137,15 @@ class FakeFM1:
             self.served += 1
             if self.unplug_after and self.served >= self.unplug_after:
                 self.connected = False
+                return
+            if self.quiet_at is not None and self.served >= self.quiet_at:
+                self.quiet_at = None                # session given up: the main loop waits for an upgrade command
+                self.queue = []
+                return
+            if self.replug_at is not None and self.served >= self.replug_at:
+                self.replug_at = None
+                self.connected = False
+                threading.Timer(self.replug_delay, self.boot, (self.identity, "Felucca Update")).start()
                 return
             if self.stall_after and self.served >= self.stall_after:
                 return
@@ -155,6 +182,12 @@ def pkgfile(name, raw):
     p = TMP / name
     p.write_bytes(raw)
     return str(p)
+
+
+def logfile(text):
+    """the log the installer named in its output, read"""
+    m = re.search(r"the session's log: (\S+)", text)
+    return Path(m[1]).read_text() if m and Path(m[1]).exists() else None
 
 
 def cli(args, dev, answer=True):
@@ -235,9 +268,19 @@ def errors():
        "unplugged in step 1 -> exit 4 'lost', nothing written")
     t0 = time.monotonic()
     rc, out, err = cli([p, "--yes"], FakeFM1(image, identity="ota-FM-1_900", name="Felucca Update", unplug_after=3))
-    ok(rc == 4 and "run the install again" in err and time.monotonic() - t0 < 3, "unplugged during the write -> exit 4 at once")
-    rc, out, err = cli([p, "--yes"], FakeFM1(image, identity="ota-FM-1_900", name="Felucca Update", stall_after=3))
-    ok(rc == 4 and "stopped answering" in err, "loader stops answering -> exit 4 after the idle time")
+    took = time.monotonic() - t0
+    ok(rc == 4 and "did not come back within" in err and "Run the install again" in err and 1.0 <= took < 3,
+       f"unplugged during the write, never back -> waits {I.DELAY['reconnect']:.0f} s for it, exit 4 ({took:.1f} s)")
+    ok("straight into the computer" in err and "download mode" in err and "M-Flasher" in err
+       and "keeps the bootloader" in err and I.MANUAL_RESCUE in err and "stays in update mode" not in err,
+       "... the honest message: no hub, replug, the download mode, the rescue or M-Flasher")
+    log = logfile(err)
+    ok(log is not None and "req #3 " in log and "the port is gone" in log and "the loader did not come back" in log
+       and log.rstrip().endswith("end"), "... its log saved and named, with the last requests and how it ended")
+    dev = FakeFM1(image, identity="ota-FM-1_900", name="Felucca Update", stall_after=3)
+    rc, out, err = cli([p, "--yes"], dev)
+    ok(rc == 4 and "stopped answering" in err and f"after {I.RESUMES} resumes" in err and dev.upgrades == 1 + I.RESUMES,
+       f"loader stops asking for good -> {I.RESUMES} resumes, then exit 4")
     rc, out, err = cli([p, "--yes"], FakeFM1(image, identity="ota-FM-1_900", name="Felucca Update", bad_addr=len(image)))
     ok(rc == 4 and "outside the package" in err, "read past the package -> exit 4")
 
@@ -268,6 +311,58 @@ def errors():
     ok(rc == 2, "missing file -> exit 2")
 
 
+def stalls():
+    """the write's stalls, each in a whole install (running -> loader -> Felucca): the installer waits, resumes, and
+    the log says what happened"""
+    raw = package()
+    image = I.logical_image(raw)
+    p = pkgfile("ok.fwsc", raw)
+
+    dev = FakeFM1(image)
+    rc, out, err = cli([p, "--yes"], dev)
+    log = logfile(out)
+    reqs = re.findall(r"req #(\d+) +(0x[0-9a-f]{8}) \+(\d+) +([\d.]+) ms", log or "")
+    ok(rc == 0 and log is not None and len(reqs) == dev.served and reqs[-1][1] == "0xf0000000"
+       and "step 1 (check)" in log and "step 2 (write)" in log and "done: FM-1_900" in log,
+       f"the log of a good install: every request ({len(reqs)}), its address and timing, the steps, the end")
+    ok("straight into the computer, not through a USB hub" in out and "switched on" in out,
+       "before the install: plug it straight in (no hub), keep it switched on")
+
+    dev = FakeFM1(image, drop_at=6)               # the 2nd read of the write: its answer lost
+    rc, out, err = cli([p, "--yes"], dev)
+    log = logfile(out) or ""
+    ok(rc == 0 and dev.dropped == 1 and dev.bad == 0 and dev.upgrades == 2 and "the last answer again" in log
+       and "resume" not in log, "an answer lost -> sent again after the pause, the write goes on (no restart)")
+
+    dev = FakeFM1(image, quiet_at=7)              # the loader gives its session up mid-write
+    rc, out, err = cli([p, "--yes"], dev)
+    log = logfile(out) or ""
+    ok(rc == 0 and dev.bad == 0 and dev.upgrades == 3 and "handshake on the same port: ota-FM-1_900" in log
+       and "resume 1" in log and "waiting for it" in out and "the write starts again" in out,
+       "the loader goes quiet mid-write -> a handshake, the upgrade again, the write finishes")
+    ok(re.search(r"GAP (0\.[4-9]|[1-9])", log) is not None, "... the log marks the gap")
+
+    dev = FakeFM1(image, replug_at=8)             # off USB and back as the loader
+    rc, out, err = cli([p, "--yes"], dev)
+    log = logfile(out) or ""
+    ok(rc == 0 and dev.bad == 0 and dev.upgrades == 3 and "the port is gone" in log
+       and "MIDI inputs: (none)" in log and "found ota-FM-1_900 on Felucca Update" in log and "resume 1" in log
+       and "done: the FM-1 runs FM-1_900" in out,
+       "the loader drops off USB and comes back -> found again, the write finishes")
+
+    dev = FakeFM1(image, replug_at=8, replug_delay=3.0)    # back too late
+    rc, out, err = cli([p, "--yes"], dev)
+    ok(rc == 4 and "did not come back within" in err and logfile(err) is not None,
+       "... back only after the wait -> exit 4, the honest message, the log")
+
+    plain = pkgfile("plain.fwsc", package(marker=False))
+    dev = FakeFM1(I.logical_image(package(marker=False)), drop_at=6)
+    rc, out, err = cli([plain, "--yes", "--force"], dev)
+    log = logfile(out) or logfile(err) or ""
+    ok(rc == 0 and "the last answer again" not in log and "another loader" in log and "resume 1" in log,
+       "another loader (--force): no answer sent again (its pauses not known); after the long idle, a restart")
+
+
 def against_js():
     clean = ROOT / "build/amb.fwsc"
     if not shutil.which("node") or not clean.exists():
@@ -286,7 +381,9 @@ def against_js():
 wire()
 installs()
 errors()
+stalls()
 against_js()
 shutil.rmtree(TMP, ignore_errors=True)
+shutil.rmtree(LOGS, ignore_errors=True)
 print(f"INSTALL TESTS FAILED ({failed})" if failed else "install tests passed")
 sys.exit(1 if failed else 0)
