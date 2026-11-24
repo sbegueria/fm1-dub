@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DUB-1 The space</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=block" rel="stylesheet">
+<link rel="stylesheet" href="sheet.css">
+</head>
+<body>
+<!-- Cheat sheet 9 of the series (build/design/CHEATSHEETS.md). Every fact checked against the firmware at eceec65
+     (firmware/src/app/ui.c: button() (FX: Dub <-> Echo), VIEW_KNOB / KNOB_LABEL / KNOB_HELP for V_SPACE, V_ESND,
+     V_PERF, V_STRIP; B_REC's tap and GRID_HOLD; NUDGE_PAR and nudge() (the space's shake); firmware/src/dsp/amb.c:
+     en_set's P_ECHO, P_ETIME, P_FEEDBACK, P_REVERB, P_SIZE, P_CLOUD, P_EBLUR, P_ETONE, P_EWIDTH, P_CTHROW and the
+     strips' sends; ETIME_NAME, echo_time(), TAPE_N / TAPE_SR, en_param_text() (Feedback as seconds, the capped time);
+     heads_step(), echoes() (the tape, the heads, dub hold's loop), the clouds (CL_LEN, cloud_birth(), cloud()),
+     render_chunk() (eg, rg, tg, cl_in, the strikes' duck of the returns, the mix), control() (fb_cap, perf_echo,
+     the throws' easing, THR_FB), the frozen plate and cloud). The screens: tests/listen/shots.amb on the host build
+     of eceec65.
+     Re-checked against the firmware at 671d9be for the 1.4.0 release (step 6: build/design/REPORT-docs-sheets.txt). -->
+<div class="sheet">
+<header><span class="badge">DUB-1</span><h1>The space</h1>
+<span class="sub">FX: the tape echo, the plate and the cloud, dub's own instrument, as of 1.4.0 (build 671d9be). FM-1 firmware.</span></header>
+
+<figure><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 272" role="img" aria-label="How the sound goes through the echo, the plate and the cloud">
+<defs>
+<marker id="ah7d8787" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#7d8787"/></marker>
+<marker id="ah1f7f75" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#1f7f75"/></marker>
+<marker id="ahc08a1e" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#c08a1e"/></marker>
+</defs>
+<rect x="4" y="50" width="164" height="168" rx="9" fill="#e8f4f2" stroke="#1f7f75" stroke-width="1.6"/>
+<text x="86.0" y="69" text-anchor="middle" font-size="15" font-weight="700" fill="#1c2526" letter-spacing=".03em">THE PARTS</text>
+<text x="86.0" y="88" text-anchor="middle" font-size="12" fill="#7d8787" class="plain">chord · pings · bass</text>
+<text x="86.0" y="104" text-anchor="middle" font-size="12" fill="#7d8787" class="plain">kick · hats · noise</text>
+<text x="86.0" y="120" text-anchor="middle" font-size="12" fill="#7d8787" class="plain"></text>
+<text x="86.0" y="136" text-anchor="middle" font-size="12" fill="#7d8787" class="plain">each its strip (SEL,</text>
+<text x="86.0" y="152" text-anchor="middle" font-size="12" fill="#7d8787" class="plain">a white key held):</text>
+<text x="86.0" y="168" text-anchor="middle" font-size="12" fill="#7d8787" class="plain">Level, Filter, then</text>
+<text x="86.0" y="184" text-anchor="middle" font-size="12" fill="#7d8787" class="plain">the sends</text>
+<rect x="712" y="50" width="184" height="168" rx="9" fill="#e8f4f2" stroke="#1f7f75" stroke-width="1.6"/>
+<text x="804.0" y="69" text-anchor="middle" font-size="15" font-weight="700" fill="#1c2526" letter-spacing=".03em">THE MIX</text>
+<text x="804.0" y="88" text-anchor="middle" font-size="12" fill="#7d8787" class="plain">the dry, the echo,</text>
+<text x="804.0" y="104" text-anchor="middle" font-size="12" fill="#7d8787" class="plain">the plate, the cloud</text>
+<text x="804.0" y="120" text-anchor="middle" font-size="12" fill="#7d8787" class="plain"></text>
+<text x="804.0" y="136" text-anchor="middle" font-size="12" fill="#7d8787" class="plain">ducked by the kick</text>
+<text x="804.0" y="152" text-anchor="middle" font-size="12" fill="#7d8787" class="plain">(Duck), Width,</text>
+<text x="804.0" y="168" text-anchor="middle" font-size="12" fill="#7d8787" class="plain">SELECT's filter, the</text>
+<text x="804.0" y="184" text-anchor="middle" font-size="12" fill="#7d8787" class="plain">grid's filters › out</text>
+<path d="M168 64 L 186 64 L 186 12 L 692 12 L 692 64 L 708 64" fill="none" stroke="#7d8787" stroke-width="1.6" marker-end="url(#ah7d8787)"/>
+<text x="440" y="26" text-anchor="middle" font-size="13" font-weight="400" fill="#7d8787" class="plain">the dry</text>
+<rect x="330" y="34" width="300" height="112" rx="9" fill="#fff" stroke="#1f7f75" stroke-width="1.6"/>
+<text x="480.0" y="53" text-anchor="middle" font-size="15" font-weight="700" fill="#1c2526" letter-spacing=".03em">TAPE ECHO</text>
+<text x="480" y="70" text-anchor="middle" font-size="13.5" font-weight="400" fill="#1c2526" class="plain">Tone in › the tape (Echo time) › the head</text>
+<text x="480" y="88" text-anchor="middle" font-size="13" font-weight="400" fill="#7d8787" class="plain">the first repeat clean; then, each time round,</text>
+<text x="480" y="104" text-anchor="middle" font-size="13" font-weight="400" fill="#7d8787" class="plain">Blur and a band-pass: softer, darker</text>
+<path d="M598 114 C 620 114, 620 134, 598 134 L 362 134 C 340 134, 340 114, 358 114" fill="none" stroke="#1f7f75" stroke-width="1.6" marker-end="url(#ah1f7f75)"/>
+<text x="480" y="129" text-anchor="middle" font-size="13" font-weight="700" fill="#1f7f75" class="">FEEDBACK: how long, 1.5 – 15 s</text>
+<rect x="330" y="168" width="130" height="92" rx="9" fill="#fff" stroke="#1f7f75" stroke-width="1.6"/>
+<text x="395.0" y="187" text-anchor="middle" font-size="15" font-weight="700" fill="#1c2526" letter-spacing=".03em">PLATE</text>
+<text x="395.0" y="206" text-anchor="middle" font-size="12" fill="#7d8787" class="plain">Size: how long</text>
+<text x="395.0" y="222" text-anchor="middle" font-size="12" fill="#7d8787" class="plain">it rings</text>
+<rect x="500" y="168" width="130" height="92" rx="9" fill="#fff" stroke="#1f7f75" stroke-width="1.6"/>
+<text x="565.0" y="187" text-anchor="middle" font-size="15" font-weight="700" fill="#1c2526" letter-spacing=".03em">CLOUD</text>
+<text x="565.0" y="206" text-anchor="middle" font-size="12" fill="#7d8787" class="plain">grains of what</text>
+<text x="565.0" y="222" text-anchor="middle" font-size="12" fill="#7d8787" class="plain">goes to the plate</text>
+<path d="M460 198 L 496 198" fill="none" stroke="#7d8787" stroke-width="1.6" marker-end="url(#ah7d8787)"/>
+<path d="M500 232 L 464 232" fill="none" stroke="#7d8787" stroke-width="1.6" marker-end="url(#ah7d8787)"/>
+<text x="480" y="192" text-anchor="middle" font-size="12" font-weight="400" fill="#7d8787" class="plain">in</text>
+<text x="480" y="249" text-anchor="middle" font-size="12" font-weight="400" fill="#7d8787" class="plain">its tail</text>
+<path d="M420 146 L 420 164" fill="none" stroke="#7d8787" stroke-width="1.4" marker-end="url(#ah7d8787)" stroke-dasharray="4 3"/>
+<text x="426" y="160" text-anchor="start" font-size="12" font-weight="400" fill="#7d8787" class="plain">a little</text>
+<path d="M168 100 L 326 88" fill="none" stroke="#7d8787" stroke-width="1.8" marker-end="url(#ah7d8787)"/>
+<text x="250" y="82" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1c2526" class="">Echo send</text>
+<text x="250" y="112" text-anchor="middle" font-size="13" font-weight="400" fill="#7d8787" class="plain">× Dub's Echo</text>
+<path d="M168 140 C 240 140, 280 124, 326 120" fill="none" stroke="#c08a1e" stroke-width="2.4" marker-end="url(#ahc08a1e)"/>
+<text x="240" y="156" text-anchor="middle" font-size="13.5" font-weight="700" fill="#c08a1e" class="">THROWS: feedback up</text>
+<text x="240" y="172" text-anchor="middle" font-size="12.5" font-weight="400" fill="#7d8787" class="plain">a stab thrown, a black key</text>
+<text x="240" y="187" text-anchor="middle" font-size="12.5" font-weight="400" fill="#7d8787" class="plain">held, the grid's Throw</text>
+<path d="M168 200 L 326 214" fill="none" stroke="#7d8787" stroke-width="1.8" marker-end="url(#ah7d8787)"/>
+<text x="250" y="234" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1c2526" class="">Plate send</text>
+<text x="250" y="250" text-anchor="middle" font-size="13" font-weight="400" fill="#7d8787" class="plain">× Dub's Reverb</text>
+<path d="M630 90 L 708 110" fill="none" stroke="#7d8787" stroke-width="1.8" marker-end="url(#ah7d8787)"/>
+<path d="M630 214 L 708 180" fill="none" stroke="#7d8787" stroke-width="1.8" marker-end="url(#ah7d8787)"/>
+<path d="M395 260 L 395 268 L 664 268 L 710 206" fill="none" stroke="#7d8787" stroke-width="1.8" marker-end="url(#ah7d8787)"/>
+</svg></figure>
+
+<div class="cols">
+<div class="col">
+
+<div class="card">
+<h2>1 · The Dub page <span class="where">FX</span></h2>
+<div class="row"><div class="n">Echo<small>KNOB 1</small></div><div class="d">How much goes into the echo: each part's Echo send times this.<span class="r">0 – 100</span></div></div>
+<div class="row"><div class="n">Echo time<small>KNOB 2</small></div><div class="d">The tape loop's length, on the beat. Under ~43 BPM a bar won't fit the 5.6 s tape: it shows 5.6 s.<span class="r">1/8 corchea (8th) · 1/8. con puntillo · 1/4 negra (quarter) · 1/4. · 1/2 blanca (half) · 1 bar</span></div></div>
+<div class="row"><div class="n">Feedback<small>KNOB 3</small></div><div class="d">How long the repeats go on, as the tail's time to -60 dB: a long echo fades as soon as a short one. Resting, kept under 90%: the tails die out.<span class="r">1.5 s – 15 s</span></div></div>
+<div class="row"><div class="n">Reverb<small>KNOB 4</small></div><div class="d">How much goes into the plate: each part's Plate send times this.<span class="r">0 – 100</span></div></div>
+</div>
+
+<div class="card">
+<h2>2 · The Echo page <span class="where">FX again</span></h2>
+<div class="intro">The space's colour. 50 is the echo as the pieces have it.</div>
+<div class="row"><div class="n">Blur<small>KNOB 1</small></div><div class="d">How much each repeat dissolves.<span class="r">0 clean copies · 50 softer each time · 100 a wash</span></div></div>
+<div class="row"><div class="n">Tone<small>KNOB 2</small></div><div class="d">A low-pass on what goes into the tape: the repeats darker or brighter, an octave every 25.<span class="r">0 ~500 Hz · 50 ~2 kHz · 100 ~5 kHz</span></div></div>
+<div class="row"><div class="n">Size<small>KNOB 3</small></div><div class="d">How long the plate rings.<span class="r">0 – 100</span></div></div>
+<div class="row"><div class="n">Cloud<small>KNOB 4</small></div><div class="d">How much of the reverb goes through the grain cloud.<span class="r">0 the plate alone – 100 a thick wash</span></div></div>
+</div>
+
+<div class="card">
+<h2>3 · The echo, how it plays</h2>
+<div class="row"><div class="n">The repeats</div><div class="d">The first comes back clean, on its time; then each softer and darker, melting into a wash.</div></div>
+<div class="row"><div class="n">In the gaps</div><div class="d">Each new stab pushes the returns down (up to 6 dB, back over ~150 ms); a thrown stab's ride over.</div></div>
+<div class="row"><div class="n">The field</div><div class="d">One head, its right side a few ms later (Width, SEL: 8 ms at 50); a second head, at three quarters, while a thrown stab rings. Mono under ~80 Hz.</div></div>
+<div class="row"><div class="n">Drift</div><div class="d">Form's Drift: the heads wander; now and then the second slides to 2/3, 1/2, 3/8 or 1/4 of the loop, bending its pitch.</div></div>
+</div>
+
+</div>
+<div class="col">
+
+<div class="card">
+<h2>4 · The cloud</h2>
+<div class="row"><div class="n">What</div><div class="d">The last 0.74 s of what goes to the plate, played back in grains: up to six, each 80 to 250 ms, anywhere in it, anywhere in the field; now and then an octave down, rarely up.</div></div>
+<div class="row"><div class="n">Where</div><div class="d">Into the plate (they bloom in its tail) and out; the tail back into the cloud: a wash that grows on itself.</div></div>
+<div class="row"><div class="n">More</div><div class="d">Thicker as the filter opens, and in a Break. It listens as if Reverb were at least 63.</div></div>
+</div>
+
+<div class="card">
+<h2>5 · What feeds them</h2>
+<div class="row"><div class="n">The strips<small>SEL, white held</small></div><div class="d">Each part's Echo and Plate: 0 none · 50 as the piece sends · 100 twice. The bass sends no echo in any piece; the kick none, its 100 a full send.</div></div>
+<div class="row"><div class="n">Throws</div><div class="d">A stab thrown (the Chord page's Throws): its dry 6 dB down, the feedback up. A black key held (SEL): the part slammed in at its own level, the feedback towards 93%, the repeats stacking. A soft clip holds it.</div></div>
+<div class="row"><div class="n">Pushes</div><div class="d">The Arrangement page's Echo key and its four sirens (sheet 2); the grid's Throw and Swell, Wash (sheet 10). A set's Segue and Mix hold the echo on a last stab (sheet 12).</div></div>
+<div class="row"><div class="n">Wet<small>SEL KNOB 3</small></div><div class="d">The whole music dry, or drowned; for playing, not saved.</div></div>
+</div>
+
+<div class="card">
+<h2>6 · Dub hold <span class="where">REC, a tap</span></h2>
+<figure class="shot" style="width:24mm; float:right; margin:4px 0 2px 8px"><img src="data:image/png;base64,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" alt="Dub hold"></figure>
+<div class="row"><div class="n">On</div><div class="d">The echo plays what it holds, the loop as it is: nothing in, nothing lost. The plate rings on, closing to new sound; the cloud stops listening, its grains over what it held. The chord holds.</div></div>
+<div class="row"><div class="n">Shown</div><div class="d">REC lit, HOLD in red in the header, the rings and the chord's name red.</div></div>
+<div class="row"><div class="n">Off</div><div class="d">REC again. (Held 0.3 s instead: the effects grid, sheet 10.)</div></div>
+</div>
+
+</div>
+</div>
+
+<div class="foot">
+<div class="box"><h3>FX held</h3>0.5 s, a nudge: Echo, Feedback (smaller steps), Reverb, Size, Cloud. 1.5 s, a shake: a new echo time.</div>
+<div class="box"><h3>The screen</h3>The ripples are the echo: a ring a repeat, as strong as it comes back. The lanes' rings: where the repeats land.</div>
+</div>
+</div>
+</body>
+</html>

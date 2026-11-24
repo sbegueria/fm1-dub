@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DUB-1 Effects grid</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=block" rel="stylesheet">
+<link rel="stylesheet" href="sheet.css">
+</head>
+<body>
+<!-- Cheat sheet 10 of the series (build/design/CHEATSHEETS.md). Every fact checked against the firmware at eceec65
+     (firmware/src/app/ui.c: the effects grid section (FX_KEY, GRID_HOLD, grid_up(), fx_key()), B_REC's tap, the input's
+     keys (REC held: the effects; the other keys nothing) and knobs (the grid up: they rest), grid_band()'s GROUP and
+     CELL, leds()' grid branch, PERF_FX and perf_fx_send(); firmware/src/dsp/amb.c: EN_FX_NAME, fx_ctl() (each
+     effect's easing and target), render_fx() (the Siren, the Riser), mfx(), render_chunk() (Wash, Verb, Crash, Freeze,
+     the master filter after the mix, Stutter), the stabs' Gate and gate_dec, stab_fire()'s Throw, heads (fx_em),
+     perf_echo (Swell)). The screen: build/cheatsheets/src/extra.amb on the host build of eceec65.
+     Re-checked against the firmware at 671d9be for the 1.4.0 release (step 6: build/design/REPORT-docs-sheets.txt). -->
+<div class="sheet">
+<header><span class="badge">DUB-1</span><h1>Effects grid</h1>
+<span class="sub">REC held: sixteen effects on the white keys, each as long as its key is held, as of 1.4.0 (build 671d9be). FM-1 firmware.</span></header>
+
+<figure>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 238" role="img" aria-label="The effects grid on the white keys F3 to G5, REC held">
+<rect x="42.4" y="22" width="54.1" height="50" rx="8" fill="#2f3839" stroke="#2f3839" stroke-width="1.6"/>
+<text x="69.5" y="63.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#8a9494" class="mono" letter-spacing="0">F#3</text>
+<rect x="103.9" y="22" width="54.1" height="50" rx="8" fill="#2f3839" stroke="#2f3839" stroke-width="1.6"/>
+<text x="131.0" y="63.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#8a9494" class="mono" letter-spacing="0">G#3</text>
+<rect x="165.4" y="22" width="54.1" height="50" rx="8" fill="#2f3839" stroke="#2f3839" stroke-width="1.6"/>
+<text x="192.5" y="63.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#8a9494" class="mono" letter-spacing="0">A#3</text>
+<rect x="288.4" y="22" width="54.1" height="50" rx="8" fill="#2f3839" stroke="#2f3839" stroke-width="1.6"/>
+<text x="315.5" y="63.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#8a9494" class="mono" letter-spacing="0">C#4</text>
+<rect x="349.9" y="22" width="54.1" height="50" rx="8" fill="#2f3839" stroke="#2f3839" stroke-width="1.6"/>
+<text x="377.0" y="63.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#8a9494" class="mono" letter-spacing="0">D#4</text>
+<rect x="472.9" y="22" width="54.1" height="50" rx="8" fill="#2f3839" stroke="#2f3839" stroke-width="1.6"/>
+<text x="500.0" y="63.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#8a9494" class="mono" letter-spacing="0">F#4</text>
+<rect x="534.4" y="22" width="54.1" height="50" rx="8" fill="#2f3839" stroke="#2f3839" stroke-width="1.6"/>
+<text x="561.5" y="63.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#8a9494" class="mono" letter-spacing="0">G#4</text>
+<rect x="595.9" y="22" width="54.1" height="50" rx="8" fill="#2f3839" stroke="#2f3839" stroke-width="1.6"/>
+<text x="623.0" y="63.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#8a9494" class="mono" letter-spacing="0">A#4</text>
+<rect x="718.9" y="22" width="54.1" height="50" rx="8" fill="#2f3839" stroke="#2f3839" stroke-width="1.6"/>
+<text x="746.0" y="63.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#8a9494" class="mono" letter-spacing="0">C#5</text>
+<rect x="780.4" y="22" width="54.1" height="50" rx="8" fill="#2f3839" stroke="#2f3839" stroke-width="1.6"/>
+<text x="807.5" y="63.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#8a9494" class="mono" letter-spacing="0">D#5</text>
+<rect x="903.4" y="22" width="54.1" height="50" rx="8" fill="#2f3839" stroke="#2f3839" stroke-width="1.6"/>
+<text x="930.5" y="63.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#8a9494" class="mono" letter-spacing="0">F#5</text>
+<text x="500.0" y="13.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="#8a9494" class="" letter-spacing=".02em">the black keys: nothing while REC is held  ·  a bar: each group's first, lit  ·  rings: into the echo</text>
+<rect x="11.7" y="80" width="54.1" height="124" rx="9" fill="#dff1ee" stroke="#1f7f75" stroke-width="1.6"/>
+<text x="38.8" y="95.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">1</text>
+<rect x="24.8" y="176" width="28" height="3" rx="1.5" fill="#1f7f75"/>
+<text x="38.8" y="130.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#155e56" class="" letter-spacing=".03em">THROW</text>
+<circle cx="38.8" cy="157" r="4" fill="none" stroke="#1f7f75" stroke-width="1.3" opacity="1"/>
+<circle cx="38.8" cy="157" r="7" fill="none" stroke="#1f7f75" stroke-width="1.3" opacity="0.55"/>
+<circle cx="38.8" cy="157" r="10" fill="none" stroke="#1f7f75" stroke-width="1.3" opacity="0.3"/>
+<text x="38.8" y="196.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">F3</text>
+<rect x="73.2" y="80" width="54.1" height="124" rx="9" fill="#dff1ee" stroke="#1f7f75" stroke-width="1.6"/>
+<text x="100.2" y="95.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">2</text>
+<text x="100.2" y="123.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#155e56" class="" letter-spacing=".03em">TIME</text>
+<text x="100.2" y="138.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#155e56" class="" letter-spacing=".03em">X2</text>
+<circle cx="100.2" cy="157" r="4" fill="none" stroke="#1f7f75" stroke-width="1.3" opacity="1"/>
+<circle cx="100.2" cy="157" r="7" fill="none" stroke="#1f7f75" stroke-width="1.3" opacity="0.55"/>
+<circle cx="100.2" cy="157" r="10" fill="none" stroke="#1f7f75" stroke-width="1.3" opacity="0.3"/>
+<text x="100.2" y="196.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">G3</text>
+<rect x="134.7" y="80" width="54.1" height="124" rx="9" fill="#dff1ee" stroke="#1f7f75" stroke-width="1.6"/>
+<text x="161.8" y="95.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">3</text>
+<text x="161.8" y="130.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#155e56" class="" letter-spacing=".03em">STOP</text>
+<circle cx="161.8" cy="157" r="4" fill="none" stroke="#1f7f75" stroke-width="1.3" opacity="1"/>
+<circle cx="161.8" cy="157" r="7" fill="none" stroke="#1f7f75" stroke-width="1.3" opacity="0.55"/>
+<circle cx="161.8" cy="157" r="10" fill="none" stroke="#1f7f75" stroke-width="1.3" opacity="0.3"/>
+<text x="161.8" y="196.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">A3</text>
+<rect x="196.2" y="80" width="54.1" height="124" rx="9" fill="#dff1ee" stroke="#1f7f75" stroke-width="1.6"/>
+<text x="223.2" y="95.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">4</text>
+<text x="223.2" y="130.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#155e56" class="" letter-spacing=".03em">SWELL</text>
+<circle cx="223.2" cy="157" r="4" fill="none" stroke="#1f7f75" stroke-width="1.3" opacity="1"/>
+<circle cx="223.2" cy="157" r="7" fill="none" stroke="#1f7f75" stroke-width="1.3" opacity="0.55"/>
+<circle cx="223.2" cy="157" r="10" fill="none" stroke="#1f7f75" stroke-width="1.3" opacity="0.3"/>
+<text x="223.2" y="196.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">B3</text>
+<rect x="257.7" y="80" width="54.1" height="124" rx="9" fill="#e1eaf8" stroke="#4a72b0" stroke-width="1.6"/>
+<text x="284.8" y="95.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">5</text>
+<rect x="270.8" y="176" width="28" height="3" rx="1.5" fill="#4a72b0"/>
+<text x="284.8" y="130.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#2b4f88" class="" letter-spacing=".03em">LOW</text>
+<text x="284.8" y="196.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">C4</text>
+<rect x="319.2" y="80" width="54.1" height="124" rx="9" fill="#e1eaf8" stroke="#4a72b0" stroke-width="1.6"/>
+<text x="346.2" y="95.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">6</text>
+<text x="346.2" y="130.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#2b4f88" class="" letter-spacing=".03em">HIGH</text>
+<text x="346.2" y="196.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">D4</text>
+<rect x="380.7" y="80" width="54.1" height="124" rx="9" fill="#e1eaf8" stroke="#4a72b0" stroke-width="1.6"/>
+<text x="407.8" y="95.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">7</text>
+<text x="407.8" y="130.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#2b4f88" class="" letter-spacing=".03em">WAH</text>
+<text x="407.8" y="196.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">E4</text>
+<rect x="442.2" y="80" width="54.1" height="124" rx="9" fill="#e1eaf8" stroke="#4a72b0" stroke-width="1.6"/>
+<text x="469.2" y="95.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">8</text>
+<text x="469.2" y="130.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#2b4f88" class="" letter-spacing=".03em">PHONE</text>
+<text x="469.2" y="196.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">F4</text>
+<rect x="503.7" y="80" width="54.1" height="124" rx="9" fill="#ece4f6" stroke="#7a58a8" stroke-width="1.6"/>
+<text x="530.8" y="95.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">9</text>
+<rect x="516.8" y="176" width="28" height="3" rx="1.5" fill="#7a58a8"/>
+<text x="530.8" y="130.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#523681" class="" letter-spacing=".03em">VERB</text>
+<text x="530.8" y="196.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">G4</text>
+<rect x="565.2" y="80" width="54.1" height="124" rx="9" fill="#ece4f6" stroke="#7a58a8" stroke-width="1.6"/>
+<text x="592.2" y="95.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">10</text>
+<text x="592.2" y="130.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#523681" class="" letter-spacing=".03em">CRASH</text>
+<text x="592.2" y="196.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">A4</text>
+<rect x="626.7" y="80" width="54.1" height="124" rx="9" fill="#ece4f6" stroke="#7a58a8" stroke-width="1.6"/>
+<text x="653.8" y="95.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">11</text>
+<text x="653.8" y="130.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#523681" class="" letter-spacing=".03em">FREEZE</text>
+<text x="653.8" y="196.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">B4</text>
+<rect x="688.2" y="80" width="54.1" height="124" rx="9" fill="#ece4f6" stroke="#7a58a8" stroke-width="1.6"/>
+<text x="715.2" y="95.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">12</text>
+<text x="715.2" y="130.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#523681" class="" letter-spacing=".03em">WASH</text>
+<circle cx="715.2" cy="157" r="4" fill="none" stroke="#7a58a8" stroke-width="1.3" opacity="1"/>
+<circle cx="715.2" cy="157" r="7" fill="none" stroke="#7a58a8" stroke-width="1.3" opacity="0.55"/>
+<circle cx="715.2" cy="157" r="10" fill="none" stroke="#7a58a8" stroke-width="1.3" opacity="0.3"/>
+<text x="715.2" y="196.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">C5</text>
+<rect x="749.7" y="80" width="54.1" height="124" rx="9" fill="#fbe2dc" stroke="#c4503c" stroke-width="1.6"/>
+<text x="776.8" y="95.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">13</text>
+<rect x="762.8" y="176" width="28" height="3" rx="1.5" fill="#c4503c"/>
+<text x="776.8" y="130.0" text-anchor="middle" font-size="12.5" font-weight="700" fill="#8f3020" class="" letter-spacing=".03em">STUTTER</text>
+<text x="776.8" y="196.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">D5</text>
+<rect x="811.2" y="80" width="54.1" height="124" rx="9" fill="#fbe2dc" stroke="#c4503c" stroke-width="1.6"/>
+<text x="838.2" y="95.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">14</text>
+<text x="838.2" y="130.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#8f3020" class="" letter-spacing=".03em">GATE</text>
+<circle cx="838.2" cy="157" r="4" fill="none" stroke="#c4503c" stroke-width="1.3" opacity="1"/>
+<circle cx="838.2" cy="157" r="7" fill="none" stroke="#c4503c" stroke-width="1.3" opacity="0.55"/>
+<circle cx="838.2" cy="157" r="10" fill="none" stroke="#c4503c" stroke-width="1.3" opacity="0.3"/>
+<text x="838.2" y="196.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">E5</text>
+<rect x="872.7" y="80" width="54.1" height="124" rx="9" fill="#fbe2dc" stroke="#c4503c" stroke-width="1.6"/>
+<text x="899.8" y="95.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">15</text>
+<text x="899.8" y="130.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#8f3020" class="" letter-spacing=".03em">SIREN</text>
+<circle cx="899.8" cy="157" r="4" fill="none" stroke="#c4503c" stroke-width="1.3" opacity="1"/>
+<circle cx="899.8" cy="157" r="7" fill="none" stroke="#c4503c" stroke-width="1.3" opacity="0.55"/>
+<circle cx="899.8" cy="157" r="10" fill="none" stroke="#c4503c" stroke-width="1.3" opacity="0.3"/>
+<text x="899.8" y="196.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">F5</text>
+<rect x="934.2" y="80" width="54.1" height="124" rx="9" fill="#fbe2dc" stroke="#c4503c" stroke-width="1.6"/>
+<text x="961.2" y="95.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">16</text>
+<text x="961.2" y="130.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#8f3020" class="" letter-spacing=".03em">RISER</text>
+<circle cx="961.2" cy="157" r="4" fill="none" stroke="#c4503c" stroke-width="1.3" opacity="1"/>
+<circle cx="961.2" cy="157" r="7" fill="none" stroke="#c4503c" stroke-width="1.3" opacity="0.55"/>
+<circle cx="961.2" cy="157" r="10" fill="none" stroke="#c4503c" stroke-width="1.3" opacity="0.3"/>
+<text x="961.2" y="196.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">G5</text>
+<path d="M11.7 208 V214 H250.3 V208" fill="none" stroke="#1f7f75" stroke-width="1.4"/>
+<text x="131.0" y="231.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1f7f75" class="" letter-spacing=".02em">ECHO: white 1–4</text>
+<path d="M257.7 208 V214 H496.3 V208" fill="none" stroke="#4a72b0" stroke-width="1.4"/>
+<text x="377.0" y="231.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="#4a72b0" class="" letter-spacing=".02em">FILTER: white 5–8, on everything</text>
+<path d="M503.7 208 V214 H742.3 V208" fill="none" stroke="#7a58a8" stroke-width="1.4"/>
+<text x="623.0" y="231.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="#7a58a8" class="" letter-spacing=".02em">SPACE: white 9–12</text>
+<path d="M749.7 208 V214 H988.3 V208" fill="none" stroke="#c4503c" stroke-width="1.4"/>
+<text x="869.0" y="231.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="#c4503c" class="" letter-spacing=".02em">RHYTHM: white 13–16</text>
+</svg>
+</figure>
+
+<div class="cols">
+<div class="col">
+
+<div class="card">
+<h2>1 · Echo <span class="where">white 1–4 · F3–B3</span></h2>
+<div class="intro">The echo's own: what goes in, and its tape.</div>
+<div class="row"><div class="n">Throw</div><div class="d">Every stab thrown into the echo: its dry down, the feedback up.</div></div>
+<div class="row"><div class="n">Time x2</div><div class="d">The echo's time doubled (halved if the tape is too short), gliding there and back.</div></div>
+<div class="row"><div class="n">Tape stop<small>STOP</small></div><div class="d">The tape slowing to a quarter, its pitch diving; let go, it spins back up.</div></div>
+<div class="row"><div class="n">Swell</div><div class="d">Everything into the echo, feeding back more: the Arrangement page's Echo key.</div></div>
+</div>
+
+<div class="card">
+<h2>2 · Filter <span class="where">white 5–8 · C4–F4</span></h2>
+<div class="intro">A master filter on everything, the echo and the plate too, swept in and out.</div>
+<div class="row"><div class="n">Low-pass<small>LOW</small></div><div class="d">Sweeping down to ~350 Hz: under water.</div></div>
+<div class="row"><div class="n">High-pass<small>HIGH</small></div><div class="d">Sweeping up to ~1.3 kHz: thin, a radio.</div></div>
+<div class="row"><div class="n">Wah</div><div class="d">A resonant band sweeping ~350 Hz to ~1.6 kHz, 1.3 times a second.</div></div>
+<div class="row"><div class="n">Phone</div><div class="d">A narrow band, ~450 Hz to ~3 kHz, overdriven.</div></div>
+</div>
+
+<div class="card">
+<h2>3 · Space <span class="where">white 9–12 · G4–C5</span></h2>
+<div class="intro">The plate and the cloud thrown.</div>
+<div class="row"><div class="n">Verb</div><div class="d">The whole dry mix into the plate.</div></div>
+<div class="row"><div class="n">Crash</div><div class="d">A dark burst of noise into the plate as the key goes down, eased in: a splash at the music's own level.</div></div>
+<div class="row"><div class="n">Freeze</div><div class="d">The cloud stops listening: its grains thick, over what it held, brought forward.</div></div>
+<div class="row"><div class="n">Wash</div><div class="d">The dry down to a quarter; everything into the echo and the plate.</div></div>
+</div>
+
+</div>
+<div class="col">
+
+<div class="card">
+<h2>4 · Rhythm <span class="where">white 13–16 · D5–G5</span></h2>
+<div class="intro">The rhythm and two noise voices of its own.</div>
+<div class="row"><div class="n">Stutter</div><div class="d">A semicorchea (16th) of the whole mix caught as the key goes down, and looped.</div></div>
+<div class="row"><div class="n">Gate</div><div class="d">The chord ringing on (1.5 s), chopped in semicorcheas (16ths), its sends too.</div></div>
+<div class="row"><div class="n">Siren</div><div class="d">The dub siren: a square-ish tone swung up and down (about 200 Hz to 1.2 kHz, 0.8 times a second), into the echo. (Not the Arrangement page's four sirens: sheet 2.)</div></div>
+<div class="row"><div class="n">Riser</div><div class="d">Noise through a band-pass rising 1.5 octaves a second, louder as it climbs; into the plate, a little into the echo.</div></div>
+</div>
+
+<div class="card">
+<h2>5 · Playing it <span class="where">REC</span></h2>
+<figure class="shot" style="width:28mm; float:right; margin:4px 0 4px 8px"><img src="data:image/png;base64,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" alt="The effects grid, Freeze and Wash held"><figcaption>Freeze and Wash held.</figcaption></figure>
+<div class="row"><div class="n">REC held</div><div class="d">A third of a second: the grid fills the screen; the knobs rest.</div></div>
+<div class="row"><div class="n">A white key</div><div class="d">Its effect, eased in, as long as the key is held, even after REC is let go. Several at once.</div></div>
+<div class="row"><div class="n">The lights</div><div class="d">Each group's first key lit, to find the rows by touch; an effect held, lit.</div></div>
+<div class="row"><div class="n">REC, a tap</div><div class="d">Still dub hold (sheet 9). Held for the grid, or a key played: its release does nothing.</div></div>
+</div>
+
+<div class="card">
+<h2>6 · Where they act</h2>
+<div class="row"><div class="n">The rings</div><div class="d">On the drawing: into the echo, or the echo's own (Throw, Time x2, Stop, Swell, Wash, Gate, Siren, Riser).</div></div>
+<div class="row"><div class="n">After it all</div><div class="d">The four filters and Stutter act on the whole mix, the echo's repeats too.</div></div>
+<div class="row"><div class="n">On SEL</div><div class="d">Time x2, Freeze, Tape stop and Stutter are also white 13–16 on the Arrangement page (sheet 2); they play with the grid's.</div></div>
+</div>
+
+</div>
+</div>
+
+<div class="card full" style="margin-top:8px">
+<h2>7 · How quickly <span class="where">eased in · let go</span></h2>
+<div class="intro">Most of the way in, and out once the key is let go (each eases; nothing jumps).</div>
+<div style="display:grid; grid-template-columns: repeat(4, 1fr); column-gap:14px">
+<table class="t">
+<tr><td class="nm">Throw</td><td>the next stabs</td></tr>
+<tr><td class="nm">Time x2</td><td>a glide, ~0.1 s</td></tr>
+<tr><td class="nm">Stop</td><td>~0.7 s · back ~0.25 s</td></tr>
+<tr><td class="nm">Swell</td><td>~0.04 s</td></tr>
+</table>
+<table class="t">
+<tr><td class="nm">Low · High</td><td>~0.5 s · back ~0.3 s</td></tr>
+<tr><td class="nm">Wah</td><td>~0.08 s</td></tr>
+<tr><td class="nm">Phone</td><td>~0.05 s</td></tr>
+</table>
+<table class="t">
+<tr><td class="nm">Verb</td><td>~0.03 s</td></tr>
+<tr><td class="nm">Crash</td><td>a burst, ~80 ms</td></tr>
+<tr><td class="nm">Freeze</td><td>~0.1 s</td></tr>
+<tr><td class="nm">Wash</td><td>~0.4 s · back ~0.8 s</td></tr>
+</table>
+<table class="t">
+<tr><td class="nm">Stutter</td><td>from the press</td></tr>
+<tr><td class="nm">Gate</td><td>~0.03 s</td></tr>
+<tr><td class="nm">Siren</td><td>~0.02 s · fades ~0.15 s</td></tr>
+<tr><td class="nm">Riser</td><td>climbing · fades ~0.15 s</td></tr>
+</table>
+</div>
+</div>
+
+<div class="foot">
+<div class="box"><h3>Heavy</h3>Each effect costs nothing until held. All sixteen at once is the heaviest thing DUB-1 does: in a heavy piece it can near the FM-1's limit (Setup's CPU).</div>
+<div class="box"><h3>Said</h3>Each effect's name in the header as its key goes down; a screen reader reads the grid, a group at a time.</div>
+</div>
+</div>
+</body>
+</html>

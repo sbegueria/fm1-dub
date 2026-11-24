@@ -1,0 +1,1605 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only
+     DUB-1's Sets page (1.5.0, step 5; build/design/STORAGE-1.5.0.md 6.4): beside the installer, the same look. Over Web
+     MIDI (Chrome or Edge): connect, back up the pieces and every set in one file, list the sets on the FM-1 with their
+     names, send a .dub1 set (its pieces shown first; the FM-1 asks, and the page says so while it waits), load one into
+     the pieces, delete one, download one; (Decisions 4) restore a whole backup after one question on the FM-1, and the
+     page in English or Japanese as the installer (English first, 日本語 a click away; ?lang=ja opens it in Japanese).
+     (1.5.0) Make a set: a new set from the pieces of others (the pieces now, a set, a ready-made set, a file), chosen,
+     put in order and named (dub1makeset.js), then downloaded, heard or sent through the Send form.
+     The protocol is dub1sets.js's (firmware/src/app/setwire.c's twin), the files dub1container.js's;
+     tools/make_pages.py puts the three in sets/. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sets · DUB-1</title>
+<style>
+  /* DUB-1's colours, as its screen, the emulator, the manual and the installer: a dark room, a cold teal */
+  :root { --bg: #10141a; --fg: #dee4e8; --dim: #9aa8b6; --accent: #2b6e72; --sheet: #1e252f; --river-2: #5cc4cc;
+          --rule: #2e3846; --warn: #ec9654; color-scheme: dark; }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+         font: 16px/1.6 "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  main { max-width: 600px; margin: 0 auto; padding: 48px 16px; }
+  h1 { font-size: 28px; font-weight: 300; letter-spacing: .06em; text-transform: uppercase; margin: 0 0 24px; }
+  h2 { font-size: 16px; font-weight: 400; text-transform: uppercase; letter-spacing: .06em; margin: 40px 0 12px; padding-top: 8px; border-top: 1px solid var(--fg); }
+  p { margin: 0 0 16px; }
+  [hidden] { display: none !important; }        /* (a .row hidden stays hidden) */
+  .lang { float: right; font-size: 13px; color: var(--dim); cursor: pointer; text-decoration: underline; background: none; border: 0; padding: 0; }
+  button { font: inherit; background: var(--accent); color: var(--fg); border: 1px solid var(--fg); padding: 6px 22px; cursor: pointer; }
+  button.lang { background: none; border: 0; padding: 0; font-size: 13px; color: var(--dim); }
+  button.small { padding: 2px 10px; font-size: 14px; background: var(--sheet); border-color: var(--dim); }
+  button:disabled { opacity: .3; cursor: default; }
+  #status, #alert { margin-top: 16px; min-height: 1.6em; }
+  #alert:empty { display: none; }
+  #alert { font-weight: 600; color: var(--warn); }
+  #alert::before { content: "⚠ "; }
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  label.bar { display: block; font-size: 13px; color: var(--dim); margin-top: 16px; }
+  .small { color: var(--dim); font-size: 13px; }
+  progress { width: 100%; height: 6px; margin-top: 4px; accent-color: var(--river-2); }
+  pre { color: var(--dim); font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; margin-top: 16px; }
+  pre:empty { display: none; }
+  input[type=file], input[type=text], select { font: inherit; font-size: 14px; color: var(--fg); background: var(--sheet);
+         border: 1px solid var(--dim); max-width: 100%; }
+  input[type=file] { color: var(--dim); border: 0; background: none; }
+  input[type=text] { padding: 3px 6px; width: 12em; }
+  select { padding: 3px 4px; }
+  .site { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem 1.2rem; margin: 0 0 1.6rem; padding-bottom: .5rem; border-bottom: 1px solid var(--fg); }
+  .site .home { font-size: 1.05rem; font-weight: 400; letter-spacing: .08em; color: var(--fg); text-decoration: none; }
+  .site .home:hover { color: var(--river-2); background: none; }
+  .site nav { margin-left: auto; display: flex; flex-wrap: wrap; gap: .2rem 1rem; font-size: .92rem; }
+  .site nav a { color: var(--fg); text-decoration-color: var(--river-2); text-underline-offset: 3px; }
+  .site nav a[aria-current] { text-decoration: none; color: var(--river-2); }
+  a { color: inherit; text-decoration-color: var(--river-2); text-underline-offset: 3px; }
+  /* the sets on the FM-1: a row each, the buttons at the right (stacked under the name on a phone) */
+  table { width: 100%; border-collapse: collapse; margin: 0 0 12px; font-size: 15px; }
+  th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-weight: 400; color: var(--dim); font-size: 13px; text-transform: uppercase; letter-spacing: .05em; }
+  td.what { width: 4.2em; color: var(--dim); white-space: nowrap; }
+  td.name b { font-weight: 600; }
+  td.name .meta { display: block; color: var(--dim); font-size: 13px; }
+  td.act { text-align: right; white-space: nowrap; }
+  td.act button + button { margin-left: 4px; }
+  tr.empty td.name { color: var(--dim); font-style: italic; }
+  @media (max-width: 480px) { td.act { white-space: normal; } td.act button { margin: 2px 0 2px 4px; } }
+  .card { background: var(--sheet); border: 1px solid var(--rule); border-radius: 6px; padding: 12px 14px; margin: 0 0 16px; }
+  .card ol, .card ul { margin: 6px 0 0; padding-left: 22px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 0 0 12px; }
+  .fit { font-size: 13px; color: var(--dim); }
+  .fit.bad { color: var(--warn); }
+  /* the FM-1 asking: the page says what to do there, plainly, while it waits */
+  #ask { border: 2px solid var(--river-2); background: #16323a; border-radius: 8px; padding: 14px 16px; margin: 20px 0 0; }
+  #ask[hidden] { display: none; }
+  #ask .q { font-size: 22px; font-weight: 300; letter-spacing: .04em; margin: 0 0 6px; }
+  #ask .how { margin: 0 0 6px; }
+  #ask kbd { font: inherit; font-weight: 700; border: 1px solid var(--fg); border-radius: 4px; padding: 0 6px; }
+  #ask .left { color: var(--dim); font-size: 14px; margin: 0 0 10px; }
+  /* (step 7b) the cue editor: the piece's song drawn (its parts, its cues as marks, a hold's or a ride's length as a
+     bar), the list, the form */
+  .tl { margin: 4px 0 12px; }
+  .tl svg { display: block; width: 100%; height: auto; }
+  .tl .part { fill: var(--sheet); stroke: var(--rule); }
+  .tl .plabel { fill: var(--dim); font-size: 11px; }
+  .tl .tick { stroke: var(--rule); }
+  .tl .mark { stroke: var(--river-2); stroke-width: 2; }
+  .tl .span { fill: var(--accent); opacity: .85; }
+  .tl .drop { stroke: var(--warn); stroke-width: 2; stroke-dasharray: 3 2; }
+  .tl .sel { stroke: var(--fg); stroke-width: 3; }
+  #cuetable td { font-size: 14px; }
+  #cuetable td.n { color: var(--dim); width: 1.6em; }
+  #cuetable td .out { display: block; color: var(--warn); font-size: 13px; }
+  #cuetable tr.sel td { background: #16323a; }
+  .cfh { font-size: 18px; font-weight: 300; margin: 0 0 8px; }
+  .cfgrid { display: grid; grid-template-columns: max-content 1fr; gap: 8px 12px; align-items: center; }
+  .cfrow { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
+  input[type=number] { font: inherit; font-size: 14px; color: var(--fg); background: var(--sheet); border: 1px solid var(--dim);
+         padding: 3px 6px; width: 5.5em; }
+  @media (max-width: 480px) { .cfgrid { grid-template-columns: 1fr; gap: 4px; } }
+  /* (1.5.0) Make a set: a row a piece (in the set or not, its place, its name, where it came from, up and down), wrapped
+     on a phone */
+  #mk-list { list-style: none; padding: 0; margin: 4px 0 12px; border-top: 1px solid var(--rule); }
+  #mk-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 6px 0; border-bottom: 1px solid var(--rule); }
+  #mk-list input[type=checkbox] { width: 18px; height: 18px; margin: 0; accent-color: var(--river-2); }
+  #mk-list .pos { min-width: 1.4em; text-align: right; color: var(--dim); font-size: 14px; }
+  #mk-list .from { flex: 1 1 14em; color: var(--dim); font-size: 13px; }
+  #mk-list .mv { margin-left: auto; white-space: nowrap; }
+  #mk-list .mv button { padding: 2px 9px; }
+  #mk-list li.off input[type=text], #mk-list li.off .from { opacity: .55; }
+  #mk-list input[type=text][aria-invalid=true] { border-color: var(--warn); }
+</style>
+</head>
+<body>
+<main>
+  <header class="site"><a class="home" href="../">DUB-1</a><nav aria-label="DUB-1"><a href="../emu/" data-t="navemu">Emulator</a><a href="../install/" data-t="navinstall">Install</a><a href="../sets/" aria-current="page" data-t="navsets">Sets</a><a href="../manual/" data-t="navmanual">Manual</a><a href="https://github.com/sbegueria/fm1-dub" data-t="navsource">Source</a></nav></header>
+  <button class="lang" id="lang" type="button"></button>
+  <h1 data-t="title">Sets</h1>
+  <p data-t="intro"></p>
+  <p class="small" data-t="perm"></p>
+  <p><button id="connect" type="button" data-t="connect">Connect</button></p>
+  <p id="conn" class="small"></p>
+
+  <section id="dev" hidden aria-labelledby="h-dev">
+    <h2 id="h-dev" data-t="hdev"></h2>
+    <table id="sets"><caption class="sr" data-t="caption"></caption>
+      <thead><tr><th scope="col" data-t="thwhere"></th><th scope="col" data-t="thwhat"></th><th scope="col"><span class="sr" data-t="thacts"></span></th></tr></thead>
+      <tbody></tbody></table>
+    <p class="row"><button id="refresh" class="small" type="button" data-t="refresh"></button>
+      <span class="small" data-t="loadnote"></span></p>
+
+    <h2 data-t="hbackup"></h2>
+    <p data-t="backupnote"></p>
+    <p><button id="backup" type="button" data-t="backup"></button></p>
+
+    <h2 data-t="hrestore"></h2>
+    <p class="small" data-t="restorenote"></p>
+    <p><label for="restorefile" data-t="restorefile"></label><br><input type="file" id="restorefile" accept=".dub1"></p>
+    <div id="restoreview" class="card" hidden></div>
+    <p><button id="restore" type="button" disabled data-t="restore"></button></p>
+
+    <h2 data-t="hsend"></h2>
+    <p class="small" data-h="sendnote"></p>
+    <p><label for="file" data-t="file"></label><br><input type="file" id="file" accept=".dub1"></p>
+    <div id="preview" class="card" hidden></div>
+    <div id="sendform" hidden>
+      <p class="row" id="pickrow" hidden><label for="pick" data-t="pick"></label> <select id="pick"></select></p>
+      <p class="row"><label for="name" data-t="name"></label> <input type="text" id="name" maxlength="12" autocomplete="off" spellcheck="false" aria-describedby="namefit">
+        <span id="namefit" class="fit" aria-live="polite"></span></p>
+      <p class="row"><label for="slot" data-t="slot"></label> <select id="slot"></select> <span id="slotwarn" class="fit bad" hidden></span></p>
+      <p><button id="send" type="button" data-t="send"></button></p>
+    </div>
+  </section>
+
+  <div id="ask" hidden role="alert" aria-labelledby="ask-q">
+    <p class="q" id="ask-q"></p>
+    <p class="how" data-h="askhow"></p>
+    <p class="left" id="ask-left"></p>
+    <button id="cancel" class="small" type="button" data-t="cancel"></button>
+  </div>
+  <label class="bar" for="bar"><span data-t="progress"></span>
+    <progress id="bar" max="100" value="0"></progress></label>
+  <p id="status" role="status"></p>
+  <p id="alert" role="alert"></p>
+  <pre id="log"></pre>
+
+  <!-- (1.5.0) Make a set: a new set from the pieces of others, chosen, put in order and named (dub1makeset.js) -->
+  <section id="make" aria-labelledby="h-make">
+    <h2 id="h-make" data-t="hmake"></h2>
+    <p class="small" data-h="makenote"></p>
+    <p class="row" id="mk-srcrow" hidden><label for="mk-src" data-t="mkSrc"></label> <select id="mk-src"></select>
+      <button id="mk-add" class="small" type="button" data-t="mkAdd"></button></p>
+    <p class="small" id="mk-conn" data-t="mkConn"></p>
+    <p><label for="mk-file" data-t="mkFile"></label><br><input type="file" id="mk-file" accept=".dub1"></p>
+    <p class="row" id="mk-pickrow" hidden><label for="mk-pick" data-t="pick"></label> <select id="mk-pick"></select>
+      <button id="mk-pickadd" class="small" type="button" data-t="mkAdd"></button></p>
+    <div id="mk-ed" hidden>
+      <p class="small" id="mk-cap" data-t="mkListCap" style="margin:0"></p>
+      <ul id="mk-list" aria-labelledby="mk-cap"></ul>
+      <p class="row"><span id="mk-count" class="fit" aria-live="polite"></span>
+        <button id="mk-clear" class="small" type="button" data-t="mkClear"></button></p>
+      <p class="row"><label for="mk-name" data-t="mkName"></label> <input type="text" id="mk-name" maxlength="12" autocomplete="off" spellcheck="false" aria-describedby="mk-namefit">
+        <span id="mk-namefit" class="fit" aria-live="polite"></span></p>
+      <p class="row"><label for="mk-mode" data-t="mkMode"></label> <select id="mk-mode"></select>
+        <label for="mk-trans" data-t="mkTrans"></label> <select id="mk-trans"></select></p>
+      <p class="small" id="mk-keep"></p>
+      <p class="row"><button id="mk-dl" type="button" data-t="mkDl"></button>
+        <button id="mk-hear" type="button" data-t="mkHear"></button>
+        <button id="mk-send" type="button" data-t="mkSend"></button></p>
+    </div>
+    <p id="mk-msg" class="fit" role="status"></p>
+  </section>
+
+  <section id="ready" hidden aria-labelledby="h-ready">
+    <h2 id="h-ready" data-t="hready"></h2>
+    <p class="small" data-h="readynote"></p>
+    <ul id="readylist" class="card"></ul>
+  </section>
+
+  <!-- (step 7b) the cue editor: a set's cues, piece by piece (dub1cues.js: checked as the FM-1 checks them) -->
+  <section id="cues" aria-labelledby="h-cues" hidden>
+    <h2 id="h-cues" data-t="hcues"></h2>
+    <p class="small" data-h="cuesnote"></p>
+    <p><label for="cuefile" data-t="cuefile"></label><br><input type="file" id="cuefile" accept=".dub1"></p>
+    <p class="row" id="cuepickrow" hidden><label for="cuepick" data-t="pick"></label> <select id="cuepick"></select></p>
+    <div id="cueed" hidden>
+      <p id="cuehead"></p>
+      <p class="row"><label for="cuepiece" data-t="cuepiece"></label> <select id="cuepiece"></select></p>
+      <p id="cuesong" class="small"></p>
+      <div id="cuetl" class="tl" aria-hidden="true"></div>
+      <table id="cuetable"><caption class="sr" id="cuecap"></caption>
+        <thead><tr><th scope="col">#</th><th scope="col" data-t="thcwhere"></th><th scope="col" data-t="thcwhat"></th>
+          <th scope="col" data-t="thclen"></th><th scope="col"><span class="sr" data-t="thacts"></span></th></tr></thead>
+        <tbody></tbody></table>
+      <p class="row"><button id="cueadd" class="small" type="button" data-t="cueadd"></button>
+        <span id="cuecount" class="small"></span></p>
+      <div id="cueform" class="card" hidden role="group" aria-labelledby="cf-head">
+        <p class="cfh" id="cf-head"></p>
+        <div class="cfgrid">
+          <label for="cf-part" data-t="cfPart"></label>
+          <span class="cfrow"><select id="cf-part"></select>
+            <label for="cf-bar" data-t="cfBar"></label> <input type="number" id="cf-bar" min="1" max="1024" step="1">
+            <label for="cf-step" data-t="cfStep"></label> <select id="cf-step"></select></span>
+          <label for="cf-op" data-t="cfOp"></label> <select id="cf-op"></select>
+          <label for="cf-arg" id="cf-argl" data-t="cfArg"></label> <select id="cf-arg"></select>
+          <label for="cf-val" id="cf-vall" data-t="cfVal"></label>
+          <span class="cfrow" id="cf-valrow"><select id="cf-valb" aria-labelledby="cf-vall"></select>
+            <input type="number" id="cf-val" step="1"> <span id="cf-valt" class="fit"></span></span>
+          <label for="cf-len" id="cf-lenl"></label>
+          <span class="cfrow" id="cf-lenrow"><input type="number" id="cf-len" min="0" step="1">
+            <select id="cf-unit" aria-label="unit"></select> <span id="cf-lent" class="fit"></span></span>
+        </div>
+        <p id="cf-why" class="fit bad" aria-live="polite"></p>
+        <p class="row" style="margin:0"><button id="cf-ok" type="button"></button>
+          <button id="cf-cancel" class="small" type="button" data-t="cancel"></button></p>
+      </div>
+      <p id="cuemsg" class="fit" role="status"></p>
+      <p class="row"><button id="cuedl" type="button" data-t="cuedl"></button>
+        <button id="cuesend" type="button" data-t="send"></button>
+        <button id="cuehear" type="button" data-t="cuehear"></button>
+        <button id="cuereset" class="small" type="button" data-t="cuereset"></button></p>
+    </div>
+  </section>
+
+  <h2 data-t="hcarries"></h2>
+  <p class="small" data-t="carries1"></p>
+  <p class="small" data-h="carries2"></p>
+  <p class="small" data-h="license"></p>
+</main>
+<script type="module">
+import * as X from "./dub1sets.js";
+import * as Q from "./dub1cues.js";
+import { nameFits, nameField } from "./dub1container.js";
+import * as M from "./dub1makeset.js";
+const $ = (id) => document.getElementById(id);
+/* (1.5.0, the user's, 2026-11-22) the cues kept but off, as on the FM-1 (DUB1_CUES): the cue editor and its Edit cues
+   buttons hidden (?cues=1 shows them: the tests', ours); a set's CUES still sent and backed up as they came */
+const CUES = new URLSearchParams(location.search).get("cues") === "1";
+$("cues").hidden = !CUES;
+let dev = null, list = [], file = null, rfile = null, working = false;
+
+/* ------------------------------------------------------------------------------------------- the words --- */
+/* (Decisions 4) English first, 日本語 a click away, as the installer (its terms: ピース, セット, バックアップ, 接続). The
+   FM-1's own words (STORE SET 3?, GLO) stay as its screen shows them */
+const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+const STATE_JA = { [X.S_IDLE]: "何も確認していません", [X.S_ASKING]: "確認中", [X.S_YES]: "完了",
+  [X.S_NO]: "FM-1 で「いいえ」が押されました", [X.S_TIMEOUT]: "30 秒以内に FM-1 で答えがありませんでした",
+  [X.S_FAILED]: "FM-1 のフラッシュメモリーでエラーが起きました", [X.S_PLAYING]: "演奏が始まったため中止しました" };
+const WHY_JA = {
+  1: "FM-1 が要求を受け付けませんでした（途中でデータが壊れた可能性があります。もう一度試してください）",
+  2: "この DUB-1 はその操作を知りません。アップデートしてください",
+  3: "FM-1 にそのセットはありません",
+  4: "FM-1 には大きすぎます（最大 16,128 バイト）",
+  5: "新しい DUB-1 用です。先に FM-1 をアップデートしてください",
+  6: "この DUB-1 が受け付けるセットではありません（知らない値か、壊れたファイル）",
+  7: "FM-1 に空きがありません",
+  8: "FM-1 のフラッシュメモリーでエラーが起きました",
+  9: "順番がずれました。もう一度送ってください",
+  10: "送信中のものがありません",
+};
+const TEXT = {
+  en: {
+    other: "日本語", navemu: "Emulator", navinstall: "Install", navsets: "Sets", navmanual: "Manual", navsource: "Source",
+    title: "Sets",
+    intro: "Back up your pieces and sets, send a set to the FM-1 and load it into the pieces. For DUB-1 1.5 or later, with the FM-1 connected by USB; in Chrome or Edge.",
+    perm: "When you press Connect, the browser asks to let this page use MIDI devices (with SysEx): allow it. The page changes nothing by itself: the FM-1 asks on its screen before it keeps, loads or deletes a set, and only GLO says yes.",
+    connect: "Connect", notconn: "Not connected.",
+    hdev: "On the FM-1", caption: "The pieces now and the eight sets on the FM-1", thwhere: "Where", thwhat: "What", thacts: "Actions",
+    refresh: "Read the list again",
+    loadnote: "Load puts a set's pieces into pieces 1 onwards (a set of five: 1 to 5, the rest as they were).",
+    hbackup: "Back up", backupnote: "The pieces as they are now and every set on the FM-1, in one file to keep. It works while the FM-1 plays.",
+    backup: "Back up everything",
+    hrestore: "Restore",
+    restorenote: "A whole backup (the file \"Back up everything\" made) back on the FM-1: every set it holds into its own number, and its pieces into the pieces. The FM-1 asks once. Sets the backup doesn't hold stay as they are. The FM-1 must be stopped.",
+    restorefile: "Choose a backup:", restore: "Restore everything",
+    hsend: "Send a set",
+    sendnote: "A <code>.dub1</code> file: a set, the pieces of a backup, or one of a whole backup's sets. Its pieces are shown before anything is sent. The FM-1 must be stopped.",
+    file: "Choose a file:", pick: "From this backup:", name: "Its name on the FM-1:", slot: "Into:", send: "Send to the FM-1",
+    askhow: "Answer on the FM-1: <kbd>GLO</kbd> says yes. Any other button, key or knob says no.",
+    cancel: "Cancel", progress: "Progress",
+    hready: "Ready-made sets",
+    readynote: "Sets made from DUB-1's videos, and DUB-1's own eight pieces as a new FM-1 has them (The Pieces: load it to get the originals back), to download, hear in the <a href=\"../emu/\">emulator</a> first, or send to the FM-1. Their pieces replace yours when you load one: back up first.",
+    readyPieces: (o) => `${plural(o.pieces.length, "piece")}: ${o.pieces.join(", ")}.`,
+    readyDl: "Download", readyDlAria: (o) => `Download ${o.name}, ${o.file}`, readySend: "Send to the FM-1",
+    readySendAria: (o) => `Send ${o.name} to the FM-1: into the form below`, readyConnect: "Connect first to send it.",
+    hcarries: "What a set carries",
+    carries1: "Its pieces (one to eight, each whole: its sound as its author left it, its name), and the set's own Mode (Endless, Song or Set), Transition, the sirens' knobs and Tune. Not MIDI out, nor the lights or the knobs' view: those stay the player's. A set's name and the pieces' names are as wide as the FM-1's header shows them (up to 12 characters).",
+    carries2: "The FM-1 keeps eight sets, and your pieces as they are. Its updates keep them; another firmware may not: back up first. <a href=\"../manual/#sets\">More in the manual.</a>",
+    license: "GPL-3.0, no warranty. Source: <a href=\"https://github.com/sbegueria/fm1-dub\" target=\"_blank\" rel=\"noopener\">github.com/sbegueria/fm1-dub<span class=\"sr\"> (opens in a new tab)</span></a>",
+    connected: (i, port) => `Connected: ${i.version} (project format ${i.format}), on ${port}. ` +
+      (i.playing ? "It is playing: the list, backups and downloads work; stop it to send, load, restore or delete." : "Stopped."),
+    now: "Now", piecesNow: "The pieces now",
+    workMeta: (w) => `${w.name ? "from the set " + w.name + ", " : ""}8 pieces, ${w.length} bytes${w.flags & 1 ? "" : ", not saved yet"}`,
+    dl: "Download", dlNow: "Download the pieces now", setN: (n) => `Set ${n}`, empty: "empty", noname: "(no name)",
+    setMeta: (e) => `${plural(e.pieces, "piece")}, ${e.length} bytes`,
+    unread: (e) => `not one this DUB-1 reads (${e.length} bytes): it can be deleted`,
+    load: "Load", del: "Delete",
+    loadAria: (n, l) => `Load set ${n}, ${l}, into the pieces`, dlAria: (n, l) => `Download set ${n}, ${l}`,
+    delAria: (n, l) => `Delete set ${n}, ${l}`,
+    looking: "Looking for the FM-1.", readingPieces: "Reading the pieces.", readingSet: (n) => `Reading set ${n}.`,
+    saved: (f, n) => `Saved ${f} (${n} bytes).`, backingUp: "Backing up: the pieces and every set.",
+    backedUp: (f, s, n) => `Saved ${f}: the pieces and ${plural(s, "set")} (${n} bytes).`,
+    toAnswer: (s) => `${s} seconds to answer.`, left: (s) => `${s} second${s === 1 ? "" : "s"} left to answer.`,
+    asking: "The FM-1 is asking: answer there.", notDone: (st) => `Not done: ${X.STATE_TEXT[st] || "state " + st}.`,
+    loaded: (n, l) => `Set ${n}, ${l}, loaded into the pieces (and saved on the FM-1).`, deleted: (n, l) => `Set ${n}, ${l}, deleted.`,
+    kept: (n, nm) => `Kept as set ${n}${nm ? ", " + nm : ""}. Load it to play it.`,
+    keptLive: (n, nm) => `Kept as set ${n}${nm ? ", " + nm : ""}. It's the set loaded: the FM-1 keeps playing the old one until it's loaded again (the FM-1 asks: LOAD IT NOW?).`, sending: (n) => `Sending to set ${n}.`,
+    fileDesc: (fname, whole, c, i) => `${fname}: ${whole ? "a whole backup; this one: " : ""}${c.info.kind === X.WORK ? "the pieces of a backup" : "a set"}` +
+      `${i.name ? ", “" + i.name + "”" : ""}, ${plural(i.pieces.length, "piece")}${i.version ? ", made by " + i.version : ""}, format ${i.format}, ${c.bytes.length} bytes.`,
+    fromRecipe: (r) => ` (from ${r})`, kindName: { "the recipe": "the recipe", "the recipe and changes": "the recipe and changes" },
+    newer: (f, g) => `Made for a newer DUB-1 (format ${f}; this FM-1's ${g}): update the FM-1 first.`,
+    pickWork: "the pieces (as they were)", pickSet: (n, nm, p) => `set ${n}: ${nm}, ${plural(p, "piece")}`,
+    slotRepl: (n, nm) => `Set ${n} (replaces ${nm})`, slotNoName: "a set with no name", slotEmpty: (n) => `Set ${n} (empty)`,
+    slotWarn: (nm) => `This replaces ${nm} on the FM-1.`,
+    noName: "No name.", fits: (w) => `Fits (${w} of 87 px).`,
+    tooWide: "Too wide or not allowed: letters, numbers, spaces and - . ' & ! ? / + # ( ) : , _, up to 12, no wider than the FM-1's header (87 px).",
+    rHead: (fname, v) => `${fname}: a whole backup${v ? ", made by " + v : ""}. It puts back:`,
+    rSet: (o, cur) => `Set ${o.index + 1}: ${o.name || "(no name)"}, ${plural(o.pieces, "piece")}` +
+      (cur ? `, replacing ${cur.name || "a set with no name"}` : ", now empty"),
+    rWork: (o) => `The pieces: ${o.name ? "from the set " + o.name + ", " : ""}${plural(o.pieces, "piece")}, replacing the pieces now`,
+    rStay: (ns) => `${ns.length === 1 ? "Set " + ns[0] + " on the FM-1 isn't" : "Sets " + ns.join(", ") + " on the FM-1 aren't"} in this backup: ${ns.length === 1 ? "it stays" : "they stay"} as ${ns.length === 1 ? "it is" : "they are"}.`,
+    rConnect: "Connect to see what it would replace.",
+    rQuestion: (p) => `RESTORE BACKUP? ${p.sets.length ? plural(p.sets.length, "set") : ""}${p.sets.length && p.work ? " + " : ""}${p.work ? "the pieces" : ""}`,
+    restoring: "Restoring: answer on the FM-1 first.",
+    rItem: (i, n, o) => `Restoring ${i + 1} of ${n}: ${o.kind === X.SET ? "set " + (o.index + 1) : "the pieces"}.`,
+    restored: (p) => `Restored: ${p.sets.length ? plural(p.sets.length, "set") : ""}${p.sets.length && p.work ? " and " : ""}${p.work ? "the pieces" : ""}. The FM-1 has them now.`,
+    rStopped: (e) => `The restore stopped at ${t("rWhat", e.failed.kind, e.failed.index)}: ${stopWhy(e.failed)}. ` +
+      `Restored before it: ${rList(e.done) || "nothing"}.` + (e.left.length ? ` Not sent: ${rList(e.left)}.` : "") +
+      " Try again, or restore those from the backup later.",
+    rWhat: (k, ix) => k === X.SET ? `set ${ix + 1}` : "the pieces",
+    /* (step 7b) the cue editor */
+    hcues: "Cues",
+    cuesnote: "A set's moves at set places in its songs, played by the FM-1 as you would play them on the Arrangement page (<a href=\"../manual/#cues\">more in the manual</a>). Open a set here (a <code>.dub1</code> file, or <i>Edit cues</i> beside a set on the FM-1), change its cues piece by piece, then download it, send it to the FM-1, or hear it in the emulator first. Cues on or off is the FM-1's own switch (the Song mode page), for every set.",
+    cuefile: "Open a set (.dub1):", cuepiece: "Piece:", editCues: "Edit cues", editAria: (w) => `Edit the cues of ${w}`,
+    thcwhere: "Where", thcwhat: "What", thclen: "Length", cueadd: "Add a cue",
+    cuedl: "Download the set", cuehear: "Hear it in the emulator", cuereset: "Undo my changes",
+    cfPart: "Part", cfBar: "bar", cfStep: "16th", cfOp: "What", cfArg: "Which", cfVal: "Value",
+    cfLenHeld: "Held for", cfLenRide: "Over (0: at once)", cfLenSiren: "Held for",
+    cfNew: "A new cue", cfEdit: (n) => `Cue ${n}`, cfAdd: "Add it", cfSave: "Change it",
+    parts: ["Intro", "Main", "Outro", "From PLAY"],
+    where: (p, bar, st) => `${TEXT.en.parts[p]}, bar ${bar + 1}, 16th ${st + 1}`,
+    stepOpt: (s) => s % 4 ? String(s + 1) : `${s + 1} (beat ${s / 4 + 1})`,
+    units: [["bars", 16], ["beats", 4], ["16ths", 1]],
+    len: (n) => { if (!n) return ""; const b = Math.floor(n / 16), q = Math.floor(n % 16 / 4), s = n % 4, o = [];
+      if (b) o.push(plural(b, "bar")); if (q) o.push(plural(q, "beat")); if (s) o.push(plural(s, "16th")); return o.join(" "); },
+    ops: ["Mute or bring back a part", "Solo a part", "Hold a move or a throw", "Hold an effect", "A siren, tapped or held",
+      "Turn a siren's knob", "Turn the DJ filter (or Wet, Energy, Duck)", "Turn a knob of the piece", "The outro, from the next phrase",
+      "The next chord", "Lock, on or off", "Dub hold, on or off"],
+    vals: { 0: ["Back on", "Muted"], 1: ["Solo off", "Soloed"], 4: ["Tapped", "Held"], 10: ["Off", "On"], 11: ["Off", "On"] },
+    what: (q, tg, rv) => [
+      () => `${tg} ${q.val ? "muted" : "back on"}`, () => `${tg} ${q.val ? "soloed" : "solo off"}`, () => `${tg}, held`,
+      () => `${tg}, held`, () => `${tg}, ${q.len ? "held" : "tapped"}`, () => `${tg} to ${rv}`, () => `${tg} to ${rv}`,
+      () => `${tg} to ${rv}`, () => "The outro, from the next phrase", () => "The next chord", () => `Lock ${q.val ? "on" : "off"}`,
+      () => `Dub hold ${q.val ? "on" : "off"}`][q.op](),
+    lenTxt: (q, l) => !l ? (q.op >= 5 && q.op <= 7 ? "at once" : "") : q.op >= 5 && q.op <= 7 ? `over ${l}` : l,
+    song: (s, mode, trans) => mode === 0 ? `Endless (the set's Song mode): the main counts from PLAY and never ends; the intro's and the outro's cues don't play.` :
+      `Intro ${s.intro ? s.intro + " bars" : "none"}, main ${s.main} bars, outro ${s.outro ? s.outro + " bars" : "none"}` +
+      ` (${mode === 2 ? "Set mode" : "Song mode"}${mode === 2 && trans ? ", Transition " + ["LP", "Segue", "Mix"][trans] + ": the outro's last bar is the next piece's" : ""}).`,
+    out: { nointro: "Not heard: this piece has no intro.", pastintro: (s) => `Not heard: past the intro (${s.intro} bars).`,
+      pastmain: (s) => `Not heard: past the main (${s.main} bars).`, pastoutro: (s) => `Not heard: past the outro (${s.outro} bars).`,
+      pastend: (s) => `Not heard: past the song's end (${s.intro + s.main + s.outro} bars).`, endless: "Not heard in Endless (the set's Song mode).",
+      handover: "Not heard: the outro's last bar is the next piece's (the Mix or Segue)." },
+    why: { shape: "Not a cue the FM-1 takes.", arg: "Choose which.", val: (r) => r ? `A value from ${r.lo} to ${r.hi}.` : "Not a value it takes.",
+      len0: "This one has no length.", len1: "Held for at least a 16th.", global: "Tune, MIDI out and Song mode are the player's: not a cue.",
+      op: "Not a cue the FM-1 knows.", count: "A piece has 64 cues at most.", order: "Out of order.", size: "Too big for the FM-1 (16,128 bytes at most).",
+      lenmax: "65,535 16ths at most.", len3: "Held for 3 16ths at least (shorter, it's a tap).", bar: "A bar from 1 to 1024.", noslot: "a list for a piece the file doesn't have (left out)",
+      twice: "a second list for a piece (left out)", flags: "a list's flags (written as 0)" },
+    cueHead: (ed, src) => `${src}: ${ed.name ? "“" + ed.name + "”, " : ""}${plural(ed.pieces.length, "piece")}, ` +
+      `${plural(ed.pieces.reduce((n, p) => n + p.cues.length, 0), "cue")}${ed.dirty ? ", changed (not saved yet)" : ""}.`,
+    cueSrcFile: (f) => f, cueSrcSet: (n, l) => `Set ${n} on the FM-1${l ? " (" + l + ")" : ""}`, cueSrcNow: "The pieces now on the FM-1",
+    cueSrcReady: (n) => `${n} (ready-made)`, cueProblems: (l) => `The file came with ${l}: written again as the FM-1 takes it.`,
+    cueCount: (n) => `${n} of 64 cues in this piece.`, cueNone: "No cues in this piece yet.",
+    cueCap: (p) => `The cues of piece ${p.slot + 1}, ${p.name || p.recipeName}, by place`,
+    cueChange: "Change", cueDel: "Delete", cueChangeAria: (n, w) => `Change cue ${n}: ${w}`, cueDelAria: (n, w) => `Delete cue ${n}: ${w}`,
+    cueAdded: (n) => `Cue ${n} added.`, cueChanged: (n) => `Cue ${n} changed.`, cueDeleted: (n) => `Cue ${n} deleted.`,
+    cueBad: "Some cues are not ones the FM-1 takes (marked): change them first.",
+    cueOlder: (f) => `Made by an older DUB-1 (format ${f}): load it on the FM-1 and download it again to add cues.`,
+    cueNewer: (f) => `Made for a newer DUB-1 (format ${f}): this page can't edit its cues.`,
+    cueKind: "Not a set: open a set, the pieces of a backup, or one of a whole backup's sets.",
+    cueSaved: (f, n) => `Saved ${f} (${n} bytes).`, cueToSend: "In “Send a set” above: choose its number and press Send to the FM-1.",
+    cueConnect: "Connect first (at the top) to send it.", cueReading: (w) => `Reading ${w}.`,
+    cueHeard: "The emulator opens with this set: switch it on, then press Load into the pieces.",
+    cueNoHear: "The browser didn't let this page pass the set to the emulator: download it and open it there (Hear a set).",
+    cueUndone: "Back as it came.",
+    /* (1.5.0) Make a set */
+    hmake: "Make a set",
+    makenote: "A new set from the pieces you choose: the pieces now on the FM-1 (shaped as you like and saved with GLO held), a set on the FM-1, a ready-made set or a <code>.dub1</code> file, mixed as you like. Tick the pieces to put in, put them in order, name them and the set, then download it, hear it in the <a href=\"../emu/\">emulator</a> or send it to the FM-1. Each piece goes whole, its sound as it is.",
+    mkSrc: "Add pieces from:", mkAdd: "Add", mkFile: "Or from a file (.dub1):",
+    mkConn: "Connect (at the top) to take pieces from the FM-1: the pieces now or one of its sets. Files work without it.",
+    mkGroupFm: "On the FM-1", mkGroupReady: "Ready-made sets", mkOptNow: "The pieces now",
+    mkOptSet: (n, nm, p) => `Set ${n}: ${nm}, ${plural(p, "piece")}`,
+    mkSrcObj: (f, k, ix) => `${f}, ${t("rWhat", k, ix)}`,
+    mkListCap: "The pieces, in the set's order: tick the ones to put in (1 to 8).",
+    mkIn: (nm) => `Put ${nm} in the set`, mkNameAria: (from) => `Name of the piece (${from})`,
+    mkUp: (nm) => `Move ${nm} up`, mkDown: (nm) => `Move ${nm} down`,
+    mkFrom: (src, slot, r) => `${src}, piece ${slot + 1} (${r})`,
+    mkCount: (n) => n === 0 ? "No piece ticked: tick 1 to 8." : n > 8 ? `${n} pieces ticked: a set takes 8 at most.` : `${plural(n, "piece")} in the set.`,
+    mkBad: "Too wide or not allowed.",
+    mkName: "The set's name:", mkMode: "Mode:", mkTrans: "Transition:",
+    modes: ["Endless", "Song", "Set"], transs: ["LP", "Segue", "Mix"],
+    mkKeep: (src) => `The sirens' knobs and Tune come from ${src}. MIDI out, Lights and Values stay the player's.`,
+    mkNoGlob: "Its first source holds no Mode or Transition: the FM-1 keeps its own when the set is loaded.",
+    mkModeOld: (f) => `Mode stays as the first source has it (made by an older DUB-1, format ${f}).`,
+    mkDl: "Download the set", mkHear: "Hear it in the emulator", mkSend: "Send to the FM-1", mkClear: "Start again",
+    mkAdded: (n, src) => `${plural(n, "piece")} added from ${src}.`, mkCleared: "Started again: no pieces.",
+    mkFormat: (f, g) => `Not added: made by another DUB-1 version (format ${f}; the pieces here are format ${g}). A set takes pieces of one version: load it on the FM-1, then add its pieces from the pieces now.`,
+    mkTooBig: (n) => `Too big for the FM-1 (${n} bytes; 16,128 at most): take fewer pieces.`,
+    mkMoved: (nm, pos) => `${nm} moved to place ${pos}.`, mkOut: (nm) => `${nm}: not in the set.`,
+    mkToSend: "In “Send a set” above: choose Into (the set's number) and press Send to the FM-1. The FM-1 asks first.",
+  },
+  ja: {
+    other: "English", navemu: "エミュレーター", navinstall: "インストール", navsets: "セット", navmanual: "マニュアル", navsource: "ソース",
+    title: "セット",
+    intro: "ピースとセットのバックアップ、FM-1 へのセットの送信、セットをピースに読み込むことができます。DUB-1 1.5 以降、FM-1 を USB で接続して使います。（Chrome か Edge で使えます）",
+    perm: "「接続」を押すと、ブラウザが MIDI（SysEx）の使用許可を求めます。許可してください。このページが勝手に何かを変えることはありません。セットの保存・読み込み・削除の前に FM-1 が画面で確認し、GLO を押したときだけ実行されます。",
+    connect: "接続", notconn: "接続されていません。",
+    hdev: "FM-1 の中身", caption: "FM-1 の今のピースと 8 つのセット", thwhere: "場所", thwhat: "内容", thacts: "操作",
+    refresh: "一覧を読み直す",
+    loadnote: "読み込むと、セットのピースがピース 1 から順に入ります（5 つのセットなら 1〜5。残りはそのまま）。",
+    hbackup: "バックアップ", backupnote: "今のピースと FM-1 のすべてのセットを、ひとつのファイルに保存します。演奏中でも使えます。",
+    backup: "すべてバックアップ",
+    hrestore: "復元",
+    restorenote: "バックアップファイル（「すべてバックアップ」で作ったもの）を FM-1 に戻します。入っているセットはそれぞれ元の番号に、ピースは今のピースに戻ります。FM-1 での確認は 1 回だけです。バックアップにないセットはそのまま残ります。FM-1 を止めてから使ってください。",
+    restorefile: "バックアップファイルを選ぶ:", restore: "すべて復元",
+    hsend: "セットを送る",
+    sendnote: "<code>.dub1</code> ファイル（セット、バックアップのピース、またはバックアップの中のセットのひとつ）。送る前に中のピースを表示します。FM-1 を止めてから使ってください。",
+    file: "ファイルを選ぶ:", pick: "このバックアップから:", name: "FM-1 での名前:", slot: "送り先:", send: "FM-1 に送る",
+    askhow: "FM-1 で答えてください: <kbd>GLO</kbd> で「はい」。ほかのボタン・鍵盤・ノブは「いいえ」です。",
+    cancel: "キャンセル", progress: "進み具合",
+    hready: "用意されたセット",
+    readynote: "DUB-1 の動画から作ったセットと、新しい FM-1 に入っている DUB-1 の 8 つのピース（The Pieces：読み込むと元のピースに戻ります）です。ダウンロードして、まず<a href=\"../emu/\">エミュレーター</a>で聴くことも、FM-1 に送ることもできます。読み込むと今のピースが置き換わります。先にバックアップしてください。",
+    readyPieces: (o) => `ピース ${o.pieces.length} 個: ${o.pieces.join("、")}。`,
+    readyDl: "ダウンロード", readyDlAria: (o) => `${o.name}（${o.file}）をダウンロード`, readySend: "FM-1 に送る",
+    readySendAria: (o) => `${o.name} を FM-1 に送る（下の送信欄へ）`, readyConnect: "送るには、先に接続してください。",
+    hcarries: "セットに入るもの",
+    carries1: "ピース（1〜8 個。作者が残した音と名前をそのまま）と、セット自身の Mode（Endless、Song、Set）、Transition、サイレンのノブ、Tune。MIDI 出力、ライト、ノブの表示は入りません（演奏する人の設定のまま）。セットとピースの名前は、FM-1 のヘッダーに収まる幅まで（最大 12 文字）。",
+    carries2: "FM-1 には 8 つのセットと今のピースが保存されます。DUB-1 のアップデートでは消えませんが、ほかのファームウェアでは消えることがあります。先にバックアップしてください。<a href=\"../manual/#sets\">マニュアル（英語）</a>",
+    license: "GPL-3.0、無保証。ソース: <a href=\"https://github.com/sbegueria/fm1-dub\" target=\"_blank\" rel=\"noopener\">github.com/sbegueria/fm1-dub<span class=\"sr\">（新しいタブで開きます）</span></a>",
+    connected: (i, port) => `接続しました: ${i.version}（プロジェクト形式 ${i.format}）、${port}。` +
+      (i.playing ? "演奏中です。一覧・バックアップ・ダウンロードはできます。送信・読み込み・復元・削除は止めてから。" : "停止中。"),
+    now: "今", piecesNow: "今のピース",
+    workMeta: (w) => `${w.name ? "セット " + w.name + " から、" : ""}ピース 8 個、${w.length} バイト${w.flags & 1 ? "" : "、未保存"}`,
+    dl: "ダウンロード", dlNow: "今のピースをダウンロード", setN: (n) => `セット ${n}`, empty: "空", noname: "（名前なし）",
+    setMeta: (e) => `ピース ${e.pieces} 個、${e.length} バイト`,
+    unread: (e) => `この DUB-1 では読めません（${e.length} バイト）。削除できます`,
+    load: "読み込む", del: "削除",
+    loadAria: (n, l) => `セット ${n}「${l}」をピースに読み込む`, dlAria: (n, l) => `セット ${n}「${l}」をダウンロード`,
+    delAria: (n, l) => `セット ${n}「${l}」を削除`,
+    looking: "FM-1 を探しています。", readingPieces: "ピースを読み込み中。", readingSet: (n) => `セット ${n} を読み込み中。`,
+    saved: (f, n) => `${f} を保存しました（${n} バイト）。`, backingUp: "バックアップ中: ピースとすべてのセット。",
+    backedUp: (f, s, n) => `${f} を保存しました: ピースとセット ${s} 個（${n} バイト）。`,
+    toAnswer: (s) => `あと ${s} 秒以内に答えてください。`, left: (s) => `残り ${s} 秒。`,
+    asking: "FM-1 が確認しています。FM-1 で答えてください。", notDone: (st) => `実行されませんでした: ${STATE_JA[st] || "状態 " + st}。`,
+    loaded: (n, l) => `セット ${n}「${l}」をピースに読み込みました（FM-1 に保存済み）。`, deleted: (n, l) => `セット ${n}「${l}」を削除しました。`,
+    kept: (n, nm) => `セット ${n}${nm ? "「" + nm + "」" : ""} として保存しました。演奏するには読み込んでください。`,
+    keptLive: (n, nm) => `セット ${n}${nm ? "「" + nm + "」" : ""} として保存しました。読み込み中のセットなので、もう一度読み込むまで FM-1 は前のものを演奏します（FM-1 が LOAD IT NOW? と確認します）。`, sending: (n) => `セット ${n} に送信中。`,
+    fileDesc: (fname, whole, c, i) => `${fname}: ${whole ? "バックアップ全体のうち: " : ""}${c.info.kind === X.WORK ? "バックアップのピース" : "セット"}` +
+      `${i.name ? "「" + i.name + "」" : ""}、ピース ${i.pieces.length} 個${i.version ? "、" + i.version + " で作成" : ""}、形式 ${i.format}、${c.bytes.length} バイト。`,
+    fromRecipe: (r) => `（${r} から）`, kindName: { "the recipe": "レシピのまま", "the recipe and changes": "レシピと変更点" },
+    newer: (f, g) => `新しい DUB-1 用です（形式 ${f}、この FM-1 は ${g}）。先に FM-1 をアップデートしてください。`,
+    pickWork: "ピース（バックアップ時のまま）", pickSet: (n, nm, p) => `セット ${n}: ${nm}、ピース ${p} 個`,
+    slotRepl: (n, nm) => `セット ${n}（「${nm}」を置き換え）`, slotNoName: "名前のないセット", slotEmpty: (n) => `セット ${n}（空）`,
+    slotWarn: (nm) => `FM-1 の「${nm}」を置き換えます。`,
+    noName: "名前なし。", fits: (w) => `収まります（87 px 中 ${w} px）。`,
+    tooWide: "幅が広すぎるか、使えない文字があります。使えるのは英字・数字・スペースと - . ' & ! ? / + # ( ) : , _ で、12 文字まで、FM-1 のヘッダーに収まる幅（87 px）までです。",
+    rHead: (fname, v) => `${fname}: バックアップ全体${v ? "（" + v + " で作成）" : ""}。戻すもの:`,
+    rSet: (o, cur) => `セット ${o.index + 1}: ${o.name || "（名前なし）"}、ピース ${o.pieces} 個` +
+      (cur ? `（今の「${cur.name || "名前のないセット"}」を置き換え）` : "（今は空）"),
+    rWork: (o) => `ピース: ${o.name ? "セット " + o.name + " から、" : ""}ピース ${o.pieces} 個（今のピースを置き換え）`,
+    rStay: (ns) => `FM-1 のセット ${ns.join("、")} はこのバックアップにないので、そのまま残ります。`,
+    rConnect: "接続すると、何が置き換わるか表示します。",
+    rQuestion: (p) => `RESTORE BACKUP? ${p.sets.length ? plural(p.sets.length, "set") : ""}${p.sets.length && p.work ? " + " : ""}${p.work ? "the pieces" : ""}`,
+    restoring: "復元: まず FM-1 で答えてください。",
+    rItem: (i, n, o) => `復元中 ${i + 1} / ${n}: ${o.kind === X.SET ? "セット " + (o.index + 1) : "ピース"}。`,
+    restored: (p) => `復元しました: ${p.sets.length ? "セット " + p.sets.length + " 個" : ""}${p.sets.length && p.work ? "とピース" : p.work ? "ピース" : ""}。FM-1 に戻りました。`,
+    rStopped: (e) => `復元は ${t("rWhat", e.failed.kind, e.failed.index)} で止まりました（${stopWhy(e.failed)}）。` +
+      `それまでに復元したもの: ${rList(e.done) || "なし"}。` + (e.left.length ? `送らなかったもの: ${rList(e.left)}。` : "") +
+      "もう一度試すか、あとでバックアップから戻してください。",
+    rWhat: (k, ix) => k === X.SET ? `セット ${ix + 1}` : "ピース",
+    /* (step 7b) the cue editor (the FM-1's own words, CHORD THROW, the knobs' names, stay as its screen shows them) */
+    hcues: "キュー",
+    cuesnote: "キューは、セットの曲の決まった場所で FM-1 が自動で演奏する操作です（Arrangement ページで手で弾くのと同じ。<a href=\"../manual/#cues\">マニュアル（英語）</a>）。ここでセットを開き（<code>.dub1</code> ファイル、または FM-1 のセットの横の「キューを編集」）、ピースごとにキューを変えてから、ダウンロード、FM-1 に送る、またはまずエミュレーターで聴くことができます。キューのオン／オフは FM-1 本体のスイッチ（Song mode のページ）で、すべてのセットに共通です。",
+    cuefile: "セットを開く（.dub1）:", cuepiece: "ピース:", editCues: "キューを編集", editAria: (w) => `${w} のキューを編集`,
+    thcwhere: "場所", thcwhat: "内容", thclen: "長さ", cueadd: "キューを追加",
+    cuedl: "セットをダウンロード", cuehear: "エミュレーターで聴く", cuereset: "変更を取り消す",
+    cfPart: "パート", cfBar: "小節", cfStep: "16 分音符", cfOp: "内容", cfArg: "対象", cfVal: "値",
+    cfLenHeld: "押さえる長さ", cfLenRide: "かける時間（0: すぐ）", cfLenSiren: "押さえる長さ",
+    cfNew: "新しいキュー", cfEdit: (n) => `キュー ${n}`, cfAdd: "追加", cfSave: "変更",
+    parts: ["イントロ", "メイン", "アウトロ", "PLAY から"],
+    where: (p, bar, st) => `${TEXT.ja.parts[p]}、${bar + 1} 小節目、16 分音符 ${st + 1}`,
+    stepOpt: (s) => s % 4 ? String(s + 1) : `${s + 1}（${s / 4 + 1} 拍目）`,
+    units: [["小節", 16], ["拍", 4], ["16 分音符", 1]],
+    len: (n) => { if (!n) return ""; const b = Math.floor(n / 16), q = Math.floor(n % 16 / 4), s = n % 4, o = [];
+      if (b) o.push(`${b} 小節`); if (q) o.push(`${q} 拍`); if (s) o.push(`16 分音符 ${s} つ`); return o.join(" "); },
+    ops: ["パートのミュート／戻す", "パートのソロ", "ムーブ／スローを押さえる", "エフェクトを押さえる", "サイレン（タップ／長押し）",
+      "サイレンのノブを回す", "DJ フィルター（または Wet、Energy、Duck）を回す", "ピースのノブを回す", "次のフレーズからアウトロ",
+      "次のコード", "ロック（オン／オフ）", "ダブホールド（オン／オフ）"],
+    vals: { 0: ["戻す", "ミュート"], 1: ["ソロ解除", "ソロ"], 4: ["タップ", "長押し"], 10: ["オフ", "オン"], 11: ["オフ", "オン"] },
+    what: (q, tg, rv) => [
+      () => `${tg} ${q.val ? "ミュート" : "を戻す"}`, () => `${tg} ${q.val ? "ソロ" : "ソロ解除"}`, () => `${tg}（押さえる）`,
+      () => `${tg}（押さえる）`, () => `${tg}（${q.len ? "長押し" : "タップ"}）`, () => `${tg} を ${rv} へ`, () => `${tg} を ${rv} へ`,
+      () => `${tg} を ${rv} へ`, () => "次のフレーズからアウトロ", () => "次のコード", () => `ロック ${q.val ? "オン" : "オフ"}`,
+      () => `ダブホールド ${q.val ? "オン" : "オフ"}`][q.op](),
+    lenTxt: (q, l) => !l ? (q.op >= 5 && q.op <= 7 ? "すぐ" : "") : q.op >= 5 && q.op <= 7 ? `${l}かけて` : l,
+    song: (s, mode, trans) => mode === 0 ? "Endless（セットの Song mode）: メインは PLAY から数え、終わりません。イントロとアウトロのキューは鳴りません。" :
+      `イントロ ${s.intro ? s.intro + " 小節" : "なし"}、メイン ${s.main} 小節、アウトロ ${s.outro ? s.outro + " 小節" : "なし"}` +
+      `（${mode === 2 ? "Set モード" : "Song モード"}${mode === 2 && trans ? "、Transition " + ["LP", "Segue", "Mix"][trans] + ": アウトロの最後の小節は次のピースのもの" : ""}）。`,
+    out: { nointro: "鳴りません: このピースにはイントロがありません。", pastintro: (s) => `鳴りません: イントロ（${s.intro} 小節）の後です。`,
+      pastmain: (s) => `鳴りません: メイン（${s.main} 小節）の後です。`, pastoutro: (s) => `鳴りません: アウトロ（${s.outro} 小節）の後です。`,
+      pastend: (s) => `鳴りません: 曲の終わり（${s.intro + s.main + s.outro} 小節）の後です。`, endless: "Endless（セットの Song mode）では鳴りません。",
+      handover: "鳴りません: アウトロの最後の小節は次のピースのもの（Mix か Segue）です。" },
+    why: { shape: "FM-1 が受け付けるキューではありません。", arg: "対象を選んでください。", val: (r) => r ? `値は ${r.lo} から ${r.hi} まで。` : "受け付けない値です。",
+      len0: "このキューに長さはありません。", len1: "16 分音符 1 つ以上押さえてください。", global: "Tune、MIDI out、Song mode は演奏する人の設定なので、キューにはできません。",
+      op: "FM-1 が知らないキューです。", count: "ひとつのピースのキューは 64 個まで。", order: "順番が違います。", size: "FM-1 には大きすぎます（最大 16,128 バイト）。",
+      lenmax: "16 分音符 65,535 個まで。", len3: "16 分音符 3 つ以上押さえてください（それより短いとタップになります）。", bar: "小節は 1 から 1024 まで。", noslot: "ファイルにないピースのキュー（除きます）",
+      twice: "同じピースの 2 つ目のキュー（除きます）", flags: "キューのフラグ（0 にします）" },
+    cueHead: (ed, src) => `${src}: ${ed.name ? "「" + ed.name + "」、" : ""}ピース ${ed.pieces.length} 個、` +
+      `キュー ${ed.pieces.reduce((n, p) => n + p.cues.length, 0)} 個${ed.dirty ? "、変更あり（未保存）" : ""}。`,
+    cueSrcFile: (f) => f, cueSrcSet: (n, l) => `FM-1 のセット ${n}${l ? "（" + l + "）" : ""}`, cueSrcNow: "FM-1 の今のピース",
+    cueSrcReady: (n) => `${n}（用意されたセット）`, cueProblems: (l) => `ファイルに ${l} がありました。FM-1 が受け付ける形で書き直します。`,
+    cueCount: (n) => `このピースのキュー: ${n} / 64。`, cueNone: "このピースにはまだキューがありません。",
+    cueCap: (p) => `ピース ${p.slot + 1}「${p.name || p.recipeName}」のキュー（場所の順）`,
+    cueChange: "変更", cueDel: "削除", cueChangeAria: (n, w) => `キュー ${n} を変更: ${w}`, cueDelAria: (n, w) => `キュー ${n} を削除: ${w}`,
+    cueAdded: (n) => `キュー ${n} を追加しました。`, cueChanged: (n) => `キュー ${n} を変更しました。`, cueDeleted: (n) => `キュー ${n} を削除しました。`,
+    cueBad: "FM-1 が受け付けないキューがあります（印のあるもの）。先に直してください。",
+    cueOlder: (f) => `古い DUB-1 で作られています（形式 ${f}）。キューを加えるには、FM-1 に読み込んでからダウンロードし直してください。`,
+    cueNewer: (f) => `新しい DUB-1 用です（形式 ${f}）。このページではキューを編集できません。`,
+    cueKind: "セットではありません。セット、バックアップのピース、またはバックアップの中のセットを開いてください。",
+    cueSaved: (f, n) => `${f} を保存しました（${n} バイト）。`, cueToSend: "上の「セットを送る」で、送り先の番号を選んで「FM-1 に送る」を押してください。",
+    cueConnect: "送るには、先に（ページ上部で）接続してください。", cueReading: (w) => `${w} を読み込み中。`,
+    cueHeard: "このセットでエミュレーターが開きます。電源を入れて「Load into the pieces」を押してください。",
+    cueNoHear: "ブラウザがエミュレーターへの受け渡しを許可しませんでした。ダウンロードして、エミュレーターの Hear a set で開いてください。",
+    cueUndone: "元に戻しました。",
+    /* (1.5.0) Make a set */
+    hmake: "セットを作る",
+    makenote: "選んだピースから新しいセットを作ります。FM-1 の今のピース（好きなように作り、GLO 長押しで保存したもの）、FM-1 のセット、用意されたセット、<code>.dub1</code> ファイルから、混ぜて選べます。入れるピースにチェックを付け、順番を決め、ピースとセットに名前を付けてから、ダウンロード、<a href=\"../emu/\">エミュレーター</a>で聴く、または FM-1 に送ることができます。ピースの音はそのまま入ります。",
+    mkSrc: "ピースを追加:", mkAdd: "追加", mkFile: "またはファイルから（.dub1）:",
+    mkConn: "FM-1 のピース（今のピースやセット）を使うには、ページ上部で接続してください。ファイルは接続なしで使えます。",
+    mkGroupFm: "FM-1", mkGroupReady: "用意されたセット", mkOptNow: "今のピース",
+    mkOptSet: (n, nm, p) => `セット ${n}: ${nm}、ピース ${p} 個`,
+    mkSrcObj: (f, k, ix) => `${f}、${t("rWhat", k, ix)}`,
+    mkListCap: "ピース（セットの順番）: 入れるものにチェックを付けてください（1〜8 個）。",
+    mkIn: (nm) => `${nm} をセットに入れる`, mkNameAria: (from) => `ピースの名前（${from}）`,
+    mkUp: (nm) => `${nm} を上へ`, mkDown: (nm) => `${nm} を下へ`,
+    mkFrom: (src, slot, r) => `${src}、ピース ${slot + 1}（${r}）`,
+    mkCount: (n) => n === 0 ? "チェックしたピースがありません。1〜8 個にチェックしてください。" : n > 8 ? `${n} 個にチェックしています。セットは 8 個までです。` : `セットのピース: ${n} 個。`,
+    mkBad: "幅が広すぎるか、使えない文字があります。",
+    mkName: "セットの名前:", mkMode: "Mode:", mkTrans: "Transition:",
+    modes: ["Endless", "Song", "Set"], transs: ["LP", "Segue", "Mix"],
+    mkKeep: (src) => `サイレンのノブと Tune は ${src} のものです。MIDI 出力、ライト、ノブの表示は演奏する人の設定のままです。`,
+    mkNoGlob: "最初の元には Mode と Transition がありません。読み込むと FM-1 の今の設定のままになります。",
+    mkModeOld: (f) => `古い DUB-1 で作られているため（形式 ${f}）、Mode は最初の元のままです。`,
+    mkDl: "セットをダウンロード", mkHear: "エミュレーターで聴く", mkSend: "FM-1 に送る", mkClear: "最初からやり直す",
+    mkAdded: (n, src) => `${src} からピース ${n} 個を追加しました。`, mkCleared: "最初からやり直します。ピースはありません。",
+    mkFormat: (f, g) => `追加できません: 別のバージョンの DUB-1 で作られています（形式 ${f}、ここのピースは形式 ${g}）。セットには同じバージョンのピースだけを入れられます。FM-1 に読み込んでから、今のピースとして追加してください。`,
+    mkTooBig: (n) => `FM-1 には大きすぎます（${n} バイト、最大 16,128）。ピースを減らしてください。`,
+    mkMoved: (nm, pos) => `${nm} を ${pos} 番目に移しました。`, mkOut: (nm) => `${nm}: セットに入れません。`,
+    mkToSend: "上の「セットを送る」で送り先（セットの番号）を選び、「FM-1 に送る」を押してください。FM-1 が先に確認します。",
+  },
+};
+let lang = new URLSearchParams(location.search).get("lang") === "ja" ? "ja" : "en";
+/* (Decisions 5) a restore stopped: why the one failed, and a list of sets and the pieces, in the page's language */
+const stopWhy = (f) => f.err ? errText(f.err).replace(/[。.]$/, "") :
+  (lang === "ja" ? STATE_JA[f.state] : X.STATE_TEXT[f.state]) || f.why;
+const rList = (xs) => xs.map((x) => t("rWhat", x.kind, x.index)).join(lang === "ja" ? "、" : ", ");
+const t = (k, ...a) => { const v = TEXT[lang][k]; return typeof v === "function" ? v(...a) : v; };
+
+/* a SetError in the page's language: Japanese by its code (and why); the English detail kept where it names a file */
+function errText(e) {
+  if (!e) return "";
+  if (lang !== "ja" || !(e instanceof X.SetError)) return e.message || String(e);
+  switch (e.code) {
+    case "busy": return e.why === 1 ? "FM-1 が演奏中です。PLAY で止めてから、もう一度押してください。" : "FM-1 が確認中です。先に FM-1 で答えてください。";
+    case "refused": return (WHY_JA[e.why] || `拒否されました（${e.why}）`) + (e.why === 5 && dev && dev.info ? `（形式 ${e.detail}、この DUB-1 は ${dev.info.format}）` : "") + "。";
+    case "lost": return "FM-1 との接続が切れたか、応答がありません。USB を挿し直して、もう一度「接続」を押してください。";
+    case "notfound": return "DUB-1 1.5 が見つかりません。USB ケーブル（データ通信用か）を確かめ、MIDI を使う他のアプリを閉じ、FM-1 が DUB-1 1.5 以降か確かめてください。";
+    case "nomidi": return "このブラウザでは使えません。Chrome か Edge で開いてください。";
+    case "denied": return "MIDI（SysEx）の使用が許可されませんでした。アドレスバーのサイト設定で MIDI を許可して、もう一度「接続」を押してください。";
+    case "file": return `このファイルは使えません（${e.message}）`;
+    default: return e.message;
+  }
+}
+
+/* what went wrong goes to the alert (read at once), the rest to the status (read when the reader is free); kept as a
+   key (or an error) so a change of language says it again in the other */
+let last = null;
+function show() {
+  if (!last) return;
+  const txt = last.err ? errText(last.err) : t(last.k, ...last.a);
+  $(last.bad ? "alert" : "status").textContent = txt;
+  $(last.bad ? "status" : "alert").textContent = "";
+}
+function say(k, ...a) { last = { k, a, bad: false }; show(); }
+function warnK(k, ...a) { last = { k, a, bad: true }; show(); }
+const log = (s) => { $("log").textContent += s + "\n"; };
+function bar(done, total) { $("bar").value = total ? Math.round((done / total) * 100) : 0; }
+function fail(e) {
+  last = { err: e, bad: true };
+  show();
+  if (e && e.stack && !(e instanceof X.SetError)) log(String(e.stack));
+  if (e && e.code === "lost") disconnected();
+}
+const setAt = (i) => list.find((e) => e.kind === X.SET && e.index === i);
+
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-t]").forEach((e) => { e.textContent = t(e.dataset.t); });
+  document.querySelectorAll("[data-h]").forEach((e) => { e.innerHTML = t(e.dataset.h); });   /* (our own markup only) */
+  $("lang").textContent = t("other");
+  $("lang").lang = lang === "ja" ? "en" : "ja";
+  if (dev) { connLine(); render(); }
+  else if ($("conn").textContent) $("conn").textContent = t("notconn");
+  if (file) showFile(true);
+  if (rfile) restoreView();
+  readyList();
+  checkSend();
+  cueLang();
+  mkLang();
+  show();
+}
+$("lang").addEventListener("click", () => { lang = lang === "ja" ? "en" : "ja"; applyLang(); });
+
+/* one thing at a time: the buttons off while the FM-1 is busy with the page */
+function busy(on) {
+  working = on;
+  for (const b of document.querySelectorAll("#dev button, #connect, #mk-add")) b.disabled = on || (b.id === "connect" && !!dev);
+  if (!on) { checkSend(); checkRestore(); }
+}
+async function job(what, fn) {
+  if (working) return;
+  busy(true);
+  $("bar").value = 0;
+  try { await fn(); } catch (e) { fail(e); } finally { $("ask").hidden = true; busy(false); }
+}
+
+/* connecting: the FM-1 found among the MIDI ports (it answers HELLO as a DUB-1 1.5) */
+$("connect").addEventListener("click", () => job("connect", async () => {
+  if (!navigator.requestMIDIAccess) throw new X.SetError("nomidi", "This browser has no Web MIDI: open the page in Chrome or Edge.");
+  let access;
+  try { access = await navigator.requestMIDIAccess({ sysex: true }); } catch (_) {
+    throw new X.SetError("denied", "MIDI (SysEx) access was not allowed. Allow MIDI in the site settings (address bar) and press Connect again.");
+  }
+  say("looking");
+  dev = await X.findDevice(access);
+  access.onstatechange = () => { if (dev && dev.link.lost) disconnected(); };
+  await refresh();
+}));
+function disconnected() {
+  if (!dev) return;
+  dev.link.close();
+  dev = null;
+  $("dev").hidden = true;
+  $("connect").disabled = false;
+  $("conn").textContent = t("notconn");
+  mkSources();
+}
+function connLine() { $("conn").textContent = t("connected", dev.info, dev.link.name || "USB"); }
+
+/* (1.5.0, step 6) the ready-made sets beside the page (the site's sets/: sets.json, made by tools/make_sets.sh; none
+   here when the page is served alone): each to download, or to send: its bytes into the Send form as a file chosen */
+let ready = [];
+fetch("sets.json").then((r) => (r.ok ? r.json() : [])).then((l) => { ready = Array.isArray(l) ? l : []; readyList(); })
+  .catch(() => {});
+function readyList() {
+  const ul = $("readylist");
+  ul.textContent = "";
+  $("ready").hidden = !ready.length;
+  for (const o of ready) {
+    const li = document.createElement("li"), b = document.createElement("b"), a = document.createElement("a");
+    const bt = document.createElement("button"), p = document.createElement("span");
+    b.textContent = o.name;
+    p.textContent = ` ${t("readyPieces", o)} ${o.about || ""} `;
+    a.href = o.file; a.download = o.file; a.textContent = t("readyDl"); a.setAttribute("aria-label", t("readyDlAria", o));
+    bt.type = "button"; bt.className = "small"; bt.textContent = t("readySend"); bt.setAttribute("aria-label", t("readySendAria", o));
+    bt.addEventListener("click", () => readySend(o));
+    const be = document.createElement("button");      /* (step 7b) its cues in the editor */
+    be.type = "button"; be.className = "small"; be.textContent = t("editCues"); be.setAttribute("aria-label", t("editAria", o.name));
+    be.addEventListener("click", () => cueReady(o));
+    li.style.margin = "0 0 8px";
+    li.append(b, p, a, " ", bt);
+    if (CUES) li.append(" ", be);
+    ul.append(li);
+  }
+  mkSources();
+}
+async function readySend(o) {
+  if (!dev) { warnK("readyConnect"); return; }
+  try {
+    const r = await fetch(o.file);
+    if (!r.ok) throw new Error(`${o.file}: HTTP ${r.status}`);
+    const bytes = new Uint8Array(await r.arrayBuffer());
+    file = { bytes, info: X.describe(bytes), fname: o.file };
+    $("file").value = "";
+    showFile();
+    $("preview").scrollIntoView({ block: "center", behavior: "smooth" });
+  } catch (err) { fail(err); }
+}
+
+/* the list: the pieces now, then the eight sets (empty ones too, to send into) */
+async function refresh() {
+  await dev.hello();
+  list = await dev.list();
+  connLine();
+  render();
+  $("dev").hidden = false;
+  if (rfile) restoreView();
+}
+function render() {
+  const tb = $("sets").tBodies[0];
+  tb.textContent = "";
+  const row = (what, nameHtml, acts, empty) => {
+    const tr = tb.insertRow();
+    if (empty) tr.className = "empty";
+    const a = tr.insertCell(), b = tr.insertCell(), c = tr.insertCell();
+    a.className = "what"; b.className = "name"; c.className = "act";
+    a.textContent = what;
+    b.append(...nameHtml);
+    for (const [label, aria, fn] of acts) {
+      const bt = document.createElement("button");
+      bt.type = "button"; bt.className = "small"; bt.textContent = label; bt.setAttribute("aria-label", aria);
+      bt.disabled = working;
+      bt.addEventListener("click", fn);
+      c.append(bt);
+    }
+  };
+  const nm = (strong, meta) => {
+    const s = document.createElement("b"), m = document.createElement("span");
+    s.textContent = strong; m.className = "meta"; m.textContent = meta;
+    return [s, m];
+  };
+  const w = list.find((e) => e.kind === X.WORK);
+  if (w) row(t("now"), nm(t("piecesNow"), t("workMeta", w)), [[t("dl"), t("dlNow"), () => download(X.WORK, 0, "")],
+    [t("editCues"), t("editAria", t("piecesNow")), () => cueRead(X.WORK, 0, "")]].slice(0, CUES ? 2 : 1));
+  for (let i = 0; i < X.NSETS; i++) {
+    const e = setAt(i), n = i + 1;
+    if (!e) { row(t("setN", n), [document.createTextNode(t("empty"))], [], true); continue; }
+    const label = e.name || t("noname");
+    row(t("setN", n), nm(label, e.pieces ? t("setMeta", e) : t("unread", e)),
+        [[t("load"), t("loadAria", n, label), () => op(X.APPLY, i, label)],
+         [t("dl"), t("dlAria", n, label), () => download(X.SET, i, label)],
+         [t("del"), t("delAria", n, label), () => op(X.DELETE, i, label)],
+         [t("editCues"), t("editAria", t("setN", n)), () => cueRead(X.SET, i, label)]].slice(0, CUES ? 4 : 3));
+  }
+  slots();
+  mkSources();
+}
+$("refresh").addEventListener("click", () => job("refresh", refresh));
+
+/* a file to keep: downloaded (and kept for the tests: window.dub1LastSave) */
+function saveFile(fname, bytes) {
+  window.dub1LastSave = { name: fname, bytes };
+  const url = URL.createObjectURL(new Blob([bytes], { type: "application/octet-stream" }));
+  const a = document.createElement("a");
+  a.href = url; a.download = fname;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+function download(kind, i, label) {
+  return job("download", async () => {
+    if (kind === X.WORK) say("readingPieces"); else say("readingSet", i + 1);
+    const b = await dev.read(kind, i, bar);
+    const fname = kind === X.WORK ? X.fileName("pieces") : X.fileName("set", i + 1, label);
+    saveFile(fname, b);
+    say("saved", fname, b.length);
+  });
+}
+$("backup").addEventListener("click", () => job("backup", async () => {
+  say("backingUp");
+  const r = await dev.backup(bar);
+  const fname = X.fileName("backup");
+  saveFile(fname, r.bytes);
+  $("bar").value = 100;
+  say("backedUp", fname, r.objs.length - 1, r.bytes.length);
+}));
+
+/* the FM-1 asking: the page says what to do there, and how long is left */
+function asking(q) {
+  return {
+    onAsk: () => {
+      $("ask-q").textContent = q;
+      $("ask-left").textContent = t("toAnswer", X.ASK_S);
+      $("ask").hidden = false;
+      $("cancel").disabled = false;
+      $("ask").scrollIntoView({ block: "center", behavior: "smooth" });   /* (asked from the list: in sight) */
+      say("asking");
+    },
+    onTick: (s) => { $("ask-left").textContent = t("left", s); },
+  };
+}
+$("cancel").addEventListener("click", async () => {
+  $("cancel").disabled = true;
+  try { if (dev) await dev.cancel(); } catch (e) { fail(e); }
+});
+function answered(st, k, ...a) {
+  $("ask").hidden = true;
+  if (st === X.S_YES) say(k, ...a);
+  else if (st === X.S_NO) say("notDone", st);
+  else warnK("notDone", st);
+}
+function op(cmd, i, label) {
+  return job("op", async () => {
+    const verb = cmd === X.APPLY ? "LOAD" : "DELETE";
+    const r = await dev.askOp(cmd, i, asking(`${verb} SET ${i + 1}? ${label}`));
+    answered(r.state, cmd === X.APPLY ? "loaded" : "deleted", i + 1, label);
+    await refresh();
+  });
+}
+
+/* (Decisions 4) restoring a whole backup: the file read and shown first (what it puts back, what it replaces, what
+   stays), then one question on the FM-1, then its sets and pieces sent, kept as they come */
+$("restorefile").addEventListener("change", async (e) => {
+  rfile = null;
+  $("restoreview").hidden = true;
+  checkRestore();
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  try {
+    const bytes = new Uint8Array(await f.arrayBuffer());
+    rfile = { bytes, fname: f.name, plan: X.restorePlan(bytes), version: X.describe(bytes).version };
+    restoreView();
+  } catch (err) { fail(err); }
+  checkRestore();
+});
+function restoreView() {
+  const v = $("restoreview"), p = rfile.plan, h = document.createElement("p"), ul = document.createElement("ul");
+  v.textContent = "";
+  h.style.margin = "0";
+  h.textContent = t("rHead", rfile.fname, rfile.version);
+  for (const o of p.sets) {
+    const li = document.createElement("li");
+    li.textContent = t("rSet", o, dev ? setAt(o.index) : null);
+    ul.append(li);
+  }
+  if (p.work) {
+    const li = document.createElement("li");
+    li.textContent = t("rWork", p.work);
+    ul.append(li);
+  }
+  v.append(h, ul);
+  const note = document.createElement("p");
+  note.className = "small"; note.style.margin = "6px 0 0";
+  if (dev) {
+    const stay = list.filter((e) => e.kind === X.SET && !(p.mask >> e.index & 1)).map((e) => e.index + 1);
+    if (stay.length) note.textContent = t("rStay", stay);
+  } else {
+    note.textContent = t("rConnect");
+  }
+  if (note.textContent) v.append(note);
+  v.hidden = false;
+}
+function checkRestore() { $("restore").disabled = working || !dev || !rfile; }
+$("restore").addEventListener("click", () => job("restore", async () => {
+  const p = X.restorePlan(rfile.bytes, dev.info ? dev.info.format : 0);
+  say("restoring");
+  let r;
+  try {
+    r = await dev.restore(rfile.bytes, { ...asking(t("rQuestion", p)), progress: bar,
+      onItem: (i, n, o) => { $("ask").hidden = true; say("rItem", i, n, o); } });
+  } catch (e) {                                  /* (Decisions 5: stopped at the first not kept; which were) */
+    if (e.code !== "stopped") throw e;
+    warnK("rStopped", e);
+    if (e.failed.err && e.failed.err.code === "lost") disconnected();
+    else await refresh();
+    return;
+  }
+  if (r.state !== X.S_YES) { answered(r.state); await refresh(); return; }
+  $("bar").value = 100;
+  say("restored", p);
+  await refresh();
+}));
+
+/* sending: the file read and shown first (dub1container.js), then a name and a set to send it into */
+$("file").addEventListener("change", async (e) => {
+  file = null;
+  $("preview").hidden = $("sendform").hidden = true;
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  try {
+    const bytes = new Uint8Array(await f.arrayBuffer());
+    const info = X.describe(bytes);
+    file = { bytes, info, fname: f.name };
+    showFile();
+  } catch (err) { fail(err); }
+});
+function chosen() {                              /* the object to send: the file, or the backup's one picked */
+  if (!file) return null;
+  if (file.info.objs) {
+    const o = file.info.objs[+$("pick").value];
+    return o ? { bytes: o.bytes, info: o.info } : null;
+  }
+  return { bytes: file.bytes, info: file.info };
+}
+function showFile(again = false) {               /* (again: the language changed, the name typed kept) */
+  const info = file.info;
+  if (!again) slotPicked = false;                /* a new file: Into the first empty set again */
+  slots();
+  if (info.objs) {
+    const was = $("pick").value;
+    $("pick").textContent = "";
+    info.objs.forEach((o, k) => {
+      if (o.kind !== X.WORK && o.kind !== X.SET) return;
+      const op = document.createElement("option");
+      op.value = k;
+      op.textContent = o.kind === X.WORK ? t("pickWork") : t("pickSet", o.index + 1, o.info.name || t("noname"), o.info.pieces.length);
+      $("pick").append(op);
+    });
+    if (again && was !== "") $("pick").value = was;
+    $("pickrow").hidden = false;
+  } else {
+    $("pickrow").hidden = true;
+  }
+  preview(again);
+  $("sendform").hidden = false;
+}
+function preview(again = false) {
+  const c = chosen(), p = $("preview");
+  p.textContent = "";
+  if (!c) return;
+  const i = c.info, h = document.createElement("p");
+  h.style.margin = "0";
+  h.textContent = t("fileDesc", file.fname, !!file.info.objs, c, i);
+  const ol = document.createElement("ol");
+  for (const pc of i.pieces) {
+    const li = document.createElement("li");
+    li.textContent = (pc.name || pc.recipeName) + (pc.name && pc.name !== pc.recipeName ? t("fromRecipe", pc.recipeName) : "") +
+      (pc.kind && pc.kind !== "whole" ? (lang === "ja" ? "、" : ", ") + (TEXT[lang].kindName[pc.kind] || pc.kind) : "");
+    ol.append(li);
+  }
+  p.append(h, ol);
+  if (dev && dev.info && i.format > dev.info.format) {
+    const w = document.createElement("p");
+    w.className = "fit bad"; w.style.margin = "6px 0 0";
+    w.textContent = t("newer", i.format, dev.info.format);
+    p.append(w);
+  }
+  p.hidden = false;
+  if (!again) $("name").value = i.name || "";
+  checkSend();
+}
+$("pick").addEventListener("change", () => preview());
+function slots() {
+  const sel = $("slot"), was = sel.value;
+  sel.textContent = "";
+  for (let i = 0; i < X.NSETS; i++) {
+    const e = setAt(i), op = document.createElement("option");
+    op.value = i;
+    op.textContent = e ? t("slotRepl", i + 1, e.name || t("slotNoName")) : t("slotEmpty", i + 1);
+    sel.append(op);
+  }
+  /* (the user, 2026-11-22: a set already there was replaced by mistake) the first empty set, unless Into was chosen for
+   * this file; a set that would be replaced is said beside it */
+  const free = [...Array(X.NSETS).keys()].find((i) => !setAt(i));
+  sel.value = slotPicked && was !== "" ? was : String(free ?? (was !== "" ? was : 0));
+  slotWarn();
+}
+let slotPicked = false;
+function slotWarn() {
+  const e = setAt(+$("slot").value), w = $("slotwarn");
+  w.hidden = !e;
+  w.textContent = e ? t("slotWarn", e.name || t("slotNoName")) : "";
+}
+$("slot").addEventListener("change", () => { slotPicked = true; slotWarn(); });
+function nameState() {                           /* the name as the FM-1 takes it (names.h: as wide as its header shows) */
+  const v = $("name").value;
+  if (!v) return { ok: true, text: t("noName") };
+  try {
+    const w = nameFits(nameField(v));
+    return { ok: true, text: t("fits", w) };
+  } catch (_) {
+    return { ok: false, text: t("tooWide") };
+  }
+}
+function checkSend() {
+  const n = nameState();
+  $("namefit").textContent = n.text;
+  $("namefit").className = n.ok ? "fit" : "fit bad";
+  $("send").disabled = working || !dev || !chosen() || !n.ok;
+}
+$("name").addEventListener("input", checkSend);
+$("send").addEventListener("click", () => job("send", async () => {
+  const c = chosen(), i = +$("slot").value, nmv = $("name").value;
+  const data = X.asSet(c.bytes, nmv !== (c.info.name || "") ? nmv : null);
+  say("sending", i + 1);
+  const st = await dev.sendSet(i, data, { ...asking(`STORE SET ${i + 1}? ${nmv}`), progress: bar });
+  answered(st, dev.live ? "keptLive" : "kept", i + 1, nmv);   /* (beta2: into the set loaded, the old one plays on) */
+  await refresh();
+}));
+/* ------------------------------------------------------------------------------- (step 7b) the cue editor --- */
+/* A set opened here (a file; a set or the pieces read from the FM-1; a ready-made set): its pieces' cues, a piece at a
+   time: the song drawn with its cues on it, the list by place, a form to add or change one. Each cue checked as the
+   FM-1 checks it (dub1cues.js): what the page writes, the FM-1 takes. Saved: downloaded, sent (the Send form above,
+   the FM-1 asks), or heard in the emulator (the set handed over in this browser's storage: ../emu/#hear) */
+let ed = null, edSlot = 0, edForm = null, edSrc = null, cfile = null;
+const OPN = Q.OPS.length;
+const vText = (q) => { const r = Q.range(q.op, q.arg); return r ? r.text(q.val) : String(q.val); };
+const tgName = (q) => { if (Q.OPS[q.op] && Q.OPS[q.op].noarg) return ""; const g = Q.targets(q.op).find((x) => x.arg === q.arg);
+  return g ? (q.op === Q.KNOB && g.group ? `${g.group}: ${g.name}` : g.name) : `#${q.arg}`; };
+const cueWhat = (q) => t("what", q, tgName(q), vText(q));
+const cueLen = (q) => t("lenTxt", q, t("len", q.len));
+let cueLast = null;                              /* (the editor's last word: said again in the other language) */
+function cueShow() { if (!cueLast) return; $("cuemsg").textContent = cueLast.f(); $("cuemsg").className = cueLast.bad ? "fit bad" : "fit"; }
+function cueSay(k, ...a) { cueLast = { f: () => t(k, ...a), bad: false }; cueShow(); }
+function cueWarn(txt) { cueLast = { f: typeof txt === "function" ? txt : () => txt, bad: true }; cueShow(); }
+function whyText(w, q) { const v = TEXT[lang].why[w]; return typeof v === "function" ? v(q ? Q.range(q.op, q.arg) : null) : v || w; }
+function srcText() { return edSrc ? t(edSrc.k, ...edSrc.a) : ""; }
+
+// a set to edit: bytes (a backup: one of its objects picked first)
+function cueOpen(bytes, src) {
+  cfile = null;
+  $("cuepickrow").hidden = true;
+  $("cueed").hidden = true;
+  edSrc = src;
+  let info;
+  try { info = X.describe(bytes); } catch (e) { cueWarn(() => errText(e)); return; }
+  if (info.objs) {
+    cfile = { bytes, info };
+    const sel = $("cuepick");
+    sel.textContent = "";
+    info.objs.forEach((o, k) => {
+      if (o.kind !== X.WORK && o.kind !== X.SET) return;
+      sel.append(new Option(o.kind === X.WORK ? t("pickWork") : t("pickSet", o.index + 1, o.info.name || t("noname"), o.info.pieces.length), k));
+    });
+    $("cuepickrow").hidden = false;
+    cueObj(info.objs[+sel.value].bytes);
+    return;
+  }
+  cueObj(bytes);
+}
+function cueObj(bytes) {
+  ed = null;
+  try { ed = new Q.Edit(bytes); } catch (e) {
+    $("cueed").hidden = true;
+    const f = (() => { try { return X.describe(bytes).format; } catch (_) { return 0; } })();
+    cueWarn(() => e.code === "older" ? t("cueOlder", f) : e.code === "newer" ? t("cueNewer", f) : e.code === "kind" ? t("cueKind") : errText(e));
+    return;
+  }
+  edSlot = ed.pieces[0] ? ed.pieces[0].slot : 0;
+  edForm = null;
+  $("cueed").hidden = false;
+  $("cuemsg").textContent = "";
+  cueLast = null;
+  if (ed.problems.length) cueWarn(() => t("cueProblems", ed.problems.map((p) => `${TEXT[lang].why[p.why] || p.why} (${p.slot + 1})`).join(", ")));
+  cueView();
+}
+$("cuefile").addEventListener("change", async (e) => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  cueOpen(new Uint8Array(await f.arrayBuffer()), { k: "cueSrcFile", a: [f.name] });
+});
+$("cuepick").addEventListener("change", () => { if (cfile) cueObj(cfile.info.objs[+$("cuepick").value].bytes); });
+function cueRead(kind, i, label) {               /* (Edit cues, beside a set or the pieces now on the FM-1) */
+  return job("cues", async () => {
+    const w = kind === X.WORK ? t("cueSrcNow") : t("cueSrcSet", i + 1, label);
+    say("cueReading", w);
+    const b = await dev.read(kind, i, bar);
+    $("cuefile").value = "";
+    cueOpen(b, kind === X.WORK ? { k: "cueSrcNow", a: [] } : { k: "cueSrcSet", a: [i + 1, label] });
+    $("bar").value = 100;
+    $("cues").scrollIntoView({ block: "start", behavior: "smooth" });
+  });
+}
+async function cueReady(o) {                     /* (a ready-made set's cues) */
+  try {
+    const r = await fetch(o.file);
+    if (!r.ok) throw new Error(`${o.file}: HTTP ${r.status}`);
+    $("cuefile").value = "";
+    cueOpen(new Uint8Array(await r.arrayBuffer()), { k: "cueSrcReady", a: [o.name] });
+    $("cues").scrollIntoView({ block: "start", behavior: "smooth" });
+  } catch (err) { fail(err); }
+}
+
+function cueView() {
+  if (!ed) return;
+  const p = ed.piece(edSlot);
+  $("cuehead").textContent = t("cueHead", ed, srcText());
+  const ps = $("cuepiece");
+  ps.textContent = "";
+  for (const x of ed.pieces) ps.append(new Option(`${x.slot + 1}. ${x.name || x.recipeName} (${x.cues.length})`, x.slot));
+  ps.value = edSlot;
+  $("cuesong").textContent = t("song", p.song, ed.mode, ed.trans);
+  $("cuecap").textContent = t("cueCap", p);
+  const bad = new Map(Q.listWhy(p.cues).map((w) => [w.i, w.why]));
+  const tb = $("cuetable").tBodies[0];
+  tb.textContent = "";
+  p.cues.forEach((q, i) => {
+    const tr = tb.insertRow(), pl = Q.place(q.pos), wh = ed.where(edSlot, q), what = cueWhat(q);
+    if (edForm && edForm.i === i) tr.className = "sel";
+    const c0 = tr.insertCell(), c1 = tr.insertCell(), c2 = tr.insertCell(), c3 = tr.insertCell(), c4 = tr.insertCell();
+    c0.className = "n"; c0.textContent = i + 1;
+    c1.textContent = t("where", pl.part, pl.bar, pl.step);
+    if (wh.why) { const o = document.createElement("span"); o.className = "out"; const v = TEXT[lang].out[wh.why];
+      o.textContent = typeof v === "function" ? v(p.song) : v; c1.append(o); }
+    c2.textContent = what;
+    if (bad.has(i)) { const o = document.createElement("span"); o.className = "out"; o.textContent = whyText(bad.get(i), q); c2.append(o); }
+    c3.textContent = cueLen(q);
+    c4.className = "act";
+    for (const [lbl, aria, fn] of [[t("cueChange"), t("cueChangeAria", i + 1, what), () => formOpen(i)],
+                                   [t("cueDel"), t("cueDelAria", i + 1, what), () => cueDel(i)]]) {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "small"; b.textContent = lbl; b.setAttribute("aria-label", aria);
+      b.addEventListener("click", fn);
+      c4.append(b);
+    }
+  });
+  $("cuecount").textContent = p.cues.length ? t("cueCount", p.cues.length) : t("cueNone");
+  $("cueadd").disabled = p.cues.length >= Q.MAXCUE;
+  const okAll = !ed.check().length;
+  for (const id of ["cuedl", "cuesend", "cuehear"]) $(id).disabled = !okAll || !!edForm;
+  $("cuereset").disabled = !ed.dirty;
+  timeline(p);
+  if (edForm) formView();
+}
+$("cuepiece").addEventListener("change", () => { edSlot = +$("cuepiece").value; edForm = null; $("cueform").hidden = true; cueView(); });
+
+/* the piece's song drawn: intro, main, outro (or Endless: from PLAY), a mark a cue, a hold's or a ride's length a bar,
+   one not heard dashed in the warning's colour (the list says why) */
+function timeline(p) {
+  const NS = "http://www.w3.org/2000/svg", s = p.song, endless = ed.mode === 0;
+  const nominal = (q) => { const pl = Q.place(q.pos), b = pl.bar + pl.step / 16;
+    return pl.part === Q.INTRO ? b : pl.part === Q.MAIN ? (endless ? 0 : s.intro) + b : pl.part === Q.OUTRO_P ? s.intro + s.main + b : b; };
+  let total = endless ? 64 : s.intro + s.main + s.outro;
+  for (const q of p.cues) total = Math.max(total, Math.ceil(nominal(q) + q.len / 16) + (endless ? 8 : 0));
+  const W = 600, H = 70, k = W / Math.max(total, 1), svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const el = (n, a, txt) => { const e = document.createElementNS(NS, n); for (const [x, y] of Object.entries(a)) e.setAttribute(x, y);
+    if (txt) e.textContent = txt; svg.append(e); return e; };
+  const parts = endless ? [[0, total, t("parts")[1]]] : [[0, s.intro, t("parts")[0]], [s.intro, s.main, t("parts")[1]],
+    [s.intro + s.main, s.outro, t("parts")[2]]];
+  for (const [x, w, n] of parts) if (w > 0) { el("rect", { class: "part", x: x * k, y: 0, width: w * k, height: 18 });
+    if (w * k > 40) el("text", { class: "plabel", x: x * k + 4, y: 13 }, n); }
+  for (let b = 32; b < total; b += 32) el("line", { class: "tick", x1: b * k, x2: b * k, y1: 18, y2: H });
+  const lane = (q) => q.op <= Q.SOLO ? 0 : q.op <= Q.FX ? 1 : q.op <= Q.SIRK ? 2 : q.op <= Q.KNOB ? 3 : 4;
+  p.cues.forEach((q, i) => {
+    const wh = ed.where(edSlot, q), x = Math.min(nominal(q), total) * k, y = 22 + lane(q) * 9;
+    if (q.len && !wh.why) el("rect", { class: "span", x, y: y + 1, width: Math.max(1, q.len / 16 * k), height: 5 });
+    el("line", { class: wh.why ? "drop" : edForm && edForm.i === i ? "mark sel" : "mark", x1: x, x2: x, y1: y - 2, y2: y + 8 });
+  });
+  $("cuetl").replaceChildren(svg);
+}
+
+/* the form: a new cue, or cue i changed. Its fields as the op takes them (dub1cues.js's OPS: a target, a value, a
+   length), the value's text as the FM-1's screen shows it, checked as the FM-1 checks it before it's kept */
+function formOpen(i) {
+  const p = ed.piece(edSlot);
+  const q = i >= 0 ? p.cues[i] : { pos: Q.pos(Q.MAIN, 0, 0), op: Q.MOVE, arg: 0, val: 0, len: 16 };
+  edForm = { i, q: { ...q } };
+  $("cueform").hidden = false;
+  formFill();
+  cueView();
+  $("cf-part").focus();
+}
+function opts(sel, list, v) {                    /* [[value, text, group?]] */
+  sel.textContent = "";
+  let g = null, gn = null;
+  for (const [val, txt, grp] of list) {
+    if (grp && grp !== gn) { g = document.createElement("optgroup"); g.label = gn = grp; sel.append(g); }
+    else if (!grp) g = null;
+    (g || sel).append(new Option(txt, val));
+  }
+  sel.value = v;
+}
+function bestUnit(n) { for (const [, u] of t("units")) if (n && n % u === 0) return u; return 16; }
+function formFill() {                            /* the form from edForm.q */
+  const q = edForm.q, pl = Q.place(q.pos), o = Q.OPS[q.op];
+  $("cf-head").textContent = edForm.i >= 0 ? t("cfEdit", edForm.i + 1) : t("cfNew");
+  $("cf-ok").textContent = edForm.i >= 0 ? t("cfSave") : t("cfAdd");
+  opts($("cf-part"), t("parts").map((n, i) => [i, n]), pl.part);
+  $("cf-bar").value = pl.bar + 1;
+  opts($("cf-step"), [...Array(16).keys()].map((s) => [s, t("stepOpt", s)]), pl.step);
+  opts($("cf-op"), t("ops").map((n, i) => [i, n]), q.op);
+  const tg = Q.targets(q.op);
+  $("cf-arg").hidden = $("cf-argl").hidden = !!o.noarg;
+  opts($("cf-arg"), tg.map((x) => [x.arg, x.name, x.group]), q.arg);
+  const r = Q.range(q.op, q.arg), vb = TEXT[lang].vals[q.op];
+  $("cf-valrow").hidden = $("cf-vall").hidden = !(r || vb);
+  $("cf-valb").hidden = !vb;
+  $("cf-val").hidden = $("cf-valt").hidden = !r;
+  if (vb) opts($("cf-valb"), vb.map((n, i) => [i, n]), q.op === Q.SIREN ? (q.len ? 1 : 0) : q.val ? 1 : 0);
+  if (r) { $("cf-val").min = r.lo; $("cf-val").max = r.hi; $("cf-val").value = q.val; }
+  const held = o.len === "held" || (q.op === Q.SIREN && q.len), ride = q.op >= Q.SIRK && q.op <= Q.KNOB;
+  $("cf-lenrow").hidden = $("cf-lenl").hidden = !(held || ride);
+  $("cf-lenl").textContent = ride ? t("cfLenRide") : q.op === Q.SIREN ? t("cfLenSiren") : t("cfLenHeld");
+  const u = bestUnit(q.len);
+  opts($("cf-unit"), t("units").map(([n, v]) => [v, n]), u);
+  $("cf-len").value = q.len / u;
+  formView();
+}
+function formRead() {                            /* edForm.q from the form: { q, why } */
+  const q = edForm.q, part = +$("cf-part").value, barv = +$("cf-bar").value, step = +$("cf-step").value;
+  let why = null;
+  if (!Number.isInteger(barv) || barv < 1 || barv > 1024) why = "bar";
+  q.pos = Q.pos(part, Math.max(0, Math.min(1023, (barv | 0) - 1)), step);
+  const r = Q.range(q.op, q.arg), vb = TEXT[lang].vals[q.op];
+  if (q.op === Q.SIREN) q.val = 0;
+  else if (vb) q.val = +$("cf-valb").value;
+  else if (r) q.val = $("cf-val").value === "" ? NaN : +$("cf-val").value;
+  else q.val = 0;
+  const lenOn = !$("cf-lenrow").hidden, n = lenOn ? +$("cf-len").value * +$("cf-unit").value : 0;
+  if (lenOn && (!Number.isInteger(n) || n < 0)) why = why || "shape";
+  if (lenOn && n > Q.MAXLEN) why = why || "lenmax";
+  q.len = lenOn ? n : 0;
+  if (q.op === Q.SIREN && +$("cf-valb").value === 0) q.len = 0;
+  if (q.op === Q.SIREN && +$("cf-valb").value === 1 && q.len < 3) why = why || "len3";   /* (shorter plays as a tap) */
+  return { q, why: why || Q.cueWhy(q) };
+}
+function formView() {                            /* the value's text, the length's, what's wrong */
+  if (!edForm || $("cueform").hidden) return;
+  const { q, why } = formRead();
+  const r = Q.range(q.op, q.arg);
+  $("cf-valt").textContent = r && Number.isInteger(q.val) && q.val >= r.lo && q.val <= r.hi ? `${r.text(q.val)} (${r.lo}…${r.hi})` : r ? `${r.lo}…${r.hi}` : "";
+  $("cf-lent").textContent = q.len ? `= ${t("len", q.len)}` : "";
+  $("cf-why").textContent = why ? whyText(why, q) : "";
+  if (!why) { const wh = ed.where(edSlot, q), v = wh.why && TEXT[lang].out[wh.why]; $("cf-why").textContent = v ? (typeof v === "function" ? v(ed.piece(edSlot).song) : v) : ""; }
+  $("cf-ok").disabled = !!why;
+}
+for (const id of ["cf-part", "cf-bar", "cf-step", "cf-val", "cf-valb", "cf-len", "cf-unit"]) {
+  $(id).addEventListener("input", formView);
+  $(id).addEventListener("change", () => {
+    if (id !== "cf-valb" || edForm.q.op !== Q.SIREN) { formView(); return; }
+    const held = +$("cf-valb").value === 1;      /* (a siren: tapped, or held a bar to begin with) */
+    formRead();
+    edForm.q.len = held ? (edForm.q.len > 2 ? edForm.q.len : 16) : 0;
+    formFill();
+  });
+}
+$("cf-op").addEventListener("change", () => {    /* another op: its first target, its default value and length */
+  const q = edForm.q, op = +$("cf-op").value, o = Q.OPS[op];
+  formRead();
+  q.op = op; q.arg = Q.targets(op)[0].arg;
+  const r = Q.range(op, q.arg);
+  q.val = r ? r.def : o.val === "bool" ? 1 : 0;
+  q.len = o.len === "held" ? 16 : 0;
+  formFill();
+});
+$("cf-arg").addEventListener("change", () => {   /* another target: a ride starts from its default */
+  const q = edForm.q;
+  formRead();
+  q.arg = +$("cf-arg").value;
+  const r = Q.range(q.op, q.arg);
+  if (r && (q.val < r.lo || q.val > r.hi)) q.val = r.def;
+  formFill();
+});
+$("cf-cancel").addEventListener("click", () => { edForm = null; $("cueform").hidden = true; cueView(); $("cueadd").focus(); });
+$("cf-ok").addEventListener("click", () => {
+  const { q, why } = formRead();
+  if (why) return;
+  let n;
+  try {
+    n = edForm.i >= 0 ? ed.change(edSlot, edForm.i, q) : ed.add(edSlot, q);
+  } catch (e) { cueWarn(() => whyText(e.code, q)); return; }
+  const was = edForm.i;
+  edForm = null;
+  $("cueform").hidden = true;
+  cueView();
+  cueSay(was >= 0 ? "cueChanged" : "cueAdded", n + 1);
+  const row = $("cuetable").tBodies[0].rows[n];
+  if (row) row.querySelector("button").focus();
+});
+$("cueadd").addEventListener("click", () => formOpen(-1));
+function cueDel(i) {
+  ed.remove(edSlot, i);
+  edForm = null;
+  $("cueform").hidden = true;
+  cueView();
+  cueSay("cueDeleted", i + 1);
+  $("cueadd").focus();
+}
+$("cuereset").addEventListener("click", () => { cueObj(ed.orig); cueSay("cueUndone"); });
+
+/* saved: downloaded; sent (into the Send form above: the FM-1 asks, as any set); heard in the emulator */
+function cueBytes() {
+  try { return ed.bytes(); } catch (e) { cueWarn(() => t("cueBad")); return null; }
+}
+function cueName() {
+  const base = (ed.name || (ed.kind === X.WORK ? "pieces" : "set")).replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return `dub1-${base || "set"}-cues.dub1`;
+}
+$("cuedl").addEventListener("click", () => {
+  const b = cueBytes();
+  if (!b) return;
+  const f = cueName();
+  saveFile(f, b);
+  cueSay("cueSaved", f, b.length);
+});
+$("cuesend").addEventListener("click", () => {
+  const b = cueBytes();
+  if (!b) return;
+  if (!dev) { cueWarn(() => t("cueConnect")); return; }
+  file = { bytes: b, info: X.describe(b), fname: cueName() };
+  $("file").value = "";
+  showFile();
+  $("sendform").scrollIntoView({ block: "center", behavior: "smooth" });
+  $("name").focus();
+  cueSay("cueToSend");
+});
+/* a set heard in the emulator: handed over in this browser's storage (../emu/#hear reads it): false if it can't be */
+function hearSet(b, name, from) {
+  let s = "";
+  for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode(...b.subarray(i, i + 0x8000));
+  try {
+    localStorage.setItem("dub1-hear", JSON.stringify({ name, from, b64: btoa(s), t: Date.now() }));
+  } catch (_) { return false; }
+  window.dub1HearOpened = window.open("../emu/#hear", "dub1-emu");
+  return true;
+}
+$("cuehear").addEventListener("click", () => {
+  const b = cueBytes();
+  if (!b) return;
+  if (!hearSet(b, ed.name, srcText())) { cueWarn(() => t("cueNoHear")); return; }
+  cueSay("cueHeard");
+});
+function cueLang() {                             /* (the language changed: the editor's words again) */
+  if (cfile) {
+    const was = $("cuepick").value;
+    $("cuepick").textContent = "";
+    cfile.info.objs.forEach((o, k) => { if (o.kind === X.WORK || o.kind === X.SET)
+      $("cuepick").append(new Option(o.kind === X.WORK ? t("pickWork") : t("pickSet", o.index + 1, o.info.name || t("noname"), o.info.pieces.length), k)); });
+    $("cuepick").value = was;
+  }
+  cueShow();
+  if (!ed) return;
+  if (edForm) { formRead(); formFill(); }
+  cueView();
+}
+/* ------------------------------------------------------------------------------------- (1.5.0) Make a set --- */
+/* A new set from the pieces of others (dub1makeset.js): sources added (the pieces now or a set, read from the FM-1; a
+   ready-made set; a .dub1 file, or one of a whole backup's objects), a row a piece: in the set or not, its place (up,
+   down), its name (checked as the FM-1 checks a name); the set's name, Mode and Transition (the first source's to begin
+   with). Then downloaded, heard in the emulator, or sent: into the Send form above (Into, the FM-1 asks), as any set */
+const mk = { sources: [], rows: [], mode: null, trans: null, next: 0 };
+let mkLast = null, mkFileObj = null;
+function mkShow() { if (!mkLast) return; $("mk-msg").textContent = mkLast.f(); $("mk-msg").className = mkLast.bad ? "fit bad" : "fit"; }
+function mkSay(k, ...a) { mkLast = { f: () => t(k, ...a), bad: false }; mkShow(); }
+function mkWarn(f) { mkLast = { f, bad: true }; mkShow(); }
+const mkSrcText = (si) => { const l = mk.sources[si].label; return t(l.k, ...l.a); };
+const mkRowName = (r) => r.name || X.RECIPES[r.recipe] || `#${r.slot + 1}`;
+
+/* the sources to add from: the FM-1's (connected: the pieces now, each set stored with pieces) and the ready-made */
+function mkSources() {
+  const sel = $("mk-src"), was = sel.value;
+  sel.textContent = "";
+  if (dev) {
+    const g = document.createElement("optgroup");
+    g.label = t("mkGroupFm");
+    if (list.some((e) => e.kind === X.WORK)) g.append(new Option(t("mkOptNow"), "w"));
+    for (let i = 0; i < X.NSETS; i++) {
+      const e = setAt(i);
+      if (e && e.pieces) g.append(new Option(t("mkOptSet", i + 1, e.name || t("noname"), e.pieces), "s" + i));
+    }
+    if (g.children.length) sel.append(g);
+  }
+  if (ready.length) {
+    const g = document.createElement("optgroup");
+    g.label = t("mkGroupReady");
+    ready.forEach((o, k) => g.append(new Option(o.name, "r" + k)));
+    sel.append(g);
+  }
+  if ([...sel.options].some((o) => o.value === was)) sel.value = was;
+  $("mk-srcrow").hidden = !sel.options.length;
+  $("mk-conn").hidden = !!dev;
+  $("mk-add").disabled = working;
+}
+/* a source's bytes added: its pieces as rows (ticked while the set has room) */
+function mkAdd(bytes, label) {
+  let src;
+  try { src = M.readSource(bytes); } catch (e) { mkWarn(() => errText(e)); return false; }
+  const fmt = mk.sources.length ? mk.sources[0].src.format : src.format;
+  if (src.format !== fmt) { mkWarn(() => t("mkFormat", src.format, fmt)); return false; }
+  const si = mk.sources.push({ src, label }) - 1;
+  if (si === 0) {                                /* (the first: the set's name, Mode and Transition its) */
+    $("mk-name").value = src.name;
+    const b = M.baseOf([src]);
+    mk.mode = b.modeHere ? b.mode : null;
+    mk.trans = b.glob ? b.trans : null;
+  }
+  let on = mk.rows.filter((r) => r.on).length;
+  for (const p of src.pieces)
+    mk.rows.push({ id: mk.next++, si, slot: p.slot, recipe: p.recipe, name: p.name, on: on < M.NPIECES && !!++on });
+  $("mk-ed").hidden = false;
+  mkRender();
+  mkSay("mkAdded", src.pieces.length, mkSrcText(si));
+  return true;
+}
+$("mk-add").addEventListener("click", async () => {
+  const v = $("mk-src").value;
+  if (!v) return;
+  if (v[0] === "r") {
+    const o = ready[+v.slice(1)];
+    try {
+      const r = await fetch(o.file);
+      if (!r.ok) throw new Error(`${o.file}: HTTP ${r.status}`);
+      mkAdd(new Uint8Array(await r.arrayBuffer()), { k: "cueSrcReady", a: [o.name] });
+    } catch (err) { mkWarn(() => errText(err)); }
+    return;
+  }
+  if (!dev) return;
+  const kind = v[0] === "w" ? X.WORK : X.SET, i = kind === X.WORK ? 0 : +v.slice(1), e = kind === X.SET ? setAt(i) : null;
+  const label = kind === X.WORK ? { k: "cueSrcNow", a: [] } : { k: "cueSrcSet", a: [i + 1, e ? e.name : ""] };
+  await job("make", async () => {
+    say("cueReading", t(label.k, ...label.a));
+    const b = await dev.read(kind, i, bar);
+    $("bar").value = 100;
+    if (mkAdd(b, label)) say("mkAdded", M.readSource(b).pieces.length, t(label.k, ...label.a));
+  });
+});
+$("mk-file").addEventListener("change", async (e) => {
+  mkFileObj = null;
+  $("mk-pickrow").hidden = true;
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  let bytes, info;
+  try {
+    bytes = new Uint8Array(await f.arrayBuffer());
+    info = X.describe(bytes);
+  } catch (err) { mkWarn(() => errText(err)); return; }
+  if (!info.objs) { mkAdd(bytes, { k: "cueSrcFile", a: [f.name] }); return; }
+  mkFileObj = { fname: f.name, info };           /* (a whole backup: which of its objects) */
+  mkPickFill();
+  $("mk-pickrow").hidden = false;
+  $("mk-pick").focus();
+});
+function mkPickFill() {
+  const sel = $("mk-pick"), was = sel.value;
+  sel.textContent = "";
+  mkFileObj.info.objs.forEach((o, k) => {
+    if (o.kind === X.WORK || o.kind === X.SET)
+      sel.append(new Option(o.kind === X.WORK ? t("pickWork") : t("pickSet", o.index + 1, o.info.name || t("noname"), o.info.pieces.length), k));
+  });
+  if (was !== "" && [...sel.options].some((o) => o.value === was)) sel.value = was;
+}
+$("mk-pickadd").addEventListener("click", () => {
+  if (!mkFileObj) return;
+  const o = mkFileObj.info.objs[+$("mk-pick").value];
+  if (o) mkAdd(o.bytes, { k: "mkSrcObj", a: [mkFileObj.fname, o.kind, o.index] });
+});
+$("mk-clear").addEventListener("click", () => {
+  mk.sources = []; mk.rows = []; mk.mode = mk.trans = null;
+  $("mk-name").value = "";
+  $("mk-file").value = "";
+  $("mk-pickrow").hidden = true;
+  $("mk-ed").hidden = true;
+  mkSay("mkCleared");
+  $("mk-src").options.length ? $("mk-src").focus() : $("mk-file").focus();
+});
+
+/* the rows: drawn again whole when the order or the sources change (focus kept on the button pressed); a name typed or a
+   tick changes only what it changes (mkCheck) */
+function mkRender(focus = null) {
+  const ul = $("mk-list");
+  ul.textContent = "";
+  mk.rows.forEach((r, k) => {
+    const li = document.createElement("li"), cb = document.createElement("input"), pos = document.createElement("span");
+    const nm = document.createElement("input"), fit = document.createElement("span"), from = document.createElement("span");
+    const mv = document.createElement("span"), up = document.createElement("button"), dn = document.createElement("button");
+    li.dataset.id = r.id;
+    cb.type = "checkbox"; cb.checked = r.on; cb.id = `mk-on-${r.id}`;
+    pos.className = "pos"; pos.setAttribute("aria-hidden", "true");
+    nm.type = "text"; nm.maxLength = 12; nm.autocomplete = "off"; nm.spellcheck = false; nm.value = r.name;
+    nm.placeholder = X.RECIPES[r.recipe] || ""; nm.id = `mk-nm-${r.id}`;
+    fit.className = "fit"; fit.id = `mk-fit-${r.id}`;
+    nm.setAttribute("aria-describedby", fit.id);
+    from.className = "from";
+    from.textContent = t("mkFrom", mkSrcText(r.si), r.slot, X.RECIPES[r.recipe] || `#${r.recipe + 1}`);
+    mv.className = "mv";
+    up.type = dn.type = "button"; up.className = dn.className = "small";
+    up.textContent = "↑"; dn.textContent = "↓";
+    up.dataset.mv = "-1"; dn.dataset.mv = "1";
+    up.disabled = k === 0; dn.disabled = k === mk.rows.length - 1;
+    mv.append(up, dn);
+    li.append(cb, pos, nm, fit, from, mv);
+    ul.append(li);
+    cb.addEventListener("change", () => {
+      r.on = cb.checked;
+      mkCheck();
+      if (!r.on) mkSay("mkOut", mkRowName(r));
+    });
+    nm.addEventListener("input", () => { r.name = nm.value; mkCheck(); });
+    for (const b of [up, dn]) b.addEventListener("click", () => mkMove(r.id, +b.dataset.mv));
+  });
+  mkModes();
+  mkCheck();
+  if (focus) {
+    const li = ul.querySelector(`li[data-id="${focus.id}"]`);
+    const b = li && (li.querySelector(`button[data-mv="${focus.d}"]:not(:disabled)`) || li.querySelector("button:not(:disabled)"));
+    if (b) b.focus();
+  }
+}
+function mkMove(id, d) {
+  const k = mk.rows.findIndex((r) => r.id === id), j = k + d;
+  if (k < 0 || j < 0 || j >= mk.rows.length) return;
+  [mk.rows[k], mk.rows[j]] = [mk.rows[j], mk.rows[k]];
+  mkRender({ id, d });
+  const r = mk.rows[j];
+  if (r.on) mkSay("mkMoved", mkRowName(r), mk.rows.filter((x) => x.on).indexOf(r) + 1);
+  else mkSay("mkMoved", mkRowName(r), j + 1);
+}
+/* Mode and Transition: the first source's to begin with; Mode only where its place is known (today's format) */
+function mkModes() {
+  const ms = $("mk-mode"), ts = $("mk-trans"), b = M.baseOf(mk.sources.map((s) => s.src));
+  ms.textContent = ""; ts.textContent = "";
+  t("modes").forEach((n, i) => ms.append(new Option(n, i)));
+  t("transs").forEach((n, i) => ts.append(new Option(n, i)));
+  ms.disabled = mk.mode === null; ts.disabled = mk.trans === null;
+  if (mk.mode !== null) ms.value = mk.mode; else ms.selectedIndex = -1;
+  if (mk.trans !== null) ts.value = mk.trans; else ts.selectedIndex = -1;
+  const bi = b ? mk.sources.findIndex((s) => s.src === b) : -1;
+  $("mk-keep").textContent = !b ? "" : !b.glob ? t("mkNoGlob") :
+    (mk.mode === null ? t("mkModeOld", b.format) + " " : "") + t("mkKeep", mkSrcText(bi));
+}
+$("mk-mode").addEventListener("change", () => { mk.mode = +$("mk-mode").value; });
+$("mk-trans").addEventListener("change", () => { mk.trans = +$("mk-trans").value; });
+/* every name checked, the places numbered, the count said, the buttons on when the set would be one the FM-1 takes */
+function mkCheck() {
+  let place = 0, bad = false;
+  for (const r of mk.rows) {
+    const li = $("mk-list").querySelector(`li[data-id="${r.id}"]`);
+    if (!li) continue;
+    const c = M.nameCheck(r.name), nm = li.querySelector("input[type=text]"), fit = li.querySelector(".fit");
+    li.className = r.on ? "" : "off";
+    li.querySelector(".pos").textContent = r.on ? `${++place}.` : "–";
+    li.querySelector("input[type=checkbox]").setAttribute("aria-label", t("mkIn", mkRowName(r)));
+    nm.setAttribute("aria-label", t("mkNameAria", li.querySelector(".from").textContent));
+    nm.setAttribute("aria-invalid", c.ok ? "false" : "true");
+    fit.textContent = c.ok ? (r.name ? `${c.width}/87 px` : "") : t("mkBad");
+    fit.className = c.ok ? "fit" : "fit bad";
+    const [up, dn] = li.querySelectorAll(".mv button");
+    up.setAttribute("aria-label", t("mkUp", mkRowName(r)));
+    dn.setAttribute("aria-label", t("mkDown", mkRowName(r)));
+    if (r.on && !c.ok) bad = true;
+  }
+  const n = mk.rows.filter((r) => r.on).length, sn = M.nameCheck($("mk-name").value);
+  $("mk-count").textContent = t("mkCount", n) + (bad ? " " + t("tooWide") : "");
+  $("mk-count").className = n >= 1 && n <= M.NPIECES && !bad ? "fit" : "fit bad";
+  $("mk-namefit").textContent = !$("mk-name").value ? t("noName") : sn.ok ? t("fits", sn.width) : t("tooWide");
+  $("mk-namefit").className = sn.ok ? "fit" : "fit bad";
+  const ok = n >= 1 && n <= M.NPIECES && !bad && sn.ok;
+  for (const id of ["mk-dl", "mk-hear", "mk-send"]) $(id).disabled = !ok;
+}
+$("mk-name").addEventListener("input", mkCheck);
+/* the set as the FM-1 would take it: its bytes, or null (said why) */
+function mkBytes() {
+  try {
+    return M.makeSet({ name: $("mk-name").value, mode: mk.mode, trans: mk.trans, base: M.baseOf(mk.sources.map((s) => s.src)),
+      pieces: mk.rows.filter((r) => r.on).map((r) => ({ src: mk.sources[r.si].src, slot: r.slot, name: r.name })) });
+  } catch (e) {
+    mkWarn(() => e.code === "size" ? t("mkTooBig", e.bytes) : e.code === "format" ? t("mkFormat", e.format, e.want) :
+      e.code === "count" ? t("mkCount", e.n) : e.code === "name" ? t("tooWide") : errText(e));
+    return null;
+  }
+}
+$("mk-dl").addEventListener("click", () => {
+  const b = mkBytes();
+  if (!b) return;
+  const f = M.makeFileName($("mk-name").value);
+  saveFile(f, b);
+  mkSay("saved", f, b.length);
+});
+$("mk-hear").addEventListener("click", () => {
+  const b = mkBytes();
+  if (!b) return;
+  if (!hearSet(b, $("mk-name").value, t("hmake"))) { mkWarn(() => t("cueNoHear")); return; }
+  mkSay("cueHeard");
+});
+$("mk-send").addEventListener("click", () => {
+  const b = mkBytes();
+  if (!b) return;
+  if (!dev) { mkWarn(() => t("cueConnect")); return; }
+  file = { bytes: b, info: X.describe(b), fname: M.makeFileName($("mk-name").value) };
+  $("file").value = "";
+  showFile();
+  $("sendform").scrollIntoView({ block: "center", behavior: "smooth" });
+  $("slot").focus();
+  mkSay("mkToSend");
+});
+function mkLang() {                              /* (the language changed: the section's words again, what's typed kept) */
+  mkSources();
+  if (mkFileObj) mkPickFill();
+  if (mk.rows.length) mkRender();
+  mkShow();
+}
+window.dub1MakeSet = () => mk;                   /* (the tests: the model as the page has it) */
+window.dub1CueEditor = () => ed;                 /* (the tests: the model as the page has it) */
+applyLang();
+</script>
+</body>
+</html>

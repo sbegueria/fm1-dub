@@ -1,0 +1,766 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only
+     Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments
+     DUB-1: Felucca's installer page (web/index_pkg.html, by way of X0X), branded for DUB-1, English first.
+     tools/make_pages.py inlines fm1pkg.js and fm1ota.js and the package's metadata. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install · DUB-1</title>
+<style>
+  /* the colours of Ambient 1: Music for Airports (1978), as the site */
+  /* DUB-1's colours, as its screen, the emulator and the manual: a dark room, a cold teal */
+  :root { --bg: #10141a; --fg: #dee4e8; --dim: #9aa8b6; --accent: #2b6e72; --sheet: #1e252f; --river-2: #5cc4cc; color-scheme: dark; }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+         font: 16px/1.6 "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  main { max-width: 520px; margin: 0 auto; padding: 48px 16px; }
+  h1 { font-size: 28px; font-weight: 300; letter-spacing: .06em; text-transform: uppercase; margin: 0 0 24px; }
+  .lang { float: right; font-size: 13px; color: var(--dim); cursor: pointer; text-decoration: underline; background: none; border: 0; padding: 0; color: var(--dim); }
+  p { margin: 0 0 16px; }
+  button { font: inherit; background: var(--accent); color: var(--fg); border: 1px solid var(--fg); padding: 6px 22px; cursor: pointer; }
+  button:disabled { opacity: .3; cursor: default; }
+  #status, #alert { margin-top: 16px; min-height: 1.6em; }
+  #alert:empty { display: none; }
+  #alert { font-weight: 600; }
+  #alert::before { content: "⚠ "; }
+  p.first { border-left: 3px solid var(--river-2); padding-left: 10px; }   /* (1.5.0: back up first) */
+  button.small { font-size: 13px; padding: 2px 10px; margin: 6px 8px 0 0; }   /* (Decisions 4: what to back up, by version) */
+  a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  label.bar { display: block; font-size: 13px; color: var(--dim); margin-top: 16px; }
+  label.bar progress { margin-top: 4px; }
+  .small { color: var(--dim); font-size: 13px; }
+  progress { width: 100%; height: 6px; margin-top: 16px; accent-color: var(--river-2); }
+  pre { color: var(--dim); font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; margin-top: 16px; }
+  pre:empty { display: none; }
+  h2 { font-size: 16px; font-weight: 400; text-transform: uppercase; letter-spacing: .06em; margin: 40px 0 12px; padding-top: 8px; border-top: 1px solid var(--fg); }
+  ol { margin: 0 0 16px; padding-left: 20px; }
+  input[type=file] { font: inherit; font-size: 13px; color: var(--dim); max-width: 100%; }
+  .site { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem 1.2rem; margin: 0 0 1.6rem; padding-bottom: .5rem; border-bottom: 1px solid var(--fg); }
+  .site .home { font-size: 1.05rem; font-weight: 400; letter-spacing: .08em; color: var(--fg); text-decoration: none; }
+  .site .home:hover { color: var(--river-2); background: none; }
+  .site nav { margin-left: auto; display: flex; flex-wrap: wrap; gap: .2rem 1rem; font-size: .92rem; }
+  .site nav a { color: var(--fg); text-decoration-color: var(--river-2); text-underline-offset: 3px; }
+  .site nav a[aria-current] { text-decoration: none; color: var(--river-2); }
+</style>
+</head>
+<body>
+<main>
+  <header class="site"><a class="home" href="../">DUB-1</a><nav aria-label="DUB-1"><a href="../emu/">Emulator</a><a href="../install/" aria-current="page">Install</a><a href="../sets/">Sets</a><a href="../manual/">Manual</a><a href="https://github.com/sbegueria/fm1-dub">Source</a></nav></header>
+  <button class="lang" id="lang" type="button"></button>
+  <h1>Install DUB-1</h1>
+  <p data-t="intro"></p>
+  <p class="small" data-t="perm"></p>
+  <p class="first"><span data-t="backup"></span> <a href="../sets/" id="setslink" style="color:inherit" data-t="backuplink"></a>
+    <br><button id="check" type="button" class="small" data-t="checkbtn"></button>
+    <span id="checkres" class="small" aria-live="polite"></span></p>
+  <p data-t="warn"></p>
+  <p class="small" data-t="direct"></p>
+  <p class="small" data-t="beta"></p>
+  <p class="small"><span data-t="brick"></span>
+    <a href="../manual/#recovering-an-fm-1-that-won-t-start" style="color:inherit" data-t="bricklink"></a></p>
+  <p class="small" data-t="back"></p>
+  <p class="small"><a href="https://www.m-vave.com/download" target="_blank" rel="noopener" style="color:inherit">www.m-vave.com/download<span class="sr" data-t="newtab"></span></a></p>
+  <p><button id="go" disabled data-t="install"></button></p>
+  <label class="bar" for="bar"><span data-t="progress"></span>
+    <progress id="bar" max="100" value="0"></progress></label>
+  <p id="status" role="status"></p>
+  <p id="alert" role="alert"></p>
+  <p id="help" class="small" hidden><a id="helprescue" href="../manual/#recovering-an-fm-1-that-won-t-start" style="color:inherit" data-t="helprescue"></a><br>
+    <a href="https://github.com/jvitkauskas/m-flasher" target="_blank" rel="noopener" style="color:inherit"><span data-t="helpmf"></span><span class="sr" data-t="newtab"></span></a></p>
+  <p id="logbox" class="small" hidden><span data-t="logwhy"></span><br>
+    <button id="copylog" type="button" class="small" data-t="copylog"></button> <span id="copied" aria-live="polite"></span></p>
+  <pre id="log"></pre>
+  <h2 data-t="stockh"></h2>
+  <p class="small" data-t="stockwhy"></p>
+  <ol class="small">
+    <li><span data-t="stock1"></span> <a id="stocklink" href="https://github.com/m-vave/fm1_open/raw/b178ac43c25f010c60a878056fb5331fe693fd62/sdk/firmware/FM-1_015.fwsc" download="FM-1_015.fwsc" style="color:inherit">FM-1_015.fwsc</a></li>
+    <li><label for="stockfile" data-t="stock2"></label><br><input type="file" id="stockfile" accept=".fwsc"></li>
+    <li data-t="stock3"></li>
+  </ol>
+  <p><button id="stockgo" disabled data-t="stockinstall"></button></p>
+  <p><a href="../" style="color:inherit" data-t="manual"></a></p>
+  <p class="small">DUB-1 is built on Felucca by Leo Kuroshita (@kurogedelic), <a href="https://hugelton.com" target="_blank" rel="noopener" style="color:inherit">Hügelton Instruments<span class="sr" data-t="newtab"></span></a>,
+    by way of X0X and FoMni.<br>
+    Fonts: Barlow Semi Condensed (SIL OFL 1.1). M-VAVE and FM-1 are trademarks of their respective owners.<br>
+    <span data-t="license"></span> <a href="https://github.com/sbegueria/fm1-dub" target="_blank" rel="noopener" style="color:inherit">github.com/sbegueria/fm1-dub<span class="sr" data-t="newtab"></span></a></p>
+</main>
+<script type="module">
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments
+//
+// FM-1 .fwsc packages in the browser: the package identity and the image the
+// device reads during an update.
+
+const BLOCKS = 20, BLK = 0x30, KEEP = 0x2F;
+
+// the package identity ("FM-1_904"): one marker byte after each of the first 20 blocks
+function productOf(fwsc) {
+  if (fwsc.length < BLOCKS * BLK) throw new Error("not an FM-1 package (too short)");
+  let s = "";
+  for (let i = 0; i < BLOCKS; i++) {
+    const m = fwsc[i * BLK + KEEP];
+    if (m !== 0x7D) s += String.fromCharCode((m - i - 1) & 0xFF);
+  }
+  return s;
+}
+
+// the image the device addresses during an update: the .fwsc without the 20 marker bytes
+function logicalImage(fwsc) {
+  const out = new Uint8Array(fwsc.length - BLOCKS);
+  for (let i = 0; i < BLOCKS; i++) out.set(fwsc.subarray(i * BLK, i * BLK + KEEP), i * KEEP);
+  out.set(fwsc.subarray(BLOCKS * BLK), BLOCKS * KEEP);
+  return out;
+}
+
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments
+//
+// The FM-1 USB-MIDI update protocol (M-UPGRADE compatible) over WebMIDI.
+// Step 1: the running firmware reads parts of the package and stages the update
+// loader. Step 2: the loader reads the whole image and writes it. In both steps
+// the device sends cmd 0x30 read requests on the logical image and we answer.
+//
+// Stalls in step 2, as tools/fm1_install.py (its docstring, "Stalls", says why): no request for 6 s -> the
+// last answer again (once); no request for 17 s (Felucca's loader gives a read up after 3 x 5 s and waits in its
+// main loop) -> a handshake: the loader there -> the upgrade command again (its new session reads the package
+// again from the start; the sectors already written are only compared); not there, or its port gone -> wait up
+// to 30 s for a loader on USB-MIDI and start it again. At most 3 times. Another loader (M-VAVE's, in the stock
+// package): no answer sent again, and 180 s before the handshake. The session's log (each request, its timing,
+// the gaps, the stalls, the end) is kept in memory: updater.logText().
+
+const HS_QUERY = [0xF0, 0x00, 0x32, 0x45, 0x00, 0x00, 0x00, 0x40, 0x7F, 0xF7];
+const UPGRADE = [0xF0, 0x22, 0x24, 0x35, 0x7F, 0xF7];
+const MAXDATA = 512;
+const LOADER_MARK = "FELUCCA-LOADER-1";
+// ms; the tests shorten them (new Updater(access, log, { timing: {...} }))
+const OTA_TIMING = { start: 2000, reply: 10, poll: 1000, hs: 1000, loader: 3000, reboot: 3000, retry: 1000,
+  idleCheck: 8000, idleWrite: 180000, waitLoader: 30000, waitReboot: 40000,
+  resend: 6000, quiet: 17000, reconnect: 30000, gap: 1000, resumes: 3 };
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const IS_OTA = (id) => /^ota-/i.test(id.model);
+
+// does the image carry Felucca's own update loader (its marker in the loader's first LZ4 literals)?
+function hasFeluccaLoader(image) {
+  const m = Array.from(LOADER_MARK, (c) => c.charCodeAt(0));
+  outer: for (let i = 0; i + m.length <= image.length; i++) {
+    if (image[i] !== m[0]) continue;
+    for (let k = 1; k < m.length; k++) if (image[i + k] !== m[k]) continue outer;
+    return true;
+  }
+  return false;
+}
+
+// errors carry a code the pages translate: notfound, model, stopped, noloader, lost, noreturn,
+// mismatch (detail: the identity the device reports), badreq; and stall (step 2 stopped or lost, not back:
+// detail "lost" or "stopped")
+function fail(code, msg, detail = "") { const e = new Error(msg); e.code = code; e.detail = detail; return e; }
+
+function pack7(data) {
+  const out = []; let acc = 0, nb = 0;
+  for (const b of data) {
+    acc |= b << nb; nb += 8;
+    while (nb >= 7) { out.push(acc & 0x7F); acc >>>= 7; nb -= 7; }
+  }
+  if (nb) out.push(acc & 0x7F);
+  return out;
+}
+
+function unpack7(s) {
+  const out = []; let acc = 0, nb = 0;
+  for (const b of s) {
+    acc |= (b & 0x7F) << nb; nb += 7;
+    while (nb >= 8) { out.push(acc & 0xFF); acc >>>= 8; nb -= 8; }
+  }
+  return out;
+}
+
+function response(addr, data, fl = 0) {
+  const len = data.length;
+  const body = [0x00, 0x59, 0x30, (len + 8) & 0xFF, ((len + 8) >> 8) & 0xFF, 0, fl,
+    addr & 0xFF, (addr >>> 8) & 0xFF, (addr >>> 16) & 0xFF, (addr >>> 24) & 0xFF,
+    len & 0xFF, (len >> 8) & 0xFF, 0, ...data];
+  let s = 0;
+  for (let i = 6; i < body.length; i++) s += body[i];
+  body.push(~s & 0xFF);
+  return [0xF0, ...pack7(body), 0xF7];
+}
+
+function parseRequest(pkt) {
+  if (pkt[0] !== 0xF0 || pkt[pkt.length - 1] !== 0xF7) return null;
+  const u = unpack7(pkt.slice(1, -1));
+  if (u.length !== 15 || u[0] !== 0 || u[1] !== 0x59 || u[2] !== 0x30) return null;
+  let s = 0;
+  for (let i = 6; i < 14; i++) s += u[i];
+  if ((~s & 0xFF) !== u[14]) return null;
+  return { fl: u[6], addr: (u[7] | (u[8] << 8) | (u[9] << 16) | (u[10] << 24)) >>> 0, len: u[11] | (u[12] << 8) | (u[13] << 16) };
+}
+
+function parseIdentity(pkt) {
+  const d = unpack7(pkt.slice(1, -1));
+  if (d.length !== 34 || d[0] !== 0 || d[1] !== 0x59 || d[2] !== 0x11) return null;
+  const txt = String.fromCharCode(...d.slice(6, 33)).replace(/\0+$/, "");
+  const m = /^([^_]+)_(\d+)$/.exec(txt);
+  return m ? { text: txt, model: m[1], version: parseInt(m[2], 10) } : null;
+}
+
+// one MIDI in/out pair with a SysEx queue
+class Link {
+  constructor(input, output) {
+    this.input = input; this.output = output; this.q = []; this.waiter = null;
+    input.onmidimessage = (ev) => {
+      if (ev.data[0] !== 0xF0) return;
+      this.q.push(Array.from(ev.data));
+      if (this.waiter) { const w = this.waiter; this.waiter = null; w(); }
+    };
+  }
+  get lost() { return this.input.state === "disconnected" || this.output.state === "disconnected"; }
+  // false when the port is gone (unplugged): WebMIDI throws on a disconnected output
+  send(bytes) {
+    try { this.output.send(bytes); return true; } catch (_) { return false; }
+  }
+  drain() { this.q.length = 0; }
+  async read(ms) {
+    if (!this.q.length) {
+      let tm;
+      await Promise.race([new Promise((r) => { this.waiter = r; }), new Promise((r) => { tm = setTimeout(r, ms); })]);
+      clearTimeout(tm);
+      this.waiter = null;
+    }
+    return this.q.shift() || null;
+  }
+  close() { this.input.onmidimessage = null; }
+}
+
+async function handshake(link, tries = 3, ms = 1000) {
+  link.drain();
+  for (let t = 0; t < tries; t++) {
+    if (!link.send(HS_QUERY)) return null;
+    const end = Date.now() + ms;
+    while (Date.now() < end) {
+      const p = await link.read(end - Date.now());
+      if (!p) break;
+      const id = parseIdentity(p);
+      if (id) return id;
+    }
+  }
+  return null;
+}
+
+class Updater {
+  // log(text): the page's step lines; opts.timing: OTA_TIMING's values to change (the tests)
+  constructor(access, log, opts = {}) {
+    this.access = access;
+    this.log = log || (() => {});
+    this.T = { ...OTA_TIMING, ...(opts.timing || {}) };
+    this.t0 = Date.now();
+    this.lines = [];
+    this.lastReq = null;
+    this.reqs = 0;
+    this.ev(`fm1ota ${new Date().toISOString()}  ${typeof navigator !== "undefined" ? navigator.userAgent : ""}`);
+  }
+
+  // the session's log: each request (address, length, the time since the one before), the gaps, the stalls, the end
+  ev(msg) { this.lines.push(`${((Date.now() - this.t0) / 1000).toFixed(3).padStart(9)}  ${msg}`); }
+  req(addr, len) {
+    const now = Date.now(), dt = this.lastReq === null ? 0 : now - this.lastReq;
+    this.lastReq = now;
+    this.reqs++;
+    this.ev(`req #${String(this.reqs).padEnd(5)} 0x${addr.toString(16).padStart(8, "0")} +${String(len).padEnd(4)} ` +
+            `${dt.toFixed(1).padStart(8)} ms${dt >= this.T.gap ? `  GAP ${(dt / 1000).toFixed(1)} s` : ""}`);
+  }
+  logText() { return this.lines.join("\n") + "\n"; }
+
+  inputNames() { return [...this.access.inputs.values()].filter((i) => i.state !== "disconnected").map((i) => i.name); }
+
+  // every in/out pair with the same port name that answers the handshake
+  async find(filter) {
+    const outs = [...this.access.outputs.values()];
+    for (const input of this.access.inputs.values()) {
+      if (input.state === "disconnected") continue;
+      if (!/fm-1|felucca|ota|composite|sinco|usb-midi/i.test(input.name || "")) continue;   // never probe other gear
+      const output = outs.find((o) => o.name === input.name) || (outs.length === 1 ? outs[0] : null);
+      if (!output) continue;
+      try { await input.open(); await output.open(); } catch (_) { continue; }
+      const link = new Link(input, output);
+      const id = await handshake(link, 2, this.T.hs);
+      if (id && (!filter || filter(id))) return { link, id, name: input.name };
+      link.close();
+    }
+    return null;
+  }
+
+  async waitFor(filter, ms, tick) {
+    const end = Date.now() + ms;
+    let seen = null;
+    while (Date.now() < end) {
+      const names = this.inputNames().join(", ") || "(none)";
+      if (names !== seen) { this.ev(`MIDI inputs: ${names}`); seen = names; }   // what came and went on USB
+      const dev = await this.find(filter);
+      if (dev) { this.ev(`found ${dev.id.text} on ${dev.name}`); return dev; }
+      if (tick) tick();
+      await sleep(this.T.retry);
+    }
+    return null;
+  }
+
+  // serve read requests until the device asks for finishAddr; stops early when the port disappears (lost: true)
+  // instead of waiting out idleMs. resendMs: that long without a request -> the last answer again (once);
+  // tick(ms since the last request) while it is that quiet. -> { served, finished, lost, last }
+  async serve(link, image, finishAddr, idleMs, onProgress, resendMs = null, tick = null) {
+    let served = 0, last = Date.now(), answer = null, resent = false;
+    for (;;) {
+      const pkt = await link.read(this.T.poll);
+      if (!pkt) {
+        const quiet = Date.now() - last;
+        if (link.lost) { this.ev(`the port is gone, ${(quiet / 1000).toFixed(1)} s after the last request`); return { served, finished: false, lost: true, last }; }
+        if (quiet > idleMs) { this.ev(`no request for ${(quiet / 1000).toFixed(1)} s`); return { served, finished: false, lost: false, last }; }
+        if (resendMs !== null && quiet >= resendMs) {
+          if (answer && !resent) {
+            resent = true;
+            this.ev(`no request for ${(quiet / 1000).toFixed(1)} s: the last answer again`);
+            link.send(answer);
+          }
+          if (tick) tick(quiet);
+        }
+        continue;
+      }
+      const r = parseRequest(pkt);
+      if (!r) continue;
+      last = Date.now(); resent = false;
+      this.req(r.addr, r.len);
+      if (r.addr === 0xE0000000 || r.addr === 0xF0000000) {
+        answer = response(r.addr, [...new TextEncoder().encode("success"), 0]);
+        link.send(answer);
+        if (r.addr === finishAddr) { this.ev(`finish 0x${r.addr.toString(16)} answered`); return { served, finished: true, lost: false, last }; }
+        continue;
+      }
+      if (r.len > MAXDATA || r.addr + r.len > image.length) {
+        this.ev(`bad request ${r.addr.toString(16)}+${r.len}`);
+        throw fail("badreq", `bad request ${r.addr.toString(16)}+${r.len}`);
+      }
+      await sleep(this.T.reply);
+      answer = response(r.addr, Array.from(image.subarray(r.addr, r.addr + r.len)), r.fl);
+      if (!link.send(answer)) {
+        this.ev("the answer could not be sent: the port is gone");
+        return { served, finished: false, lost: true, last };
+      }
+      served++;
+      if (onProgress) onProgress(served, r.addr);
+    }
+  }
+
+  // full install: running firmware -> loader -> new firmware
+  async install(image, product, onStep) {
+    const step = onStep || (() => {});
+    this.ev(`install ${product}, ${image.length} B, ${hasFeluccaLoader(image) ? "Felucca loader" : "another loader"}`);
+    this.ev(`MIDI inputs: ${this.inputNames().join(", ") || "(none)"}`);
+    const dev = await this.find((id) => !IS_OTA(id));
+    if (!dev) { this.ev("FM-1 not found"); throw fail("notfound", "FM-1 not found (USB cable, and no other app using it?)"); }
+    const [model] = product.split("_");
+    if (dev.id.model !== model) { dev.link.close(); throw fail("model", `the device is ${dev.id.text}, the package is for ${product}`); }
+    step("start", dev.id.text);
+    this.ev(`step 1 (check) on ${dev.id.text}, ${dev.name}`);
+    dev.link.send(UPGRADE);
+    await sleep(this.T.start);
+    const s1 = await this.serve(dev.link, image, 0xE0000000, this.T.idleCheck, (n) => step("verify", n));
+    dev.link.close();
+    if (!s1.finished) throw fail(s1.lost ? "lost" : "stopped", `the device ${s1.lost ? "was disconnected" : "stopped"} after ${s1.served} requests: nothing was written`);
+    step("loader");
+    await sleep(this.T.loader);
+    const ota = await this.waitFor(IS_OTA, this.T.waitLoader);
+    if (!ota) { this.ev("no loader"); throw fail("noloader", "the update loader did not appear"); }
+    await this.write(ota, image, step, product);
+    step("reboot");
+    await sleep(this.T.reboot);
+    const back = await this.waitFor((id) => !IS_OTA(id), this.T.waitReboot);
+    if (!back) { this.ev("the FM-1 did not come back after the write"); throw fail("noreturn", "the device did not come back: power-cycle it"); }
+    back.link.close();
+    if (back.id.text !== product) { this.ev(`mismatch: ${back.id.text}`); throw fail("mismatch", `installed, but the device reports ${back.id.text}`, back.id.text); }
+    this.ev(`done: ${back.id.text}`);
+    step("done", back.id.text);
+    return back.id.text;
+  }
+
+  // step 2 with the loader found by find()/waitFor(); throws "stall" when it stops and doesn't come back.
+  // step("stall", seconds since the last request) while waiting, step("resume", n) when the write starts again
+  async write(ota, image, step, product = null) {
+    const felucca = hasFeluccaLoader(image);
+    const quiet = felucca ? this.T.quiet : this.T.idleWrite, resend = felucca ? this.T.resend : null;
+    let link = ota.link, name = ota.name, total = 0, resumes = 0, reached = 0;
+    this.ev(`step 2 (write) on ${ota.id.text}, ${name}; ${felucca ? "Felucca" : "another"} loader; package ${image.length} B`);
+    const prog = (n, addr) => {                          // step("write", percent of the package read)
+      reached = Math.max(reached, addr);
+      step("write", Math.min(99, Math.floor((addr * 100) / image.length)));
+    };
+    for (;;) {
+      link.send(UPGRADE);
+      this.ev("upgrade command sent");
+      await sleep(this.T.start);
+      const s = await this.serve(link, image, 0xF0000000, quiet, prog, resend, (q) => step("stall", Math.floor(q / 1000)));
+      total += s.served;
+      if (s.finished) { link.close(); return s; }
+      const why = s.lost ? "lost" : "stopped", pct = Math.floor((reached * 100) / image.length);
+      if (resumes >= this.T.resumes) {
+        link.close();
+        this.ev(`gave up after ${resumes} resumes`);
+        throw fail("stall", `the loader ${s.lost ? "was disconnected" : "stopped answering"} again at ${pct}% (${total} requests), after ${resumes} resumes`, why);
+      }
+      let back = null;
+      if (!s.lost) {                                     // still on USB: is the loader there?
+        const id = await handshake(link, 2, this.T.hs);
+        this.ev(`handshake on the same port: ${id ? id.text : "no answer"}`);
+        if (id && IS_OTA(id)) back = { link, id, name };
+      }
+      if (!back) {                                       // gone, or mute: wait for it on USB
+        link.close();
+        this.ev(`waiting up to ${this.T.reconnect / 1000} s for the loader on USB`);
+        const since = () => step("stall", Math.floor((Date.now() - s.last) / 1000));
+        since();
+        back = await this.waitFor((id) => IS_OTA(id) || id.text === product, this.T.reconnect, since);
+        if (back && !IS_OTA(back.id)) {                  // the write had finished after all
+          back.link.close();
+          this.ev(`the FM-1 is back running ${back.id.text}: the write had finished`);
+          return { served: total, finished: true };
+        }
+      }
+      if (!back) {
+        this.ev("the loader did not come back");
+        throw fail("stall", `the loader ${s.lost ? "was disconnected" : "stopped answering"} at ${pct}% (${total} requests) and did not come back within ${this.T.reconnect / 1000} s`, why);
+      }
+      resumes++;
+      this.ev(`resume ${resumes}: ${back.id.text} on ${back.name}, the write starts again`);
+      step("resume", resumes);
+      link = back.link; name = back.name;
+    }
+  }
+
+  // resume: the device is already in update mode (loader) -> true when the write finished (throws "stall" when it
+  // stops and doesn't come back), false when no loader is found
+  async resume(image, onStep, product = null) {
+    const ota = await this.find(IS_OTA);
+    if (!ota) { this.ev("no loader to resume"); return false; }
+    this.ev(`resume an unfinished write: ${ota.id.text} on ${ota.name}`);
+    const s = await this.write(ota, image, onStep || (() => {}), product);
+    this.ev("done (resumed)");
+    return s.finished;
+  }
+}
+
+const $ = (id) => document.getElementById(id);
+const TEXT = {
+  ja: {
+    intro: "FM-1 を USB で接続してください。（Chrome か Edge で使えます）",
+    perm: "インストールを押すと、ブラウザが MIDI の使用許可を求めます。許可してください。",
+    newtab: "（新しいタブで開きます）", progress: "進み具合", ready: "インストールできます: DUB-1 ",
+    percent: "%",
+    warn: "書き込み中は USB を抜かないでください。",
+    backup: "まずバックアップ: DUB-1 1.5 以降なら、インストールの前にピースとセットをファイルに保存してください（アップデートではそのまま残りますが、ほかのファームウェアでは残らないことがあります）。",
+    backuplink: "セットのページ",
+    checkbtn: "この FM-1 を確認",
+    checking: "FM-1 を確認しています。",
+    chknotfound: "FM-1 が見つかりません。USB ケーブル（データ通信用か）を確かめ、MIDI を使う他のアプリを閉じてから、もう一度押してください。",
+    chkold: (v) => `この FM-1 は DUB-1 ${v} です。セットはまだなく、この方法でバックアップするものはありません。アップデートしてもピースはそのまま残ります（1.5 の最初の起動で引き継がれます）。念のため控えておくなら、各ピースの名前と画面をメモか写真で残してください。`,
+    chknew: (v, f) => `この FM-1 は DUB-1 ${f ? f.text : v} です` + (!f ? "（正確なバージョンは読めませんでした。テスト版と正式版はこの方法では区別できません）" :
+      f.test ? `（${f.release} のテスト版で、正式版ではありません）` : "（正式版）") +
+      "。インストールの前に、セットのページでピースとセットをバックアップしてください: ",
+    chkdev: (f) => `この FM-1 は DUB-1 の開発版です${f ? "（" + f.text + "）" : ""}。1.5 以降なら、セットのページでバックアップしてください: `,
+    chkother: (t) => `この FM-1 は DUB-1 ではなく ${t} です。DUB-1 のピースやセットはないので、バックアップするものはありません。`,
+    install: "インストール", other: "English",
+    manual: "DUB-1 のページへ",
+    direct: "USB ケーブルはハブを通さず、パソコンに直接つないでください（Probe や Transporter などの機材は不要です）。書き込みが終わるまで、FM-1 の電源は入れたままにしてください（充電しておくか、USB から給電）。",
+    brick: "万一 FM-1 が起動しなくなった場合は、Mac から標準ファームウェアに戻せます:",
+    bricklink: "起動しない FM-1 の復旧（英語）",
+    beta: "このカスタムファームウェアを使ったことで FM-1 が壊れたり不具合が起きたりしても、作者は一切の責任を負いません。自己責任でお使いください。",
+    back: "公式ファームウェアに戻すには、このページ下の「純正ファームウェアに戻す」か、M-VAVE 公式のアップデーター M-UPGRADE（Downloads → PC Software → M-UPGRADE）を使います。",
+    stockh: "純正ファームウェアに戻す",
+    stockwhy: "M-VAVE の FM-1 V15 を、DUB-1（またはそのセーフモード、X0X、Felucca）から同じ USB ケーブルで書き込みます。DUB-1 に保存したピースとセットは消えることがあります。先にバックアップしてください（セットのページ）。",
+    stock1: "M-VAVE の FM-1 V15 をダウンロード:",
+    stock2: "ダウンロードしたファイルを選ぶ:",
+    stock3: "FM-1 を USB で接続し、下のボタンを押す。",
+    stockinstall: "純正ファームウェアを書き込む",
+    stockok: "M-VAVE の FM-1 V15 です。ボタンを押してください。",
+    stockbad: "これは M-VAVE の FM-1 V15 のファイルではありません。上のリンクのファイルを選んでください。",
+    stockdone: "完了。FM-1 は純正ファームウェアで起動しました。",
+    nomidi: "このブラウザでは使えません。Chrome か Edge で開いてください。", loadfail: "読み込めませんでした: ",
+    start: "開始します", verify: "確認中", loader: "書き込みモードに切り替え中", write: "書き込み中",
+    reboot: "再起動中", done: "完了しました",
+    stopped: "途中で止まりました。USB ケーブルをハブを通さずパソコンに直接挿し直して、もう一度インストールを押してください。",
+    error: "エラー: ",
+    denied: "MIDI（SysEx）の使用が許可されませんでした。アドレスバーのサイト設定で MIDI を許可して、もう一度押してください。",
+    notfound: "FM-1 が見つかりません。USB ケーブル（データ通信用か）を確かめ、MIDI を使う他のアプリを閉じてから、もう一度押してください。",
+    model: "接続されている機器は FM-1 ではありません。",
+    lost: "書き込みの前に USB の接続が切れました（何も書き込まれていません）。ハブを通さずパソコンに直接挿し直して、もう一度インストールを押してください。",
+    noloader: "書き込みモードの FM-1 が見つかりません。USB ケーブルを抜き、ハブを通さずパソコンに直接挿し直して、もう一度インストールを押してください。FM-1 がまったく見つからず、画面が暗いままなら、チップ自体のダウンロードモードに入っているかもしれません。下の復旧の手順か、M-Flasher の FLASH FIRMWARE（ブートローダーはそのまま残ります）で戻してから、もう一度インストールしてください。",
+    stall: "書き込みの途中で FM-1 が応答しなくなり、戻ってきませんでした。USB ケーブルを抜き、ハブを通さずパソコンに直接挿し直してください。FM-1 の電源は切らずに、もう一度インストールを押してください。まだ書き込みモードなら、書き込みを最後まで終えます。FM-1 がまったく見つからず、画面が暗いままなら、チップ自体のダウンロードモードに入っているかもしれません。下の復旧の手順か、M-Flasher の FLASH FIRMWARE（ブートローダーはそのまま残ります）で戻してから、もう一度インストールしてください。",
+    stallwait: "FM-1 の応答が止まりました。待っています: ", sec: " 秒…",
+    resumed: "FM-1 が戻りました。書き込みを再開します（書き込み済みの部分は確かめるだけです）。",
+    helprescue: "起動しない FM-1 の復旧（英語）",
+    helpmf: "M-Flasher（FLASH FIRMWARE はブートローダーをそのまま残します）",
+    logwhy: "このインストールのログ（各リクエストとその時刻）は、止まった原因を調べる助けになります。",
+    copylog: "ログをコピー", copied: "コピーしました。問題の報告に貼り付けてください。",
+    noreturn: "FM-1 が戻ってきません。電源を入れ直してください。それでも画面が暗いままなら、下の復旧の手順を見てください。",
+    mismatch: "書き込みは終わりましたが、FM-1 が別のバージョンを報告しています: ",
+    badpkg: "インストールするファイルが壊れています。ページを再読み込みしてください。",
+    leave: "書き込み中です。ページを閉じないでください。",
+    license: "GPL-3.0、無保証。ソース:",
+  },
+  en: {
+    intro: "Connect the FM-1 by USB. (Works in Chrome or Edge.)",
+    perm: "When you press Install, the browser asks to let this page use MIDI devices: allow it.",
+    newtab: " (opens in a new tab)", progress: "Progress", ready: "Ready to install DUB-1 ",
+    percent: " percent",
+    warn: "Do not unplug the USB cable while writing.",
+    backup: "First, back up: on DUB-1 1.5 or later, save your pieces and sets to a file before installing (an update keeps them; another firmware may not).",
+    backuplink: "Back up on the Sets page",
+    checkbtn: "Check this FM-1",
+    checking: "Checking the FM-1.",
+    chknotfound: "FM-1 not found. Check the USB cable (a data cable), close other apps that use MIDI, and press Check again.",
+    chkold: (v) => `This FM-1 runs DUB-1 ${v}: it has no sets yet, and there is nothing to back up this way. The update keeps its pieces (1.5 takes them over at its first start). To keep a note of them anyway, write down each piece's name, or take photos of its screens.`,
+    chknew: (v, f) => `This FM-1 runs DUB-1 ${f ? f.text : v}` + (!f ? " (its full version not read: a test build and the release look the same this way)" :
+      f.test ? `, a test build of ${f.release}, not the release` : ", the release") +
+      `: back up its pieces and sets on the Sets page before installing: `,
+    chkdev: (f) => `This FM-1 runs a development build of DUB-1${f ? " (" + f.text + ")" : ""}: if it is 1.5 or later, back up on the Sets page: `,
+    chkother: (t) => `This FM-1 runs ${t}, not DUB-1: it holds no DUB-1 pieces or sets, so there is nothing to back up.`,
+    install: "Install", other: "日本語",
+    manual: "Back to DUB-1",
+    direct: "Plug the USB cable straight into the computer, not through a hub (no probe or Transporter is needed), and keep the FM-1 switched on (charged, or on USB power) until the install has finished.",
+    brick: "If the FM-1 no longer starts, a Mac can put the stock firmware back:",
+    bricklink: "recovering an FM-1 that won't start",
+    beta: "The author accepts no responsibility if your FM-1 is damaged or misbehaves because of this custom firmware. Use it at your own risk.",
+    back: "To go back to the official firmware, use \"Back to the stock firmware\" below, or M-VAVE's own updater, M-UPGRADE (Downloads → PC Software → M-UPGRADE).",
+    stockh: "Back to the stock firmware",
+    stockwhy: "This writes M-VAVE's own FM-1 V15 back, from DUB-1 (or its safe mode, X0X or Felucca) over the same USB cable. The pieces and sets saved in DUB-1 may be lost: back them up first (the Sets page).",
+    stock1: "Download M-VAVE's FM-1 V15:",
+    stock2: "Choose the file you downloaded:",
+    stock3: "Connect the FM-1 by USB and press the button below.",
+    stockinstall: "Install the stock firmware",
+    stockok: "That is M-VAVE's FM-1 V15. Press the button to install it.",
+    stockbad: "That is not M-VAVE's FM-1 V15 file. Choose the file from the link above.",
+    stockdone: "Done. The FM-1 has restarted with its original firmware.",
+    nomidi: "This browser cannot do it. Open the page in Chrome or Edge.", loadfail: "Could not load: ",
+    start: "Starting", verify: "Verifying", loader: "Switching to update mode", write: "Writing",
+    reboot: "Restarting", done: "Done",
+    stopped: "Stopped. Unplug the USB cable, plug it straight into the computer (not through a hub) and press Install again.",
+    error: "Error: ",
+    denied: "MIDI (SysEx) access was not allowed. Allow MIDI in the site settings (address bar) and press Install again.",
+    notfound: "FM-1 not found. Check the USB cable (a data cable), close other apps that use MIDI, and press Install again.",
+    model: "The connected device is not an FM-1.",
+    lost: "The USB connection was lost before anything was written. Plug the cable straight into the computer (not through a hub) and press Install again.",
+    noloader: "The FM-1 in update mode was not found. Unplug the USB cable, plug it straight into the computer (not through a hub) and press Install again. If the FM-1 is not found at all and its screen stays blank, it may have dropped into the chip's own download mode: recover it with the rescue or with M-Flasher's FLASH FIRMWARE (it keeps the bootloader), both linked below, then install again.",
+    stall: "The FM-1 stopped answering during the write and did not come back. Unplug the USB cable, plug it straight into the computer (not through a hub), leave the FM-1 switched on, and press Install again: if it is still in update mode, the install finishes the write. If the FM-1 is not found at all and its screen stays blank, it may have dropped into the chip's own download mode: recover it with the rescue or with M-Flasher's FLASH FIRMWARE (it keeps the bootloader), both linked below, then install again.",
+    stallwait: "The FM-1 stopped answering; waiting for it: ", sec: " s...",
+    resumed: "The FM-1 is back: the write starts again (what is already written is only checked).",
+    helprescue: "Recovering an FM-1 that won't start (the rescue)",
+    helpmf: "M-Flasher (its FLASH FIRMWARE keeps the bootloader)",
+    logwhy: "The install's log (each request and its timing) helps find out why it stopped.",
+    copylog: "Copy the log", copied: "Copied: paste it into your report of the problem.",
+    noreturn: "The FM-1 did not come back. Switch it off and on. If its screen then stays blank, see the recovery below.",
+    mismatch: "Written, but the FM-1 reports another version: ",
+    badpkg: "The file to install is damaged. Reload the page.",
+    leave: "Writing. Do not close the page.",
+    license: "GPL-3.0, no warranty. Source:",
+  },
+};
+let checked = null;                              /* (Decisions 4) the version check's outcome */
+let lang = "en";                                 /* English first; 日本語 is a click away */
+const t = (k) => TEXT[lang][k];
+let lastKey = null, lastArg = "";
+/* what went wrong goes to the alert (read at once), the rest to the status (read when the reader is free) */
+const FAIL = new Set(["nomidi", "loadfail", "stopped", "error", "denied", "notfound", "model", "lost", "noloader", "noreturn",
+                      "mismatch", "badpkg", "stockbad", "stall"]);
+/* the failures after which the FM-1 may be stuck: the recovery links under the alert */
+const RECOVER = new Set(["stall", "noloader", "noreturn"]);
+function show(k, txt) {
+  $(FAIL.has(k) ? "alert" : "status").textContent = txt;
+  $(FAIL.has(k) ? "status" : "alert").textContent = "";
+}
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-t]").forEach((e) => { e.textContent = t(e.dataset.t); });
+  $("lang").textContent = t("other");
+  $("lang").lang = lang === "ja" ? "en" : "ja";
+  $("setslink").href = lang === "ja" ? "../sets/?lang=ja" : "../sets/";
+  if (lastKey) show(lastKey, t(lastKey) + lastArg);
+  if (checked) checkSay();
+}
+$("lang").addEventListener("click", () => { lang = lang === "ja" ? "en" : "ja"; applyLang(); });
+applyLang();
+const sayK = (k, arg = "") => { lastKey = k; lastArg = arg; show(k, t(k) + arg); };
+/* progress in words: "Writing, 40 percent", at most every 2 s or every 10 percent (the bar moves smoothly) */
+let lastPct = -100, lastAt = 0;
+function progress(k, pct) {
+  pct = Math.round(pct);
+  $("bar").value = pct;
+  const now = performance.now();
+  if (k === lastKey && pct < 100 && pct - lastPct < 10 && now - lastAt < 2000) return;
+  lastPct = pct; lastAt = now;
+  sayK(k, (lang === "ja" ? " " : ", ") + pct + t("percent"));
+}
+/* the step lines ("write 46" ...) go to the session's log (Copy the log), not onto the page: a hundred of them pushed
+   the outcome out of sight (the user, 1.5.0) */
+const log = (t) => { if (lastUp) lastUp.ev(`step ${t}`); };
+let image = null;
+const meta = {"version": "1.5.0", "product": "FM-1_8010500", "pkg": "../firmware/dub-1.5.0.fwsc", "sets": "../sets/dub1sets.js"};
+
+let writing = false;
+window.addEventListener("beforeunload", (e) => { if (writing) { e.preventDefault(); e.returnValue = t("leave"); } });
+
+(async () => {
+  if (!navigator.requestMIDIAccess) { sayK("nomidi"); return; }
+  try {
+    const r = await fetch(meta.pkg);
+    if (!r.ok) throw new Error(`${meta.pkg}: HTTP ${r.status}`);
+    const pkg = new Uint8Array(await r.arrayBuffer());
+    if (productOf(pkg) !== meta.product) { sayK("badpkg"); return; }
+    image = logicalImage(pkg);
+    sayK("ready", meta.version);
+    $("go").disabled = false;
+  } catch (e) { sayK("loadfail", e.message); }
+})();
+
+/* stock firmware: M-VAVE's FM-1 V15, chosen by the user (M-VAVE's server allows no cross-site
+   download) and checked against its SHA-256 before anything is written */
+const STOCK_SHA256 = "db1642b2b6fa5c2cccb11ffd13878068bb28601678d3644049f99dc40e7edb8a";
+let stock = null;
+$("stockfile").addEventListener("change", async (e) => {
+  stock = null;
+  $("stockgo").disabled = true;
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  try {
+    const raw = new Uint8Array(await f.arrayBuffer());
+    const hex = [...new Uint8Array(await crypto.subtle.digest("SHA-256", raw))].map((b) => b.toString(16).padStart(2, "0")).join("");
+    if (hex !== STOCK_SHA256) { sayK("stockbad"); return; }
+    stock = { image: logicalImage(raw), product: productOf(raw) };
+    $("stockgo").disabled = writing;
+    sayK("stockok");
+  } catch (err) { sayK("error", err && err.message); }
+});
+
+async function run(img, product, isStock) {
+  let midi;
+  try { midi = await navigator.requestMIDIAccess({ sysex: true }); }
+  catch (e) { sayK("denied"); return; }
+  writing = true;
+  $("go").disabled = $("stockgo").disabled = true;
+  $("help").hidden = $("logbox").hidden = true;
+  $("copied").textContent = "";
+  let failed = null;
+  const up = new Updater(midi, log);
+  lastUp = up;
+  try {
+    const total = 74 + 1167;                     /* requests: step 1, step 2 */
+    let stallSaid = -100;
+    const step = (k, a) => {
+      if (k !== "stall") log(`${k} ${a ?? ""}`);
+      if (k === "start") sayK("start");
+      if (k === "verify") progress("verify", (a / total) * 100);
+      if (k === "loader") sayK("loader");
+      if (k === "write") { stallSaid = -100; progress("write", (74 + (a / 100) * 1167) / total * 100); }
+      if (k === "stall" && (a - stallSaid >= 5 || a < stallSaid)) {   /* every 5 s: a screen reader isn't flooded */
+        stallSaid = a;
+        sayK("stallwait", a + t("sec"));
+      }
+      if (k === "resume") sayK("resumed");
+      if (k === "reboot") sayK("reboot");
+      if (k === "done") { $("bar").value = 100; sayK(isStock ? "stockdone" : "done"); }
+    };
+    const ota = await up.find((id) => /^ota-/i.test(id.model));
+    if (ota) {
+      ota.link.close();
+      if (await up.resume(img, step, product)) sayK(isStock ? "stockdone" : "done");
+      else { failed = "noloader"; sayK("noloader"); }   /* (it was there a moment ago) */
+    } else {
+      await up.install(img, product, step);
+    }
+  } catch (e) {
+    if (isStock && e && e.code === "mismatch") { $("bar").value = 100; sayK("stockdone"); }   /* stock names itself its own way */
+    else if (e && e.code && TEXT[lang][e.code]) { failed = e.code; sayK(e.code, e.code === "stall" ? "" : e.detail || ""); }
+    else { failed = "error"; sayK("error", e && e.message); }
+    up.ev(`error (${e && e.code}): ${e && e.message}`);
+    log(String(e && e.stack || e));
+  }
+  up.ev("end");
+  if (failed) {                                  /* the session's log, to copy into a report; the way out */
+    $("logbox").hidden = false;
+    $("help").hidden = !RECOVER.has(failed);
+  }
+  writing = false;
+  $("go").disabled = !image;
+  $("stockgo").disabled = !stock;
+}
+
+/* (Decisions 4) the back-up step by version: the FM-1's identity (FM-1_8XXYYZZ: DUB-1 X.Y.Z; FM-1_800 a development
+   build); 1.4.x or older has no sets and nothing to back up this way (the update keeps its pieces), 1.5 or later is
+   offered the Sets page. (Decisions 5) A 1.5 or later (or a development build) is then asked its full version by the
+   set protocol's HELLO (the Sets page's dub1sets.js, beside it in the site): "DUB-1 1.5.0-BETA1" tells a test build from the
+   release, which the identity can't (FM-1_8010500 both); not answered: the digits alone, said so */
+function checkSay() {
+  const r = $("checkres"), c = checked;
+  r.textContent = "";
+  if (c.err) { r.textContent = t(c.err); return; }
+  const v = c.id.version, m = c.id.model === "FM-1" && v >= 8000000 && v < 9000000;
+  const ver = `${Math.floor(v / 10000) % 100}.${Math.floor(v / 100) % 100}.${v % 100}`;
+  const link = () => {
+    const a = document.createElement("a");
+    a.href = $("setslink").href; a.style.color = "inherit"; a.textContent = t("backuplink");
+    return a;
+  };
+  if (c.id.model === "FM-1" && v === 800) r.append(TEXT[lang].chkdev(c.full), link());
+  else if (!m) r.textContent = TEXT[lang].chkother(c.id.text);
+  else if (v < 8010500) r.textContent = TEXT[lang].chkold(ver);
+  else r.append(TEXT[lang].chknew(ver, c.full), link());
+}
+/* (Decisions 5) the full version a 1.5+ FM-1 says in HELLO (versionOf: { text, release, pre, test, dev }), or null */
+async function fullVersion(midi) {
+  let d = null;
+  try {
+    const S = await import(meta.sets);
+    d = await S.findDevice(midi);
+    return S.versionOf(d.info.version);
+  } catch (_) {
+    return null;
+  } finally {
+    if (d) d.link.close();
+  }
+}
+$("check").addEventListener("click", async () => {
+  let midi;
+  $("check").disabled = true;
+  $("checkres").textContent = t("checking");
+  try {
+    try { midi = await navigator.requestMIDIAccess({ sysex: true }); } catch (_) { checked = { err: "denied" }; return; }
+    const dev = await new Updater(midi, log).find((id) => !/^ota-/i.test(id.model));
+    if (dev) dev.link.close();
+    checked = dev ? { id: dev.id, full: null } : { err: "chknotfound" };
+    if (dev && dev.id.model === "FM-1" && (dev.id.version === 800 || (dev.id.version >= 8010500 && dev.id.version < 9000000)))
+      checked.full = await fullVersion(midi);
+  } catch (e) {
+    checked = { err: "chknotfound" };
+  } finally {
+    if (checked) checkSay();
+    $("check").disabled = writing;
+  }
+});
+
+/* "Copy the log": the last install's log (fm1ota.js keeps it in memory); if the clipboard is refused, the log is
+   shown under the button to select by hand */
+let lastUp = null;
+$("copylog").addEventListener("click", async () => {
+  if (!lastUp) return;
+  const text = lastUp.logText();
+  try {
+    await navigator.clipboard.writeText(text);
+    $("copied").textContent = t("copied");
+  } catch (_) {
+    $("log").textContent += "\n" + text;
+  }
+});
+
+$("go").addEventListener("click", () => run(image, meta.product, false));
+$("stockgo").addEventListener("click", () => { if (stock) run(stock.image, stock.product, true); });
+</script>
+</body>
+</html>

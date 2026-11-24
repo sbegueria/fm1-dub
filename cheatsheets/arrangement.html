@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DUB-1 Arrangement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=block" rel="stylesheet">
+<link rel="stylesheet" href="sheet.css">
+</head>
+<body>
+<!-- Cheat sheet 2 of the series (build/design/CHEATSHEETS.md). Every fact checked against the firmware at c1fdc41
+     (firmware/src/app/ui.c: the PERFORM section, PERF_KEY, PERF_NAME, PERF_FX, PERF_BPART, perf_key(), perf_solo(),
+     perf_throw(), strip_tick() and STRIP_HOLD, perf_set(), lock_toggle(), leds(); VIEW_KNOB / KNOB_LABEL / KNOB_HELP
+     for V_PERF and V_STRIP; firmware/src/dsp/amb.c: EN_FX_NAME, the throws, the moves, the strips' parameters).
+     The sirens (black 8-11) checked against the built ones (dub-1.4-sirens, 194faed; REPORT-sirens), their knobs
+     and Whoop out of tune against dub-1.4-sirenknobs (REPORT-sirenknobs).
+     Re-checked against the firmware at 671d9be for the 1.4.0 release (step 6: build/design/REPORT-docs-sheets.txt). -->
+<div class="sheet">
+<header><span class="badge">DUB-1</span><h1>Arrangement</h1>
+<span class="sub">SEL: the desk, the dub moves and the effects under your fingers, as of 1.4.0 (build 671d9be). FM-1 firmware.</span></header>
+
+<figure>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 246" role="img" aria-label="The keys F3 to G5 on the Arrangement page, each labelled with what it does">
+<rect x="11.7" y="116" width="54.1" height="96" rx="9" fill="#dff1ee" stroke="#1f7f75" stroke-width="1.6"/>
+<text x="38.8" y="131.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">1</text>
+<text x="38.8" y="172.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#155e56" class="" letter-spacing=".03em">CHORD</text>
+<text x="38.8" y="204.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">F3</text>
+<rect x="73.2" y="116" width="54.1" height="96" rx="9" fill="#dff1ee" stroke="#1f7f75" stroke-width="1.6"/>
+<text x="100.2" y="131.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">2</text>
+<text x="100.2" y="172.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#155e56" class="" letter-spacing=".03em">PINGS</text>
+<text x="100.2" y="204.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">G3</text>
+<rect x="134.7" y="116" width="54.1" height="96" rx="9" fill="#dff1ee" stroke="#1f7f75" stroke-width="1.6"/>
+<text x="161.8" y="131.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">3</text>
+<text x="161.8" y="172.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#155e56" class="" letter-spacing=".03em">BASS</text>
+<text x="161.8" y="204.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">A3</text>
+<rect x="196.2" y="116" width="54.1" height="96" rx="9" fill="#dff1ee" stroke="#1f7f75" stroke-width="1.6"/>
+<text x="223.2" y="131.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">4</text>
+<text x="223.2" y="172.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#155e56" class="" letter-spacing=".03em">KICK</text>
+<text x="223.2" y="204.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">B3</text>
+<rect x="257.7" y="116" width="54.1" height="96" rx="9" fill="#dff1ee" stroke="#1f7f75" stroke-width="1.6"/>
+<text x="284.8" y="131.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">5</text>
+<text x="284.8" y="172.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#155e56" class="" letter-spacing=".03em">HATS</text>
+<text x="284.8" y="204.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">C4</text>
+<rect x="319.2" y="116" width="54.1" height="96" rx="9" fill="#dff1ee" stroke="#1f7f75" stroke-width="1.6"/>
+<text x="346.2" y="131.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">6</text>
+<text x="346.2" y="172.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#155e56" class="" letter-spacing=".03em">NOISE</text>
+<text x="346.2" y="204.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">D4</text>
+<rect x="380.7" y="116" width="54.1" height="96" rx="9" fill="#2f3839" stroke="#2f3839" stroke-width="1.6"/>
+<text x="407.8" y="131.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#6f7a7a" class="mono" letter-spacing="0">7</text>
+<text x="407.8" y="204.0" text-anchor="middle" font-size="11" font-weight="400" fill="#8a9494" class="mono" letter-spacing="0">E4</text>
+<rect x="442.2" y="116" width="54.1" height="96" rx="9" fill="#2f3839" stroke="#2f3839" stroke-width="1.6"/>
+<text x="469.2" y="131.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#6f7a7a" class="mono" letter-spacing="0">8</text>
+<text x="469.2" y="204.0" text-anchor="middle" font-size="11" font-weight="400" fill="#8a9494" class="mono" letter-spacing="0">F4</text>
+<rect x="503.7" y="116" width="54.1" height="96" rx="9" fill="#e1eaf8" stroke="#4a72b0" stroke-width="1.6"/>
+<text x="530.8" y="131.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">9</text>
+<text x="530.8" y="172.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#2b4f88" class="" letter-spacing=".03em">OPEN</text>
+<text x="530.8" y="204.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">G4</text>
+<rect x="565.2" y="116" width="54.1" height="96" rx="9" fill="#e1eaf8" stroke="#4a72b0" stroke-width="1.6"/>
+<text x="592.2" y="131.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">10</text>
+<text x="592.2" y="172.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#2b4f88" class="" letter-spacing=".03em">SHUT</text>
+<text x="592.2" y="204.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">A4</text>
+<rect x="626.7" y="116" width="54.1" height="96" rx="9" fill="#e1eaf8" stroke="#4a72b0" stroke-width="1.6"/>
+<text x="653.8" y="131.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">11</text>
+<text x="653.8" y="172.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#2b4f88" class="" letter-spacing=".03em">DROP</text>
+<text x="653.8" y="204.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">B4</text>
+<rect x="688.2" y="116" width="54.1" height="96" rx="9" fill="#e1eaf8" stroke="#4a72b0" stroke-width="1.6"/>
+<text x="715.2" y="131.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">12</text>
+<text x="715.2" y="172.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#2b4f88" class="" letter-spacing=".03em">ECHO</text>
+<text x="715.2" y="204.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">C5</text>
+<rect x="749.7" y="116" width="54.1" height="96" rx="9" fill="#ece4f6" stroke="#7a58a8" stroke-width="1.6"/>
+<text x="776.8" y="131.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">13</text>
+<text x="776.8" y="165.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#523681" class="" letter-spacing=".03em">TIME</text>
+<text x="776.8" y="180.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#523681" class="" letter-spacing=".03em">X2</text>
+<text x="776.8" y="204.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">D5</text>
+<rect x="811.2" y="116" width="54.1" height="96" rx="9" fill="#ece4f6" stroke="#7a58a8" stroke-width="1.6"/>
+<text x="838.2" y="131.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">14</text>
+<text x="838.2" y="172.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#523681" class="" letter-spacing=".03em">FREEZE</text>
+<text x="838.2" y="204.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">E5</text>
+<rect x="872.7" y="116" width="54.1" height="96" rx="9" fill="#ece4f6" stroke="#7a58a8" stroke-width="1.6"/>
+<text x="899.8" y="131.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">15</text>
+<text x="899.8" y="165.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#523681" class="" letter-spacing=".03em">TAPE</text>
+<text x="899.8" y="180.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#523681" class="" letter-spacing=".03em">STOP</text>
+<text x="899.8" y="204.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">F5</text>
+<rect x="934.2" y="116" width="54.1" height="96" rx="9" fill="#ece4f6" stroke="#7a58a8" stroke-width="1.6"/>
+<text x="961.2" y="131.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">16</text>
+<text x="961.2" y="172.0" text-anchor="middle" font-size="12.5" font-weight="700" fill="#523681" class="" letter-spacing=".03em">STUTTER</text>
+<text x="961.2" y="204.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">G5</text>
+<rect x="42.4" y="34" width="54.1" height="74" rx="9" fill="#fbefd2" stroke="#c08a1e" stroke-width="1.6"/>
+<text x="69.5" y="49.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">1</text>
+<text x="69.5" y="79.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#7a560c" class="" letter-spacing=".03em">CHORD</text>
+<text x="69.5" y="100.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">F#3</text>
+<rect x="103.9" y="34" width="54.1" height="74" rx="9" fill="#fbefd2" stroke="#c08a1e" stroke-width="1.6"/>
+<text x="131.0" y="49.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">2</text>
+<text x="131.0" y="79.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#7a560c" class="" letter-spacing=".03em">PINGS</text>
+<text x="131.0" y="100.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">G#3</text>
+<rect x="165.4" y="34" width="54.1" height="74" rx="9" fill="#fbefd2" stroke="#c08a1e" stroke-width="1.6"/>
+<text x="192.5" y="49.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">3</text>
+<text x="192.5" y="79.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#7a560c" class="" letter-spacing=".03em">BASS</text>
+<text x="192.5" y="100.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">A#3</text>
+<rect x="288.4" y="34" width="54.1" height="74" rx="9" fill="#fbefd2" stroke="#c08a1e" stroke-width="1.6"/>
+<text x="315.5" y="49.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">4</text>
+<text x="315.5" y="79.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#7a560c" class="" letter-spacing=".03em">HATS</text>
+<text x="315.5" y="100.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">C#4</text>
+<rect x="349.9" y="34" width="54.1" height="74" rx="9" fill="#fbefd2" stroke="#c08a1e" stroke-width="1.6"/>
+<text x="377.0" y="49.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">5</text>
+<text x="377.0" y="79.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#7a560c" class="" letter-spacing=".03em">KICK</text>
+<text x="377.0" y="100.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">D#4</text>
+<rect x="472.9" y="34" width="54.1" height="74" rx="9" fill="#2f3839" stroke="#2f3839" stroke-width="1.6"/>
+<text x="500.0" y="49.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#6f7a7a" class="mono" letter-spacing="0">6</text>
+<text x="500.0" y="100.0" text-anchor="middle" font-size="11" font-weight="400" fill="#8a9494" class="mono" letter-spacing="0">F#4</text>
+<rect x="534.4" y="34" width="54.1" height="74" rx="9" fill="#2f3839" stroke="#2f3839" stroke-width="1.6"/>
+<text x="561.5" y="49.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#6f7a7a" class="mono" letter-spacing="0">7</text>
+<text x="561.5" y="100.0" text-anchor="middle" font-size="11" font-weight="400" fill="#8a9494" class="mono" letter-spacing="0">G#4</text>
+<rect x="595.9" y="34" width="54.1" height="74" rx="9" fill="#fbe2dc" stroke="#c4503c" stroke-width="1.6"/>
+<text x="623.0" y="49.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">8</text>
+<text x="623.0" y="79.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#8f3020" class="" letter-spacing=".03em">WAIL</text>
+<text x="623.0" y="100.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">A#4</text>
+<rect x="718.9" y="34" width="54.1" height="74" rx="9" fill="#fbe2dc" stroke="#c4503c" stroke-width="1.6"/>
+<text x="746.0" y="49.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">9</text>
+<text x="746.0" y="72.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#8f3020" class="" letter-spacing=".03em">WHOOP</text>
+<text x="746.0" y="87.0" text-anchor="middle" font-size="12.5" font-weight="700" fill="#8f3020" class="" letter-spacing=".03em">OFF-KEY</text>
+<text x="746.0" y="100.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">C#5</text>
+<rect x="780.4" y="34" width="54.1" height="74" rx="9" fill="#fbe2dc" stroke="#c4503c" stroke-width="1.6"/>
+<text x="807.5" y="49.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">10</text>
+<text x="807.5" y="79.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#8f3020" class="" letter-spacing=".03em">HI-LO</text>
+<text x="807.5" y="100.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">D#5</text>
+<rect x="903.4" y="34" width="54.1" height="74" rx="9" fill="#fbe2dc" stroke="#c4503c" stroke-width="1.6"/>
+<text x="930.5" y="49.0" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">11</text>
+<text x="930.5" y="79.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#8f3020" class="" letter-spacing=".03em">LASER</text>
+<text x="930.5" y="100.0" text-anchor="middle" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing="0">F#5</text>
+<path d="M42.4 28 V22 H404.1 V28" fill="none" stroke="#c08a1e" stroke-width="1.4"/>
+<text x="223.2" y="16.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="#c08a1e" class="" letter-spacing=".02em">SOLO: a tap · THROW: held</text>
+<path d="M595.9 28 V22 H957.6 V28" fill="none" stroke="#c4503c" stroke-width="1.4"/>
+<text x="776.8" y="16.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="#c4503c" class="" letter-spacing=".02em">SIRENS: a tap, a short one · held, a slow one, its knobs</text>
+<path d="M472.9 28 V22 H588.6 V28" fill="none" stroke="#8a9494" stroke-width="1.4"/>
+<text x="530.8" y="16.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="#8a9494" class="" letter-spacing=".02em">nothing</text>
+<path d="M11.7 216 V222 H373.3 V216" fill="none" stroke="#1f7f75" stroke-width="1.4"/>
+<text x="192.5" y="239.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1f7f75" class="" letter-spacing=".02em">THE PARTS: a tap, mute · held, the channel strip</text>
+<path d="M380.7 216 V222 H496.3 V216" fill="none" stroke="#8a9494" stroke-width="1.4"/>
+<text x="438.5" y="239.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="#8a9494" class="" letter-spacing=".02em">the gap</text>
+<path d="M503.7 216 V222 H742.3 V216" fill="none" stroke="#4a72b0" stroke-width="1.4"/>
+<text x="623.0" y="239.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="#4a72b0" class="" letter-spacing=".02em">THE MOVES: held</text>
+<path d="M749.7 216 V222 H988.3 V216" fill="none" stroke="#7a58a8" stroke-width="1.4"/>
+<text x="869.0" y="239.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="#7a58a8" class="" letter-spacing=".02em">THE EFFECTS: held</text>
+</svg>
+</figure>
+
+<div class="cols">
+<div class="col">
+
+<div class="card">
+<h2>1 · The parts <span class="where">white 1–6 · F3–D4</span></h2>
+<div class="intro">The chord, pings, bass, kick, hats (with the rim and the clap) and noise: the meters' rows, top to bottom.</div>
+<div class="row"><div class="n">A tap</div><div class="d"><b>Mute</b>, and back: its level kept. The same mutes as OCT- + OCT+ on a layer's page.</div></div>
+<div class="row"><div class="n">Held</div><div class="d">A third of a second, or a knob turned: its <b>channel strip</b> on the knobs until you let go (then no mute).</div></div>
+<div class="row"><div class="n">Level<small>KNOB 1</small></div><div class="d">The part's level, as OCT- / OCT+ on its page. The kick's and the hats' their own.<span class="r">kick, hats: x1 at 50 · ±12 dB at the ends</span></div></div>
+<div class="row"><div class="n">Echo<small>KNOB 2</small></div><div class="d">How much it sends into the echo.<span class="r">0 none · 50 the piece's · 100 twice</span><span class="note">The bass and the kick send none in every piece; the kick's 100 a full send.</span></div></div>
+<div class="row"><div class="n">Plate<small>KNOB 3</small></div><div class="d">How much it sends into the plate, the same way.</div></div>
+<div class="row"><div class="n">Filter<small>KNOB 4</small></div><div class="d">Before the sends: left a low-pass, darker; right a high-pass, thinner.<span class="r">LP ~200 Hz · Off, the notch · HP ~2.5 kHz</span></div></div>
+</div>
+
+<div class="card">
+<h2>2 · Solos and throws <span class="where">black 1–5 · F#3–D#4</span></h2>
+<div class="intro">Each the part of the white key on its left; D#4 the kick's (the noise has none).</div>
+<div class="row"><div class="n">A tap</div><div class="d"><b>Solo</b>: the others go quiet, their echoes ringing out. Several play together. Again: let go.</div></div>
+<div class="row"><div class="n">Held</div><div class="d">Past a third of a second, a <b>throw</b>: the part slammed into the echo at its own level, whatever its sends, the feedback climbing so the repeats stack. Let go: they ring on (and no solo).</div></div>
+<div class="row"><div class="n">Chord</div><div class="d">Every stab into the echo.</div></div>
+<div class="row"><div class="n">Pings · hats · kick</div><div class="d">As they are (the hats with the rim and the clap).</div></div>
+<div class="row"><div class="n">Bass</div><div class="d">Driven, so its harmonics carry in the echo.</div></div>
+</div>
+
+<div class="card">
+<h2>3 · The moves <span class="where">white 9–12 · G4–C5, held</span></h2>
+<div class="intro">As long as the key is held: each sweeps in, and eases back as you let go.</div>
+<div class="row"><div class="n">Open</div><div class="d">The filter pushed open: the music thins and brightens over the kick.</div></div>
+<div class="row"><div class="n">Shut</div><div class="d">The filter pushed shut: the music under water, the kick still pumping.</div></div>
+<div class="row"><div class="n">Drop</div><div class="d">The floor out: the kick and the bass gone while held.</div></div>
+<div class="row"><div class="n">Echo</div><div class="d">The echo pushed: everything into it, feeding back.</div></div>
+<div class="note" style="margin:1px 0 3px">Open and Shut push on top of SELECT's filter, over about 0.4 s.</div>
+</div>
+
+</div>
+<div class="col">
+
+<div class="card">
+<h2>4 · The effects <span class="where">white 13–16 · D5–G5, held</span></h2>
+<div class="intro">Four of the effects grid's (REC held), one key each; they play with the grid's.</div>
+<div class="row"><div class="n">Time x2</div><div class="d">The echo's time doubled (halved if the tape is too short), gliding there and back.</div></div>
+<div class="row"><div class="n">Freeze</div><div class="d">The cloud stops listening, its grains thick and brought forward.</div></div>
+<div class="row"><div class="n">Tape stop</div><div class="d">The echo's tape slowing to a quarter, its pitch diving.</div></div>
+<div class="row"><div class="n">Stutter</div><div class="d">A semicorchea (16th) of the mix caught and looped.</div></div>
+</div>
+
+<div class="card">
+<h2>5 · The sirens <span class="where">black 8–11 · A#4–F#5</span></h2>
+<div class="intro">A tap: a short one, about a bar. Held: slow from where it is, till let go, on its page. One at a time, into the echo. Whoop off the key on purpose; the rest on its root, fifth, octave.</div>
+<div class="row"><div class="n">Wail<small>the tempo's</small></div><div class="d">A glide root, fifth, octave and back.<span class="r">tap: a bar · held: every 4 bars</span></div></div>
+<div class="row"><div class="n">Whoop<small>free, off-key</small></div><div class="d">A box's whoops, an octave up and back.<span class="r">tap: 1.2 s, 2.5 a second · held: on, rising</span></div></div>
+<div class="row"><div class="n">Hi-lo<small>the tempo's</small></div><div class="d">Root and fifth in turn, the police siren.<span class="r">tap: a corchea (8th) a swap · held: a negra (quarter)</span></div></div>
+<div class="row"><div class="n">Laser<small>free</small></div><div class="d">Two octaves down to the root, warbling.<span class="r">tap: 1.5 s · held: 8 s falls, again</span></div></div>
+<div class="row"><div class="n">Its page<small>held</small></div><div class="d">The knobs ride it; kept, saved: <b>Pitch</b> ±1 octave, <b>Rate</b>, <b>Depth</b> 1–24 st, <b>Echo</b> (past 50, the repeats stack).</div></div>
+</div>
+
+<div class="card">
+<h2>6 · The knobs <span class="where">KNOB 1 · 3 · 4</span></h2>
+<div class="row"><div class="n">Width</div><div class="d">The whole mix's stereo field. The piece's, saved.<span class="r">0 mono · 100 wide</span></div></div>
+<div class="row"><div class="n">Wet</div><div class="d">The whole music dry, or drowned in the echo. For playing: not saved.<span class="r">-100 dry · 0 the piece · +100 drowned</span></div></div>
+<div class="row"><div class="n">Duck</div><div class="d">How far each beat pushes the rest down; the piece's.<span class="r">0 none · 100 -12 dB, pumping</span></div></div>
+<div class="note" style="margin:1px 0 3px">KNOB 2 is free.</div>
+</div>
+
+<div class="card">
+<h2>7 · Lock, and the lights</h2>
+<div class="row"><div class="n">Lock<small>SEL held</small></div><div class="d">Half a second, any page; again, off. Each phrase keeps the kick, the groove and the plan (the sections and chords move on). LOCK in red in the header; not saved.</div></div>
+<div class="row"><div class="n">Lit</div><div class="d">A key that does something; a part's while you hear it.</div></div>
+<div class="row"><div class="n">Dark</div><div class="d">A move, effect or throw held, a siren sounding; a part muted or soloed out; the gap, F#4, G#4.</div></div>
+<div class="row"><div class="n">Blinking</div><div class="d">A soloed black key.</div></div>
+</div>
+
+</div>
+</div>
+
+<div class="foot">
+<div class="box"><h3>Leaving</h3>A page's button leaves (HOME: to Form): the keys are the scale again. Mutes and solos stay; the moves, throws, effects and sirens let go. SEL brings it back.</div>
+<div class="box"><h3>The screen</h3>The desk's meters, a row a part and the master; the white notch its level. A muted row dark, soloed-out rows dimmed. A card says what each key did.</div>
+</div>
+</div>
+</body>
+</html>
